@@ -39,8 +39,6 @@ public class Miner : MonoBehaviour
             /* Get the user click position in world coordinates for the horizontal component */
             _movementXTarget = Mathf.Round(Camera.main.ScreenToWorldPoint(Input.mousePosition).x);
             _moving = true;
-
-            Debug.Log("Target: " + _movementXTarget + ", current: " + _rigidBody.position);
         }
 
         float deltaX = _movementXTarget - Mathf.Round(_rigidBody.position.x);
@@ -49,11 +47,6 @@ public class Miner : MonoBehaviour
         if (_moving && _canMove && (deltaX > float.Epsilon || deltaX < -float.Epsilon))
         {
             _animator.SetBool("minerWalk", true);
-
-            /* If walking to the left, flip the sprite */
-            //Debug.Log("Delta: " + deltaX);
-            //Debug.Log("Delta sign: " + Mathf.Sign(deltaX));
-            //Debug.Log("Movement: " + _movementXTarget);
 
             transform.localScale = new Vector2(Mathf.Sign(deltaX) * Mathf.Abs(transform.localScale.x), transform.localScale.y);
 
@@ -74,15 +67,13 @@ public class Miner : MonoBehaviour
             _rigidBody.position = new Vector2(Mathf.Round(_rigidBody.position.x), Mathf.Round(_rigidBody.position.y));
             _rigidBody.velocity = Vector2.zero;
 
-            Debug.Log("REACHED! -> Target: " + _movementXTarget + ", current: " + _rigidBody.position);
-
             _movementXTarget = _rigidBody.position.x;
             _canMove = true;
             _moving = false;
         }
     }
 
-    void OnCollisionStay2D(Collision2D coll)
+    void OnCollisionEnter2D(Collision2D coll)
     {
         float distance = (coll.collider.bounds.center.y - 0.5f) - _rigidBody.position.y;
         if (coll.collider.bounds.extents.y > 1.0f)
