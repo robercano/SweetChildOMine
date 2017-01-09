@@ -25,7 +25,7 @@ public class CameraController : MonoBehaviour {
 		if (ratio > -float.Epsilon && ratio < float.Epsilon)
 			ratio = 1.0f;
 
-		Camera.main.orthographicSize = Screen.height / ratio / 2.0f;
+		Camera.main.orthographicSize = Screen.height / ratio / 4.0f;
 	}
 	
 	// Update is called once per frame

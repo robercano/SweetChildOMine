@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class Miner : MonoBehaviour
 {
-
     private Animator _animator;
     private SpriteRenderer _spriteRenderer;
     private Rigidbody2D _rigidBody;
+    private BoxCollider2D _boxCollider;
 
     private float _walkSpeed = 32.0f; /**< This value is the width of a single sprite multiplied by 2 */
     private float _movementXTarget;   /**< Last location the user clock on for movement */
@@ -21,11 +22,13 @@ public class Miner : MonoBehaviour
         _animator = GetComponent<Animator>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _rigidBody = GetComponent<Rigidbody2D>();
-
-        _movementXTarget = Mathf.Round(_rigidBody.position.x);
+        _boxCollider = GetComponent<BoxCollider2D>();
+        
         _canMove = true;
         _jumpUp = false;
         _moving = false;
+
+        _movementXTarget = Mathf.Round(_rigidBody.position.x);
     }
 
     // Update is called once per frame
@@ -34,6 +37,11 @@ public class Miner : MonoBehaviour
         if (Input.GetKey(KeyCode.Escape))
             Application.Quit();
 
+        Move();
+    }
+
+    void Move()
+    {
         if (Input.GetMouseButton(0))
         {
             /* Get the user click position in world coordinates for the horizontal component */
@@ -46,15 +54,21 @@ public class Miner : MonoBehaviour
         /* Check if the sprite really needs to move */
         if (_moving && _canMove && (deltaX > float.Epsilon || deltaX < -float.Epsilon))
         {
-            _animator.SetBool("minerWalk", true);
+           // _animator.SetBool("minerWalk", true);
 
             transform.localScale = new Vector2(Mathf.Sign(deltaX) * Mathf.Abs(transform.localScale.x), transform.localScale.y);
 
             if (_jumpUp)
             {
-                _rigidBody.position = new Vector2(_rigidBody.position.x + Mathf.Sign(deltaX) * 0.5f, _rigidBody.position.y + 1.0f);
+                /* TODO: Check manually if we need to jump of fall! */
+                _rigidBody.position = new Vector2(_rigidBody.position.x, _rigidBody.position.y + 1.0f);
                 _jumpUp = false;
             }
+            else
+            {
+                MakeItFall();
+            }
+
             _rigidBody.velocity = new Vector2(Mathf.Sign(deltaX) * _walkSpeed, _rigidBody.velocity.y);
         }
         if ((_moving && deltaX <= float.Epsilon && deltaX >= -float.Epsilon) ||
@@ -70,7 +84,29 @@ public class Miner : MonoBehaviour
             _movementXTarget = _rigidBody.position.x;
             _canMove = true;
             _moving = false;
+
+            MakeItFall();
         }
+    }
+
+    void MakeItFall()
+    {
+        /* Check if we need to fall down */
+        float boxExtent = _boxCollider.bounds.extents.x;
+        float absPosX = Mathf.Round(transform.position.x);
+        float absPosY = Mathf.Round(transform.position.y);
+        Vector2 leftSource = new Vector2(absPosX - boxExtent + 1.0f, absPosY);
+        Vector2 rightSource = new Vector2(absPosX + boxExtent - 1.0f, absPosY);
+
+        _boxCollider.enabled = false;
+        RaycastHit2D hitLeft = Physics2D.Raycast(leftSource, Vector2.down);
+        RaycastHit2D hitRight = Physics2D.Raycast(rightSource, Vector2.down);
+        _boxCollider.enabled = true;
+
+        if (hitLeft != null && hitRight != null) {
+            _rigidBody.position = new Vector2(_rigidBody.position.x, _rigidBody.position.y - Mathf.Min(hitLeft.distance, hitRight.distance));
+        }
+
     }
 
     void OnCollisionEnter2D(Collision2D coll)
