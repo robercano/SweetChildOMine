@@ -4,12 +4,9 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 public class CameraController : MonoBehaviour {
-	private string kTAG = "SCOM";
 
 	// Use this for initialization
 	void Start () {
-		Debug.logger.Log (kTAG, "Starting camera!");
-			
 		GameObject sceneObject = GameObject.FindWithTag ("Background");
 		Assert.IsNotNull (sceneObject);
 

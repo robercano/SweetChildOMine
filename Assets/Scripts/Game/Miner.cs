@@ -16,7 +16,7 @@ public class Miner : MonoBehaviour
 
 	/* Private section */
 	private Animator m_animator;
-	private SpriteRenderer m_spriteRenderer;
+	//private SpriteRenderer m_spriteRenderer;
 	private Rigidbody2D m_rigidBody;
 
 	private float m_walkSpeed = 32.0f; /**< This value is the width of a single sprite multiplied by 2 */
@@ -30,7 +30,7 @@ public class Miner : MonoBehaviour
     void Start()
     {
         m_animator = GetComponent<Animator>();
-        m_spriteRenderer = GetComponent<SpriteRenderer>();
+        //m_spriteRenderer = GetComponent<SpriteRenderer>();
         m_rigidBody = GetComponent<Rigidbody2D>();
         
 		m_moveDirection = MoveDirection.None;
