@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿#if UNITY_EDITOR
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -22,3 +24,5 @@ public class EditModeVoxelSnap : MonoBehaviour {
         transform.position = new Vector2(x, y);
     }
 }
+
+#endif // UNITY_EDITOR

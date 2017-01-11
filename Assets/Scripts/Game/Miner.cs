@@ -10,21 +10,21 @@ public class Miner : MonoBehaviour
 		ColliderBody
 	};
 	[HideInInspector]
-	public enum MoveDirection {
-		None = 0, Left = -1, Right = 1
+	public enum CharacterAction {
+		None = 0, MoveLeft = -1, MoveRight = 1, Dig = 2
 	};
 
 	/* Private section */
 	private Animator m_animator;
-	//private SpriteRenderer m_spriteRenderer;
+	private SpriteRenderer m_spriteRenderer;
 	private Rigidbody2D m_rigidBody;
 
 	private float m_walkSpeed = 32.0f; /**< This value is the width of a single sprite multiplied by 2 */
 	private float m_movementXTarget;   /**< Last location the user clock on for movement */
 
-	private MoveDirection m_moveDirection;
+	private CharacterAction m_characterAction;
 	private BoxCollider2D m_feetCollider;
-	private BoxCollider2D m_bodyCollider;
+    private BoxCollider2D m_bodyCollider;
 
     // Use this for initialization
     void Start()
@@ -33,12 +33,12 @@ public class Miner : MonoBehaviour
         //m_spriteRenderer = GetComponent<SpriteRenderer>();
         m_rigidBody = GetComponent<Rigidbody2D>();
         
-		m_moveDirection = MoveDirection.None;
+		m_characterAction = CharacterAction.None;
 
         m_movementXTarget = Mathf.Round(m_rigidBody.position.x);
 
-		/* Get children components */
-		m_feetCollider = transform.FindChild ("FeetCollider").GetComponent<BoxCollider2D> ();
+        /* Get children components */
+        m_feetCollider = transform.FindChild ("FeetCollider").GetComponent<BoxCollider2D> ();
 		m_bodyCollider = transform.FindChild ("BodyCollider").GetComponent<BoxCollider2D> ();
     }
 
@@ -58,27 +58,38 @@ public class Miner : MonoBehaviour
             /* Get the user click position in world coordinates for the horizontal component */
             m_movementXTarget = Mathf.Round(Camera.main.ScreenToWorldPoint(Input.mousePosition).x);
         }
-
-        /* Check if we have reached our destination */
-		float deltaX = m_movementXTarget - Mathf.Round(m_rigidBody.position.x);
-		if (deltaX > float.Epsilon) {
-            StartMovement(MoveDirection.Right);
-		} else if (deltaX < -float.Epsilon) {
-            StartMovement(MoveDirection.Left);
-		} else {
-            /* Destination reached, end movement and return */
+        if (Input.GetMouseButton(1) && m_characterAction != CharacterAction.Dig)
+        {
+            m_characterAction = CharacterAction.None;
             EndMovement();
             MoveDown();
+            m_animator.SetTrigger("minerDig");
+            m_characterAction = CharacterAction.Dig;
+        }
+
+        /* Check if we have reached our destination */
+        float deltaX = m_movementXTarget - Mathf.Round(m_rigidBody.position.x);
+		if (deltaX > float.Epsilon) {
+            StartMovement(CharacterAction.MoveRight);
+		} else if (deltaX < -float.Epsilon) {
+            StartMovement(CharacterAction.MoveLeft);
+		} else {
+            /* Destination reached, end movement and return */
+            if (m_characterAction != CharacterAction.Dig)
+            {
+                EndMovement();
+                MoveDown();
+            }
             return;
 		}
         
         /* Check if the sprite really needs to move */
-        switch (m_moveDirection)
+        switch (m_characterAction)
         {
-            case MoveDirection.Left:
-            case MoveDirection.Right:
+            case CharacterAction.MoveLeft:
+            case CharacterAction.MoveRight:
                 /* Move it towards the target direction at the configured speed */
-                m_rigidBody.velocity = new Vector2((float)m_moveDirection * m_walkSpeed, m_rigidBody.velocity.y);
+                m_rigidBody.velocity = new Vector2((float)m_characterAction * m_walkSpeed, m_rigidBody.velocity.y);
 
                 /* Check if  we need to move down after moving */
                 MoveDown();
@@ -86,30 +97,31 @@ public class Miner : MonoBehaviour
         }
     }
 
-    void StartMovement(MoveDirection direction)
+    void StartMovement(CharacterAction direction)
     {
         /* Setup the animation only if this is a new direction */
-        if (direction != m_moveDirection)
+        if (direction != m_characterAction)
         {
-            m_animator.SetBool("minerWalk", true);
+            m_animator.SetTrigger("minerWalk");
 
             /* Flip the object so it faces on the right direction */
             transform.localScale = new Vector2((float)direction * Mathf.Abs(transform.localScale.x), transform.localScale.y);
         }
-        m_moveDirection = direction;
+        m_characterAction = direction;
     }
 
 	void EndMovement()
 	{
-		/* We are done moving */
-    	m_animator.SetBool ("minerWalk", false);
+        /* We are done moving */
+        if (m_characterAction != CharacterAction.None)
+            m_animator.SetTrigger("minerIdle");
 
 		/* Round the coordinates so they are perfect pixel aligned */
 		m_rigidBody.position = new Vector2 (Mathf.Round (m_rigidBody.position.x), Mathf.Round (m_rigidBody.position.y));
 		m_rigidBody.velocity = Vector2.zero;
 
 		m_movementXTarget = m_rigidBody.position.x;
-		m_moveDirection = MoveDirection.None;
+		m_characterAction = CharacterAction.None;
 
     }
 
@@ -139,7 +151,8 @@ public class Miner : MonoBehaviour
     public void OnCollisionEnter2DChild(Collision2D coll, ColliderType childCollider)
     {
         // Avoid moving up when movement has already finished
-        if (m_moveDirection == MoveDirection.None)
+        if (m_characterAction == CharacterAction.None ||
+            m_characterAction == CharacterAction.Dig)
             return;
 
         // Going upstairs movement: only check feet collision when obstacle is
@@ -150,10 +163,10 @@ public class Miner : MonoBehaviour
                 return;
             // Sometimes colliders that are behind the character trigger this callback,
             // if that is the case ignore them
-            if (m_moveDirection == MoveDirection.Right &&
+            if (m_characterAction == CharacterAction.MoveRight &&
                 coll.collider.bounds.center.x < m_rigidBody.position.x)
                 return;
-            if (m_moveDirection == MoveDirection.Left &&
+            if (m_characterAction == CharacterAction.MoveLeft &&
                 coll.collider.bounds.center.x > m_rigidBody.position.x)
                 return;
 
@@ -170,7 +183,7 @@ public class Miner : MonoBehaviour
         // Check if any of the contact points is in the direction
         // of the current movent. If so we have collided against a wall,
         // readjust position and end movement
-        if (m_moveDirection == MoveDirection.Left)
+        if (m_characterAction == CharacterAction.MoveLeft)
         {
             for (int i = 0; i < coll.contacts.Length; ++i)
             {
