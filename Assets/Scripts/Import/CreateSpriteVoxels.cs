@@ -3,6 +3,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEditor;
 
 public class CreateSpriteVoxels :  AssetPostprocessor
@@ -21,6 +22,14 @@ public class CreateSpriteVoxels :  AssetPostprocessor
     private Color m_outerBorder = new Color(52.0f / 255.0f, 80.0f / 255.0f, 72.0f / 255.0f);
     private Color m_innerBorder = new Color(66.0f / 255.0f, 100.0f / 255.0f, 93.0f / 255.0f);
 
+    private Object m_voxelPrefab;
+    private uint m_voxelCount;
+
+    void Start()
+    {
+
+    }
+
     void OnPreprocessTexture()
 	{
 		TextureImporter textureImporter = (TextureImporter)assetImporter;
@@ -31,13 +40,18 @@ public class CreateSpriteVoxels :  AssetPostprocessor
 
 	void OnPostprocessTexture (Texture2D texture)
 	{
-		string lowerCaseAssetPath = assetPath.ToLower ();
+        m_voxelCount = 0;
+        m_voxelPrefab = Resources.Load("Voxel");
+        Debug.Log("Prefab: " + m_voxelPrefab);
+        Assert.IsNotNull(m_voxelPrefab);
+
+        string lowerCaseAssetPath = assetPath.ToLower ();
 		if (lowerCaseAssetPath.IndexOf ("/foregrounds/") == -1)
 			return;
 
 		RemoveCaveBorders (texture);
 		AddCaveBorders (texture);
-		DetectVoxelPositions (texture);
+		//DetectVoxelPositions (texture);
 	}
 
 	void RemoveCaveBorders(Texture2D texture)
@@ -133,6 +147,9 @@ public class CreateSpriteVoxels :  AssetPostprocessor
 						colors [UpPixel].a == 0.0f ||
 						colors [DownPixel].a == 0.0f)) {
 					texture.SetPixel (x, y, Color.red);
+                    GameObject voxel = Object.Instantiate(m_voxelPrefab, new Vector3(x, y, 0.0f), Quaternion.identity) as GameObject;
+                    voxel.name = texture.name + m_voxelCount;
+                    m_voxelCount++;
 				}
 			}
 		}
