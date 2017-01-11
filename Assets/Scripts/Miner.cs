@@ -4,9 +4,6 @@ using UnityEngine;
 
 public class Miner : MonoBehaviour
 {
-	/* Public section */
-	public bool animated = true;
-
 	[HideInInspector]
 	public enum ColliderType {
 		ColliderFeet,
@@ -24,7 +21,6 @@ public class Miner : MonoBehaviour
 
 	private float m_walkSpeed = 32.0f; /**< This value is the width of a single sprite multiplied by 2 */
 	private float m_movementXTarget;   /**< Last location the user clock on for movement */
-	private bool m_jumpUp;
 
 	private MoveDirection m_moveDirection;
 	private BoxCollider2D m_feetCollider;
@@ -37,7 +33,6 @@ public class Miner : MonoBehaviour
         m_spriteRenderer = GetComponent<SpriteRenderer>();
         m_rigidBody = GetComponent<Rigidbody2D>();
         
-        m_jumpUp = false;
 		m_moveDirection = MoveDirection.None;
 
         m_movementXTarget = Mathf.Round(m_rigidBody.position.x);
@@ -64,48 +59,50 @@ public class Miner : MonoBehaviour
             m_movementXTarget = Mathf.Round(Camera.main.ScreenToWorldPoint(Input.mousePosition).x);
         }
 
+        /* Check if we have reached our destination */
 		float deltaX = m_movementXTarget - Mathf.Round(m_rigidBody.position.x);
 		if (deltaX > float.Epsilon) {
-			m_moveDirection = MoveDirection.Right;
+            StartMovement(MoveDirection.Right);
 		} else if (deltaX < -float.Epsilon) {
-			m_moveDirection = MoveDirection.Left;
+            StartMovement(MoveDirection.Left);
 		} else {
-			m_moveDirection = MoveDirection.None;
+            /* Destination reached, end movement and return */
+            EndMovement();
+            MoveDown();
+            return;
 		}
-
+        
         /* Check if the sprite really needs to move */
-		switch (m_moveDirection)
-		{
-		case MoveDirection.Left:
-		case MoveDirection.Right:
-			if (animated)
-				m_animator.SetBool ("minerWalk", true);
+        switch (m_moveDirection)
+        {
+            case MoveDirection.Left:
+            case MoveDirection.Right:
+                /* Move it towards the target direction at the configured speed */
+                m_rigidBody.velocity = new Vector2((float)m_moveDirection * m_walkSpeed, m_rigidBody.velocity.y);
 
-			transform.localScale = new Vector2 ((float)m_moveDirection * Mathf.Abs (transform.localScale.x), transform.localScale.y);
+                /* Check if  we need to move down after moving */
+                MoveDown();
+                break;
+        }
+    }
 
-			if (m_jumpUp) {
-				/* TODO: Check manually if we need to jump of fall! */
-				MoveUp ();
-				m_jumpUp = false;
-			} else {
-				MoveDown ();
-			}
+    void StartMovement(MoveDirection direction)
+    {
+        /* Setup the animation only if this is a new direction */
+        if (direction != m_moveDirection)
+        {
+            m_animator.SetBool("minerWalk", true);
 
-			m_rigidBody.velocity = new Vector2 ((float)m_moveDirection * m_walkSpeed, m_rigidBody.velocity.y);
-			break;
-
-		case MoveDirection.None:
-			EndMovement ();
-			//MoveDown ();
-			break;
-    	}
-	}
+            /* Flip the object so it faces on the right direction */
+            transform.localScale = new Vector2((float)direction * Mathf.Abs(transform.localScale.x), transform.localScale.y);
+        }
+        m_moveDirection = direction;
+    }
 
 	void EndMovement()
 	{
 		/* We are done moving */
-		if (animated)
-			m_animator.SetBool ("minerWalk", false);
+    	m_animator.SetBool ("minerWalk", false);
 
 		/* Round the coordinates so they are perfect pixel aligned */
 		m_rigidBody.position = new Vector2 (Mathf.Round (m_rigidBody.position.x), Mathf.Round (m_rigidBody.position.y));
@@ -113,7 +110,8 @@ public class Miner : MonoBehaviour
 
 		m_movementXTarget = m_rigidBody.position.x;
 		m_moveDirection = MoveDirection.None;
-	}
+
+    }
 
 	void MoveUp()
 	{
@@ -123,75 +121,89 @@ public class Miner : MonoBehaviour
     void MoveDown()
     {
         /* Check if we need to fall down */
-        float boxExtent = m_feetCollider.bounds.extents.x;
-        float absPosX = Mathf.Round(transform.position.x);
-        float absPosY = Mathf.Round(transform.position.y);
-        Vector2 leftSource = new Vector2(absPosX - boxExtent + 1.0f, absPosY);
-        Vector2 rightSource = new Vector2(absPosX + boxExtent - 1.0f, absPosY);
+        Vector2 leftSource = new Vector2(m_feetCollider.bounds.min.x + 0.5f, m_feetCollider.bounds.min.y);
+        Vector2 rightSource = new Vector2(m_feetCollider.bounds.max.x - 0.5f, m_feetCollider.bounds.min.y);
 
         m_feetCollider.enabled = false;
+        m_bodyCollider.enabled = false;
         RaycastHit2D hitLeft = Physics2D.Raycast(leftSource, Vector2.down);
         RaycastHit2D hitRight = Physics2D.Raycast(rightSource, Vector2.down);
         m_feetCollider.enabled = true;
+        m_bodyCollider.enabled = true;
 
         if (hitLeft != null && hitRight != null) {
             m_rigidBody.position = new Vector2(m_rigidBody.position.x, m_rigidBody.position.y - Mathf.Min(hitLeft.distance, hitRight.distance));
         }
     }
 
-	public void OnCollisionEnter2DChild(Collision2D coll, ColliderType childCollider)
+    public void OnCollisionEnter2DChild(Collision2D coll, ColliderType childCollider)
     {
-		/* First check if movement cannot continue further */
-		if (childCollider == ColliderType.ColliderBody) {
-			bool collision = false;
-			if (m_moveDirection == MoveDirection.Left) {
-				for (int i = 0; i < coll.contacts.Length; ++i) {
-					if (coll.contacts [i].point.x < m_rigidBody.position.x)
-						collision = true;
-				}
-				if (collision)
-					m_rigidBody.position = new Vector2 (coll.collider.bounds.center.x +
-														coll.collider.bounds.extents.x +
-														m_bodyCollider.bounds.extents.x,
-														m_rigidBody.position.y);
-			} else {
-				for (int i = 0; i < coll.contacts.Length; ++i) {
-					if (coll.contacts [i].point.x > m_rigidBody.position.x)
-						collision = true;
-				}
-				if (collision)
-					m_rigidBody.position = new Vector2 (coll.collider.bounds.center.x -
-														coll.collider.bounds.extents.x -
-														m_bodyCollider.bounds.extents.x,
-														m_rigidBody.position.y);
-			}
-			m_moveDirection = MoveDirection.None;
-			return;
-		}
+        // Avoid moving up when movement has already finished
+        if (m_moveDirection == MoveDirection.None)
+            return;
 
-		/* Check the feet for frontal collision */
-		if (childCollider == ColliderType.ColliderFeet) {
-			/*if (coll.collider.bounds.extents.y > 1.0f) {
-				if (m_moveDirection == MoveDirection.Left) {
-					m_rigidBody.position = new Vector2 (coll.collider.bounds.center.x +
-														coll.collider.bounds.extents.x +
-														m_feetCollider.bounds.extents.x,
-														m_rigidBody.position.y);
-				} else {
-					m_rigidBody.position = new Vector2 (coll.collider.bounds.center.x -
-														coll.collider.bounds.extents.x -
-														m_feetCollider.bounds.extents.x,
-														m_rigidBody.position.y);
-				}
-				m_moveDirection = MoveDirection.None;
-			} else {*/
-				float distance = (coll.collider.bounds.center.y - 0.5f) - m_rigidBody.position.y;
-				if (distance > -0.5f && distance < 0.5f) {
-					if (coll.collider.bounds.extents.y <= (0.5f + float.Epsilon)) {
-						m_jumpUp = true;
-					}
-				}
-			//}
-		}
+        // Going upstairs movement: only check feet collision when obstacle is
+        // 1 unit high or less. If higher we cannot climb the slope
+        if (childCollider == ColliderType.ColliderFeet) {
+            // If obstacle higher than 1 unit, we cannot climb it
+            if (coll.collider.bounds.extents.y > 0.5f)
+                return;
+            // Sometimes colliders that are behind the character trigger this callback,
+            // if that is the case ignore them
+            if (m_moveDirection == MoveDirection.Right &&
+                coll.collider.bounds.center.x < m_rigidBody.position.x)
+                return;
+            if (m_moveDirection == MoveDirection.Left &&
+                coll.collider.bounds.center.x > m_rigidBody.position.x)
+                return;
+
+            // Obstacle is in from of us and has 1 unit high, climb it
+            MoveUp();
+            return;
+        }
+
+        // Sometimes the body collider collides with the floor. If height
+        // is 1, assume it is the floor and skip the test
+        if (coll.collider.bounds.extents.y <= 0.5f)
+            return;
+
+        // Check if any of the contact points is in the direction
+        // of the current movent. If so we have collided against a wall,
+        // readjust position and end movement
+        if (m_moveDirection == MoveDirection.Left)
+        {
+            for (int i = 0; i < coll.contacts.Length; ++i)
+            {
+                if (coll.contacts[i].point.x < m_rigidBody.position.x)
+                {
+                    m_rigidBody.position = new Vector2(coll.collider.bounds.center.x +
+                                                        coll.collider.bounds.extents.x +
+                                                        m_bodyCollider.bounds.extents.x,
+                                                        m_rigidBody.position.y);
+                    EndMovement();
+                    MoveDown();
+                    break;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < coll.contacts.Length; ++i)
+            {
+                if (coll.contacts[i].point.x > m_rigidBody.position.x)
+                {
+                    m_rigidBody.position = new Vector2(coll.collider.bounds.center.x -
+                                                        coll.collider.bounds.extents.x -
+                                                        m_bodyCollider.bounds.extents.x,
+                                                        m_rigidBody.position.y);
+                    EndMovement();
+                    MoveDown();
+                    break;
+                }
+            }
+
+        }
+
     }
 };
+  

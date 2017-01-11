@@ -11,3 +11,5 @@
 WebGL/
 MinePrototype1*
 Player.log
+*_Data
+*.exe
