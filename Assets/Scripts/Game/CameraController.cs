@@ -23,6 +23,7 @@ public class CameraController : MonoBehaviour {
 			ratio = 1.0f;
 
 		Camera.main.orthographicSize = Screen.height / ratio / 4.0f;
+		//Camera.main.orthographicSize = 15.0f;
 	}
 	
 	// Update is called once per frame

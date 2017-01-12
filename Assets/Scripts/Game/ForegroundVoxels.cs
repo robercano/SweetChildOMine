@@ -78,7 +78,7 @@ public class ForegroundVoxels : MonoBehaviour {
                         voxel.transform.parent = gameObject.transform;
                         m_voxelCount++;
 
-                        dict.Add((uint)(y * texture.width + x), voxel);
+                        //dict.Add((uint)(y * texture.width + x), voxel);
                     }
                     
                     
