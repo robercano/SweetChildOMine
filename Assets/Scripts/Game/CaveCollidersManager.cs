@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class ForegroundVoxels : MonoBehaviour {
+public class CaveCollidersManager : MonoBehaviour {
 
     private SpriteRenderer m_spriteRenderer;
 
@@ -12,10 +12,11 @@ public class ForegroundVoxels : MonoBehaviour {
     private const int CenterPixel = SidePixels * (MatrixKernelSize + 1);
     private const int LeftPixel = CenterPixel - 1;
     private const int RightPixel = CenterPixel + 1;
-    private const int UpPixel = CenterPixel - MatrixKernelSize;
-    private const int DownPixel = CenterPixel + MatrixKernelSize;
+    private const int UpPixel = CenterPixel + MatrixKernelSize;
+    private const int DownPixel = CenterPixel - MatrixKernelSize;
     private uint m_voxelCount = 0;
     private GameObject m_voxelPrefab;
+    private IDictionary<uint, GameObject> m_collidersMap;
 
     // Use this for initialization
     void Start () {
@@ -27,7 +28,7 @@ public class ForegroundVoxels : MonoBehaviour {
 
         Texture2D texture = m_spriteRenderer.sprite.texture;
 
-        IDictionary<uint, GameObject> dict = new Dictionary<uint, GameObject>();
+        m_collidersMap = new Dictionary<uint, GameObject>();
 
         for (int x = SidePixels; x < texture.width - SidePixels; ++x)
         {
@@ -49,26 +50,18 @@ public class ForegroundVoxels : MonoBehaviour {
                 {
                     GameObject voxel = null;
 
-                    if (colors[LeftPixel].a != 0.0f)
+                    if ((colors[LeftPixel].a != 0.0f) && (m_collidersMap.TryGetValue((uint)(y * texture.width + (x - 1)), out voxel)))
                     {
-                        if (dict.TryGetValue((uint)(y * texture.width + (x - 1)), out voxel))
-                        {
-                            voxel.transform.localScale = new Vector3(voxel.transform.localScale.x + 1.0f,
-                                                                     voxel.transform.localScale.y,
-                                                                     voxel.transform.localScale.z);
-                            return;
-                        }
+                        voxel.transform.localScale = new Vector3(voxel.transform.localScale.x + 1.0f,
+                                                                 voxel.transform.localScale.y,
+                                                                 voxel.transform.localScale.z);
                     }
-                    else if (colors[DownPixel].a != 0.0f)
-                    {
-                        if (dict.TryGetValue((uint)((y - 1)* texture.width + x), out voxel))
-                        {
-                            voxel.transform.localScale = new Vector3(voxel.transform.localScale.x,
-                                                                     voxel.transform.localScale.y + 1.0f,
-                                                                     voxel.transform.localScale.z);
-                            return;
-                        }
 
+                    else if ((colors[DownPixel].a != 0.0f) && (m_collidersMap.TryGetValue((uint)((y - 1) * texture.width + x), out voxel)))
+                    {
+                        voxel.transform.localScale = new Vector3(voxel.transform.localScale.x,
+                                                                 voxel.transform.localScale.y + 1.0f,
+                                                                 voxel.transform.localScale.z);
                     }
                     if (voxel == null)
                     {
@@ -77,15 +70,14 @@ public class ForegroundVoxels : MonoBehaviour {
                         voxel.name = texture.name + "Voxel" + m_voxelCount;
                         voxel.transform.parent = gameObject.transform;
                         m_voxelCount++;
-
-                        //dict.Add((uint)(y * texture.width + x), voxel);
                     }
-                    
-                    
-                    
+
+                    m_collidersMap.Add((uint)(y * texture.width + x), voxel);
                 }
             }
+
         }
+        texture.Apply();
     }
 	
 	// Update is called once per frame

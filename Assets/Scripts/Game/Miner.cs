@@ -23,7 +23,7 @@ public class Miner : MonoBehaviour
 	private Rigidbody2D m_rigidBody;
 
 	private float m_walkSpeed = 32.0f;
-	private float m_runSpeed = 48.0f;
+	private float m_runSpeed = 64.0f;
 	private float m_movementXTarget;
 
 	private CharacterState m_currentState;
@@ -169,7 +169,7 @@ public class Miner : MonoBehaviour
 					{
 					case CharacterState.WalkLeft:
 					case CharacterState.WalkRight:
-					case CharacterState.RunRight:
+					case CharacterState.RunLeft:
 					case CharacterState.None:
 					case CharacterState.Dig:
 						TransitionState(CharacterState.RunRight);
@@ -279,21 +279,84 @@ public class Miner : MonoBehaviour
         m_feetCollider.enabled = true;
         m_bodyCollider.enabled = true;
 
-        if (hitLeft != null && hitRight != null) {
+        if ((hitLeft != null) && (hitRight != null)) {
             m_rigidBody.position = new Vector2(m_rigidBody.position.x, m_rigidBody.position.y - Mathf.Min(hitLeft.distance, hitRight.distance));
         }
     }
 
     public void OnCollisionEnter2DChild(Collision2D coll, ColliderType childCollider)
     {
-        // Avoid moving up when movement has already finished
-        if (m_currentState == CharacterState.None ||
-            m_currentState == CharacterState.Dig)
-            return;
+        switch (m_currentState)
+        {
+            case CharacterState.None:
+            case CharacterState.Dig:
+                return;
+
+            case CharacterState.WalkLeft:
+            case CharacterState.RunLeft:
+                // Sometimes the body collider collides with the floor. If height
+                // is 1, assume it is the floor and skip the test
+                if (coll.collider.bounds.extents.y <= 0.5f)
+                    break;
+
+                if (childCollider == ColliderType.ColliderBody)
+                {
+                    // Check if any of the contact points is in the direction
+                    // of the current movent. If so we have collided against a wall,
+                    // readjust position and end movement
+                    for (int i = 0; i < coll.contacts.Length; ++i)
+                    {
+                        if (coll.contacts[i].point.x < m_rigidBody.position.x)
+                        {
+                            m_rigidBody.position = new Vector2(coll.collider.bounds.center.x +
+                                                                coll.collider.bounds.extents.x +
+                                                                m_bodyCollider.bounds.extents.x,
+                                                                m_rigidBody.position.y);
+                            EndMovement();
+                            FallDown();
+                            TransitionState(CharacterState.None);
+                            break;
+                        }
+                    }
+                }
+                break;
+
+            case CharacterState.WalkRight:
+            case CharacterState.RunRight:
+                // Sometimes the body collider collides with the floor. If height
+                // is 1, assume it is the floor and skip the test
+                if (coll.collider.bounds.extents.y <= 0.5f)
+                    break;
+
+                if (childCollider == ColliderType.ColliderBody)
+                {
+                    // Check if any of the contact points is in the direction
+                    // of the current movent. If so we have collided against a wall,
+                    // readjust position and end movement
+                    for (int i = 0; i < coll.contacts.Length; ++i)
+                    {
+                        if (coll.contacts[i].point.x > m_rigidBody.position.x)
+                        {
+                            m_rigidBody.position = new Vector2(coll.collider.bounds.center.x -
+                                                                coll.collider.bounds.extents.x -
+                                                                m_bodyCollider.bounds.extents.x,
+                                                                m_rigidBody.position.y);
+                            EndMovement();
+                            FallDown();
+                            TransitionState(CharacterState.None);
+                            break;
+                        }
+                    }
+                }
+                break;
+        }
+
+        // ANY STATE
 
         // Going upstairs movement: only check feet collision when obstacle is
         // 1 unit high or less. If higher we cannot climb the slope
-        if (childCollider == ColliderType.ColliderFeet) {
+        if (childCollider == ColliderType.ColliderFeet)
+        {
             // If obstacle higher than 1 unit, we cannot climb it
             if (coll.collider.bounds.extents.y > 0.5f)
                 return;
@@ -308,53 +371,7 @@ public class Miner : MonoBehaviour
 
             // Obstacle is in from of us and has 1 unit high, climb it
             MoveUp();
-            return;
         }
-
-        // Sometimes the body collider collides with the floor. If height
-        // is 1, assume it is the floor and skip the test
-        if (coll.collider.bounds.extents.y <= 0.5f)
-            return;
-
-        // Check if any of the contact points is in the direction
-        // of the current movent. If so we have collided against a wall,
-        // readjust position and end movement
-        if (m_currentState == CharacterState.WalkLeft)
-        {
-            for (int i = 0; i < coll.contacts.Length; ++i)
-            {
-                if (coll.contacts[i].point.x < m_rigidBody.position.x)
-                {
-                    m_rigidBody.position = new Vector2(coll.collider.bounds.center.x +
-                                                        coll.collider.bounds.extents.x +
-                                                        m_bodyCollider.bounds.extents.x,
-                                                        m_rigidBody.position.y);
-					EndMovement();
-					FallDown();
-					TransitionState(CharacterState.None);
-                    break;
-                }
-            }
-        }
-        else
-        {
-            for (int i = 0; i < coll.contacts.Length; ++i)
-            {
-                if (coll.contacts[i].point.x > m_rigidBody.position.x)
-                {
-                    m_rigidBody.position = new Vector2(coll.collider.bounds.center.x -
-                                                        coll.collider.bounds.extents.x -
-                                                        m_bodyCollider.bounds.extents.x,
-                                                        m_rigidBody.position.y);
-					EndMovement();
-					FallDown();
-					TransitionState(CharacterState.None);
-                    break;
-                }
-            }
-
-        }
-
     }
-};
+ };
   

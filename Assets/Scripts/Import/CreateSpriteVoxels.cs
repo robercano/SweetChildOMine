@@ -35,7 +35,7 @@ public class CreateSpriteVoxels :  AssetPostprocessor
 		TextureImporter textureImporter = (TextureImporter)assetImporter;
 
 		textureImporter.isReadable = true;
-		textureImporter.textureCompression = TextureImporterCompression.Uncompressed;
+		//textureImporter.textureCompression = TextureImporterCompression.Uncompressed;
 	}
 
 	void OnPostprocessTexture (Texture2D texture)
