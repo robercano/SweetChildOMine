@@ -1,5 +1,4 @@
 ﻿#if UNITY_EDITOR
-
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -22,9 +21,6 @@ public class CaveImporter :  AssetPostprocessor
     private Color m_outerBorder = new Color(52.0f / 255.0f, 80.0f / 255.0f, 72.0f / 255.0f);
     private Color m_innerBorder = new Color(66.0f / 255.0f, 100.0f / 255.0f, 93.0f / 255.0f);
 
-    private Object m_colliderPrefab;
-    private uint m_colliderCount;
-
     void OnPreprocessTexture()
 	{
 		TextureImporter textureImporter = (TextureImporter)assetImporter;
@@ -35,18 +31,13 @@ public class CaveImporter :  AssetPostprocessor
 
 	void OnPostprocessTexture (Texture2D texture)
 	{
-		m_colliderCount = 0;
-		m_colliderPrefab = Resources.Load("CaveCollider");
-        Debug.Log("Prefab: " + m_colliderPrefab);
-        Assert.IsNotNull(m_colliderPrefab);
-
         string lowerCaseAssetPath = assetPath.ToLower ();
 		if (lowerCaseAssetPath.IndexOf ("/foregrounds/") == -1)
 			return;
 
 		RemoveCaveBorders (texture);
 		AddCaveBorders (texture);
-		//DetectVoxelPositions (texture);
+		CaveManager.GenerateCaveColliders (texture);
 	}
 
 	void RemoveCaveBorders(Texture2D texture)

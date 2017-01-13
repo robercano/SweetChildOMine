@@ -5,6 +5,8 @@ using UnityEngine.Assertions;
 
 public class CaveManager : MonoBehaviour {
 
+	private static bool StaticColliderGeneration = true;
+
     private SpriteRenderer m_spriteRenderer;
 
     private const int MatrixKernelSize = 3;
@@ -27,13 +29,47 @@ public class CaveManager : MonoBehaviour {
         Assert.IsNotNull(m_colliderPrefab);
 
         m_collidersMap = new Dictionary<uint, GameObject>();
-
 		Texture2D texture = m_spriteRenderer.sprite.texture;
-		GenerateCaveColliders (texture);
+
+		if (StaticColliderGeneration == true) {
+			foreach (Transform child in transform) {
+				m_colliderCount++;
+
+				uint x = (uint)(child.transform.position.x - m_spriteRenderer.bounds.min.x);
+				uint y = (uint)(child.transform.position.y - m_spriteRenderer.bounds.min.y);
+				m_collidersMap.Add((uint)(y * texture.width + x), child.gameObject);
+			}
+		} else {
+			m_colliderCount = GenerateCaveColliders (texture, m_colliderPrefab, m_spriteRenderer.bounds.min, gameObject.transform, out m_collidersMap);
+		}
     }
 
-	void GenerateCaveColliders(Texture2D texture)
+	public static uint GenerateCaveColliders(Texture2D texture)
 	{
+		if (StaticColliderGeneration == false) {
+			return 0;
+		}
+
+		GameObject colliderPrefab = Resources.Load("CaveCollider") as GameObject;
+		GameObject sceneForeground = GameObject.Find ("SceneForeground");
+		SpriteRenderer spriteRender = sceneForeground.GetComponent<SpriteRenderer> ();
+		IDictionary<uint, GameObject> colliderMap;
+
+		// Delete all children in SceneForeground
+		while(sceneForeground.transform.childCount != 0) {
+			GameObject.DestroyImmediate (sceneForeground.transform.GetChild(0).gameObject);
+		}
+
+		return CaveManager.GenerateCaveColliders (texture, colliderPrefab, spriteRender.bounds.min, sceneForeground.transform, out colliderMap);
+	}
+
+	private static uint GenerateCaveColliders(Texture2D texture, GameObject colliderPrefab, Vector3 spriteBounds,
+		                                      Transform parent, out IDictionary<uint, GameObject> colliderMap)
+	{
+		uint count = 0;
+
+		colliderMap = new Dictionary<uint, GameObject> ();
+
 		for (int x = SidePixels; x < texture.width - SidePixels; ++x)
 		{
 			for (int y = SidePixels; y < texture.height - SidePixels; ++y)
@@ -54,14 +90,14 @@ public class CaveManager : MonoBehaviour {
 				{
 					GameObject collider = null;
 
-					if ((colors[LeftPixel].a != 0.0f) && (m_collidersMap.TryGetValue((uint)(y * texture.width + (x - 1)), out collider)))
+					if ((colors[LeftPixel].a != 0.0f) && (colliderMap.TryGetValue((uint)(y * texture.width + (x - 1)), out collider)))
 					{
 						collider.transform.localScale = new Vector3(collider.transform.localScale.x + 1.0f,
 							collider.transform.localScale.y,
 							collider.transform.localScale.z);
 					}
 
-					else if ((colors[DownPixel].a != 0.0f) && (m_collidersMap.TryGetValue((uint)((y - 1) * texture.width + x), out collider)))
+					else if ((colors[DownPixel].a != 0.0f) && (colliderMap.TryGetValue((uint)((y - 1) * texture.width + x), out collider)))
 					{
 						collider.transform.localScale = new Vector3(collider.transform.localScale.x,
 							collider.transform.localScale.y + 1.0f,
@@ -69,16 +105,16 @@ public class CaveManager : MonoBehaviour {
 					}
 					if (collider == null)
 					{
-						collider = Object.Instantiate(m_colliderPrefab, new Vector3(m_spriteRenderer.bounds.min.x + x,
-							m_spriteRenderer.bounds.min.y + y, 0.0f), Quaternion.identity) as GameObject;
-						collider.name = "CaveCollider" + m_colliderCount;
-						collider.transform.parent = gameObject.transform;
-						m_colliderCount++;
+						collider = Object.Instantiate(colliderPrefab, new Vector3(spriteBounds.x + x, spriteBounds.y + y, 0.0f), Quaternion.identity) as GameObject;
+						collider.name = "CaveCollider" + count;
+						collider.transform.parent = parent;
+						count++;
 					}
 
-					m_collidersMap.Add((uint)(y * texture.width + x), collider);
+					colliderMap.Add((uint)(y * texture.width + x), collider);
 				}
 			}
 		}
+		return count;
 	}
 }
