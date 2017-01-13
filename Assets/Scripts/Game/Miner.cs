@@ -30,6 +30,7 @@ public class Miner : MonoBehaviour
 	private InputEvent m_inputEvent;
 	private BoxCollider2D m_feetCollider;
     private BoxCollider2D m_bodyCollider;
+	private BoxCollider2D m_digCollider;
 
     // Use this for initialization
     void Start()
@@ -45,6 +46,9 @@ public class Miner : MonoBehaviour
         /* Get children components */
         m_feetCollider = transform.FindChild ("FeetCollider").GetComponent<BoxCollider2D> ();
 		m_bodyCollider = transform.FindChild ("BodyCollider").GetComponent<BoxCollider2D> ();
+		m_digCollider = transform.FindChild ("DigCollider").GetComponent<BoxCollider2D> ();
+
+		m_digCollider.enabled = false;
     }
 
     // Update is called once per frame
@@ -219,6 +223,11 @@ public class Miner : MonoBehaviour
 
 	void TransitionState(CharacterState state)
 	{
+		// Transition exit code
+		if (m_currentState == CharacterState.Dig &&
+		    state != CharacterState.Dig) {
+			m_digCollider.enabled = false;
+		}
 		m_currentState = state;
 		PlayStateAnimation(state);
 	}
@@ -373,5 +382,14 @@ public class Miner : MonoBehaviour
             MoveUp();
         }
     }
+
+	void OnDigging(int onoff)
+	{
+		Debug.Log ("Digging is " + onoff);
+		if (onoff == 0)
+			m_digCollider.enabled = false;
+		else
+			m_digCollider.enabled = true;
+	}
  };
   

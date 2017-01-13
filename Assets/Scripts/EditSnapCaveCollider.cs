@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class EditModeVoxelSnap : MonoBehaviour {
+public class EditSnapCaveCollider : MonoBehaviour {
 
     public float snapValue = 1;
     public float depth = 0;

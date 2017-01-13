@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEditor;
 
-public class CreateSpriteVoxels :  AssetPostprocessor
+public class CaveImporter :  AssetPostprocessor
 {
 	private const int MatrixKernelSize = 5;
 	private const int SidePixels = (MatrixKernelSize - 1) / 2;
@@ -22,13 +22,8 @@ public class CreateSpriteVoxels :  AssetPostprocessor
     private Color m_outerBorder = new Color(52.0f / 255.0f, 80.0f / 255.0f, 72.0f / 255.0f);
     private Color m_innerBorder = new Color(66.0f / 255.0f, 100.0f / 255.0f, 93.0f / 255.0f);
 
-    private Object m_voxelPrefab;
-    private uint m_voxelCount;
-
-    void Start()
-    {
-
-    }
+    private Object m_colliderPrefab;
+    private uint m_colliderCount;
 
     void OnPreprocessTexture()
 	{
@@ -40,10 +35,10 @@ public class CreateSpriteVoxels :  AssetPostprocessor
 
 	void OnPostprocessTexture (Texture2D texture)
 	{
-        m_voxelCount = 0;
-        m_voxelPrefab = Resources.Load("Voxel");
-        Debug.Log("Prefab: " + m_voxelPrefab);
-        Assert.IsNotNull(m_voxelPrefab);
+		m_colliderCount = 0;
+		m_colliderPrefab = Resources.Load("CaveCollider");
+        Debug.Log("Prefab: " + m_colliderPrefab);
+        Assert.IsNotNull(m_colliderPrefab);
 
         string lowerCaseAssetPath = assetPath.ToLower ();
 		if (lowerCaseAssetPath.IndexOf ("/foregrounds/") == -1)
@@ -111,7 +106,7 @@ public class CreateSpriteVoxels :  AssetPostprocessor
 					continue;
 				}
 
-				// Detect voxel positions
+				// Detect collider positions
 				if (colors [CenterPixel].a == 0.0f) {
 					if (colors[LeftPixel].a != 0.0f ||
                         colors[RightPixel].a != 0.0f ||
@@ -129,7 +124,7 @@ public class CreateSpriteVoxels :  AssetPostprocessor
 		}
 		texture.LoadRawTextureData (newTexture.GetRawTextureData ());
 	}
-
+#if NONE
 	void DetectVoxelPositions(Texture2D texture)
 	{
 		for (int x = SidePixels; x < texture.width - SidePixels; ++x) {
@@ -147,13 +142,14 @@ public class CreateSpriteVoxels :  AssetPostprocessor
 						colors [UpPixel].a == 0.0f ||
 						colors [DownPixel].a == 0.0f)) {
 					texture.SetPixel (x, y, Color.red);
-                    GameObject voxel = Object.Instantiate(m_voxelPrefab, new Vector3(x, y, 0.0f), Quaternion.identity) as GameObject;
-                    voxel.name = texture.name + m_voxelCount;
-                    m_voxelCount++;
+                    GameObject voxel = Object.Instantiate(m_colliderPrefab, new Vector3(x, y, 0.0f), Quaternion.identity) as GameObject;
+                    voxel.name = texture.name + m_colliderCount;
+                    m_colliderCount++;
 				}
 			}
 		}
 	}
+#endif
 }
 
 #endif // UNITY_EDITOR
