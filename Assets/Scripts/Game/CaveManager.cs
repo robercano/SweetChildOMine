@@ -19,6 +19,7 @@ public class CaveManager : MonoBehaviour {
     private uint m_colliderCount = 0;
 	private GameObject m_colliderPrefab;
     private IDictionary<uint, GameObject> m_collidersMap;
+    private Texture2D m_texture;
 
     // Use this for initialization
     void Start () {
@@ -29,7 +30,7 @@ public class CaveManager : MonoBehaviour {
         Assert.IsNotNull(m_colliderPrefab);
 
         m_collidersMap = new Dictionary<uint, GameObject>();
-		Texture2D texture = m_spriteRenderer.sprite.texture;
+		m_texture = m_spriteRenderer.sprite.texture;
 
 		if (StaticColliderGeneration == true) {
 			foreach (Transform child in transform) {
@@ -37,10 +38,10 @@ public class CaveManager : MonoBehaviour {
 
 				uint x = (uint)(child.transform.position.x - m_spriteRenderer.bounds.min.x);
 				uint y = (uint)(child.transform.position.y - m_spriteRenderer.bounds.min.y);
-				m_collidersMap.Add((uint)(y * texture.width + x), child.gameObject);
+				m_collidersMap.Add((uint)(y * m_texture.width + x), child.gameObject);
 			}
 		} else {
-			m_colliderCount = GenerateCaveColliders (texture, m_colliderPrefab, m_spriteRenderer.bounds.min, gameObject.transform, out m_collidersMap);
+			m_colliderCount = GenerateCaveColliders (m_texture, m_colliderPrefab, m_spriteRenderer.bounds.min, gameObject.transform, out m_collidersMap);
 		}
     }
 
@@ -51,7 +52,7 @@ public class CaveManager : MonoBehaviour {
 		}
 
 		GameObject colliderPrefab = Resources.Load("CaveCollider") as GameObject;
-		GameObject sceneForeground = GameObject.Find ("SceneForeground");
+		GameObject sceneForeground = GameObject.Find ("Cave");
 		SpriteRenderer spriteRender = sceneForeground.GetComponent<SpriteRenderer> ();
 		IDictionary<uint, GameObject> colliderMap;
 
@@ -108,6 +109,8 @@ public class CaveManager : MonoBehaviour {
 						collider = Object.Instantiate(colliderPrefab, new Vector3(spriteBounds.x + x, spriteBounds.y + y, 0.0f), Quaternion.identity) as GameObject;
 						collider.name = "CaveCollider" + count;
 						collider.transform.parent = parent;
+                        collider.GetComponent<SpriteRenderer>().sortingOrder = 3;
+                        collider.tag = "CaveCollider";
 						count++;
 					}
 
@@ -117,4 +120,17 @@ public class CaveManager : MonoBehaviour {
 		}
 		return count;
 	}
+
+    public void RemoveCaveCollider(GameObject obj)
+    {
+        uint x = (uint)(obj.transform.position.x - m_spriteRenderer.bounds.min.x);
+        uint y = (uint)(obj.transform.position.y - m_spriteRenderer.bounds.min.y);
+
+        uint id = (uint)(y * m_texture.width + x);
+
+        m_collidersMap.Remove(id);
+        GameObject.Destroy(obj);
+
+
+    }
 }
