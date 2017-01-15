@@ -7,7 +7,10 @@ using UnityEditor;
 
 public class CaveImporter :  AssetPostprocessor
 {
-	private const int MatrixKernelSize = 5;
+    public Color m_outerBorder = new Color(52.0f / 255.0f, 80.0f / 255.0f, 72.0f / 255.0f);
+    public Color m_innerBorder = new Color(66.0f / 255.0f, 100.0f / 255.0f, 93.0f / 255.0f);
+
+    private const int MatrixKernelSize = 5;
 	private const int SidePixels = (MatrixKernelSize - 1) / 2;
 	private const int CenterPixel = SidePixels * (MatrixKernelSize + 1);
 	private const int LeftPixel = CenterPixel - 1;
@@ -18,9 +21,7 @@ public class CaveImporter :  AssetPostprocessor
 	private const int UpUpPixel = CenterPixel - 2*MatrixKernelSize;
 	private const int DownPixel = CenterPixel + MatrixKernelSize;
 	private const int DownDownPixel = CenterPixel + 2*MatrixKernelSize;
-    private Color m_outerBorder = new Color(52.0f / 255.0f, 80.0f / 255.0f, 72.0f / 255.0f);
-    private Color m_innerBorder = new Color(66.0f / 255.0f, 100.0f / 255.0f, 93.0f / 255.0f);
-
+    
     void OnPreprocessTexture()
 	{
 		TextureImporter textureImporter = (TextureImporter)assetImporter;
@@ -36,11 +37,16 @@ public class CaveImporter :  AssetPostprocessor
 			return;
 
 		RemoveCaveBorders (texture);
-		AddCaveBorders (texture);
+        //AddCaveBorders (texture);
+        //AddCaveBorders(texture, m_innerBorder);
+
+        GameObject cave = GameObject.Find("Cave");
+        Assert.IsNotNull(cave);
+
 		CaveManager.GenerateCaveColliders (texture);
 	}
 
-	void RemoveCaveBorders(Texture2D texture)
+    void RemoveCaveBorders(Texture2D texture)
 	{
 		RemoveCaveBorders (texture, m_outerBorder);
 		RemoveCaveBorders (texture, m_innerBorder);
@@ -115,8 +121,8 @@ public class CaveImporter :  AssetPostprocessor
 		}
 		texture.LoadRawTextureData (newTexture.GetRawTextureData ());
 	}
-#if NONE
-	void DetectVoxelPositions(Texture2D texture)
+#if DISABLED
+    void DetectVoxelPositions(Texture2D texture)
 	{
 		for (int x = SidePixels; x < texture.width - SidePixels; ++x) {
 			for (int y = SidePixels; y < texture.height - SidePixels; ++y) {

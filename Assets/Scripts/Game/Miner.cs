@@ -303,89 +303,70 @@ public class Miner : MonoBehaviour
 
             case CharacterState.WalkLeft:
             case CharacterState.RunLeft:
-                // Sometimes the body collider collides with the floor. If height
-                // is 1, assume it is the floor and skip the test
-                if (coll.collider.bounds.extents.y <= 0.5f)
-                    break;
-
-                if (childCollider == ColliderType.ColliderBody)
+                switch (childCollider)
                 {
-                    // Check if any of the contact points is in the direction
-                    // of the current movent. If so we have collided against a wall,
-                    // readjust position and end movement
-                    for (int i = 0; i < coll.contacts.Length; ++i)
-                    {
-                        if (coll.contacts[i].point.x < m_rigidBody.position.x)
+                    case ColliderType.ColliderBody:
+                        // Check if any of the contact points is in the direction
+                        // of the current movent. If so we have collided against a wall,
+                        // readjust position and end movement
+                        for (int i = 0; i < coll.contacts.Length; ++i)
                         {
-                            m_rigidBody.position = new Vector2(coll.collider.bounds.center.x +
-                                                                coll.collider.bounds.extents.x +
-                                                                m_bodyCollider.bounds.extents.x,
-                                                                m_rigidBody.position.y);
-                            EndMovement();
-                            FallDown();
-                            TransitionState(CharacterState.None);
-                            break;
+                            if (coll.contacts[i].point.x < m_rigidBody.position.x)
+                            {
+                                m_rigidBody.position = new Vector2(coll.collider.bounds.center.x +
+                                                                    coll.collider.bounds.extents.x +
+                                                                    m_bodyCollider.bounds.extents.x,
+                                                                    m_rigidBody.position.y);
+                                EndMovement();
+                                FallDown();
+                                TransitionState(CharacterState.None);
+                                break;
+                            }
                         }
-                    }
+                        break;
+                    case ColliderType.ColliderFeet:
+                        // Only move up if collider is in front of us
+                        if (coll.collider.bounds.center.x <= m_rigidBody.position.x)
+                            MoveUp();
+                        break;
                 }
                 break;
 
             case CharacterState.WalkRight:
             case CharacterState.RunRight:
-                // Sometimes the body collider collides with the floor. If height
-                // is 1, assume it is the floor and skip the test
-                if (coll.collider.bounds.extents.y <= 0.5f)
-                    break;
-
-                if (childCollider == ColliderType.ColliderBody)
+                switch (childCollider)
                 {
-                    // Check if any of the contact points is in the direction
-                    // of the current movent. If so we have collided against a wall,
-                    // readjust position and end movement
-                    for (int i = 0; i < coll.contacts.Length; ++i)
-                    {
-                        if (coll.contacts[i].point.x > m_rigidBody.position.x)
+                    case ColliderType.ColliderBody:
+                        // Check if any of the contact points is in the direction
+                        // of the current movent. If so we have collided against a wall,
+                        // readjust position and end movement
+                        for (int i = 0; i < coll.contacts.Length; ++i)
                         {
-                            m_rigidBody.position = new Vector2(coll.collider.bounds.center.x -
-                                                                coll.collider.bounds.extents.x -
-                                                                m_bodyCollider.bounds.extents.x,
-                                                                m_rigidBody.position.y);
-                            EndMovement();
-                            FallDown();
-                            TransitionState(CharacterState.None);
-                            break;
+                            if (coll.contacts[i].point.x > m_rigidBody.position.x)
+                            {
+                                m_rigidBody.position = new Vector2(coll.collider.bounds.center.x -
+                                                                    coll.collider.bounds.extents.x -
+                                                                    m_bodyCollider.bounds.extents.x,
+                                                                    m_rigidBody.position.y);
+                                EndMovement();
+                                FallDown();
+                                TransitionState(CharacterState.None);
+                                break;
+                            }
                         }
-                    }
+                        break;
+                    case ColliderType.ColliderFeet:
+                        // Only move up if collider is in front of us
+                        if (coll.collider.bounds.center.x >= m_rigidBody.position.x)
+                            MoveUp();
+                        break;
                 }
                 break;
-        }
-
-        // ANY STATE
-
-        // Going upstairs movement: only check feet collision when obstacle is
-        // 1 unit high or less. If higher we cannot climb the slope
-        if (childCollider == ColliderType.ColliderFeet)
-        {
-            // If obstacle higher than 1 unit, we cannot climb it
-            if (coll.collider.bounds.extents.y > 0.5f)
-                return;
-            // Sometimes colliders that are behind the character trigger this callback,
-            // if that is the case ignore them
-            if (m_currentState == CharacterState.WalkRight &&
-                coll.collider.bounds.center.x < m_rigidBody.position.x)
-                return;
-            if (m_currentState == CharacterState.WalkLeft &&
-                coll.collider.bounds.center.x > m_rigidBody.position.x)
-                return;
-
-            // Obstacle is in from of us and has 1 unit high, climb it
-            MoveUp();
         }
     }
 
 	void OnDigging(int onoff)
 	{
-		Debug.Log ("Digging is " + onoff);
 		if (onoff == 0)
 			m_digCollider.enabled = false;
 		else

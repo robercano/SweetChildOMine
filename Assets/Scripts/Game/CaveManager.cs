@@ -5,7 +5,10 @@ using UnityEngine.Assertions;
 
 public class CaveManager : MonoBehaviour {
 
-	private static bool StaticColliderGeneration = true;
+    public Color m_outerBorder = new Color(52.0f / 255.0f, 80.0f / 255.0f, 72.0f / 255.0f);
+    public Color m_innerBorder = new Color(66.0f / 255.0f, 100.0f / 255.0f, 93.0f / 255.0f);
+
+    private static bool StaticColliderGeneration = true;
 
     private SpriteRenderer m_spriteRenderer;
 
@@ -39,13 +42,14 @@ public class CaveManager : MonoBehaviour {
 				uint x = (uint)(child.transform.position.x - m_spriteRenderer.bounds.min.x);
 				uint y = (uint)(child.transform.position.y - m_spriteRenderer.bounds.min.y);
 				m_collidersMap.Add((uint)(y * m_texture.width + x), child.gameObject);
-			}
+                child.gameObject.GetComponent<SpriteRenderer>().color = m_outerBorder;
+            }
 		} else {
 			m_colliderCount = GenerateCaveColliders (m_texture, m_colliderPrefab, m_spriteRenderer.bounds.min, gameObject.transform, out m_collidersMap);
 		}
     }
 
-	public static uint GenerateCaveColliders(Texture2D texture)
+    public static uint GenerateCaveColliders(Texture2D texture)
 	{
 		if (StaticColliderGeneration == false) {
 			return 0;
@@ -83,15 +87,15 @@ public class CaveManager : MonoBehaviour {
 				}
 
 				// Detect collider positions
-				if (colors[CenterPixel].a != 0.0f &&
-					(colors[LeftPixel].a == 0.0f ||
-						colors[RightPixel].a == 0.0f ||
-						colors[UpPixel].a == 0.0f ||
-						colors[DownPixel].a == 0.0f))
+				if (colors[CenterPixel].a == 0.0f &&
+					(colors[LeftPixel].a != 0.0f ||
+                    colors[RightPixel].a != 0.0f ||
+					colors[UpPixel].a != 0.0f ||
+                    colors[DownPixel].a != 0.0f))
 				{
 					GameObject collider = null;
-
-					if ((colors[LeftPixel].a != 0.0f) && (colliderMap.TryGetValue((uint)(y * texture.width + (x - 1)), out collider)))
+#if OPTIMIZE_COLLIDERS
+                    if ((colors[LeftPixel].a != 0.0f) && (colliderMap.TryGetValue((uint)(y * texture.width + (x - 1)), out collider)))
 					{
 						collider.transform.localScale = new Vector3(collider.transform.localScale.x + 1.0f,
 							collider.transform.localScale.y,
@@ -104,13 +108,24 @@ public class CaveManager : MonoBehaviour {
 							collider.transform.localScale.y + 1.0f,
 							collider.transform.localScale.z);
 					}
+#endif
 					if (collider == null)
 					{
 						collider = Object.Instantiate(colliderPrefab, new Vector3(spriteBounds.x + x, spriteBounds.y + y, 0.0f), Quaternion.identity) as GameObject;
 						collider.name = "CaveCollider" + count;
 						collider.transform.parent = parent;
-                        collider.GetComponent<SpriteRenderer>().sortingOrder = 3;
                         collider.tag = "CaveCollider";
+                        CaveCollilder caveCollider = collider.GetComponent(typeof(CaveCollilder)) as CaveCollilder;
+
+                        if (colors[LeftPixel].a != 0.0f)
+                            caveCollider.AddDirection(CaveCollilder.ColliderDirection.Left);
+                        if (colors[RightPixel].a != 0.0f)
+                            caveCollider.AddDirection(CaveCollilder.ColliderDirection.Right);
+                        if (colors[UpPixel].a != 0.0f)
+                            caveCollider.AddDirection(CaveCollilder.ColliderDirection.Up);
+                        if (colors[DownPixel].a != 0.0f)
+                            caveCollider.AddDirection(CaveCollilder.ColliderDirection.Down);
+
 						count++;
 					}
 
