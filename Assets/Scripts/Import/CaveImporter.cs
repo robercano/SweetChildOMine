@@ -21,7 +21,7 @@ public class CaveImporter :  AssetPostprocessor
 	private const int UpUpPixel = CenterPixel - 2*MatrixKernelSize;
 	private const int DownPixel = CenterPixel + MatrixKernelSize;
 	private const int DownDownPixel = CenterPixel + 2*MatrixKernelSize;
-    
+#if DISABLED
     void OnPreprocessTexture()
 	{
 		TextureImporter textureImporter = (TextureImporter)assetImporter;
@@ -121,7 +121,6 @@ public class CaveImporter :  AssetPostprocessor
 		}
 		texture.LoadRawTextureData (newTexture.GetRawTextureData ());
 	}
-#if DISABLED
     void DetectVoxelPositions(Texture2D texture)
 	{
 		for (int x = SidePixels; x < texture.width - SidePixels; ++x) {
