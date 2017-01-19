@@ -21,7 +21,7 @@ public class CaveImporter :  AssetPostprocessor
 	private const int UpUpPixel = CenterPixel - 2*MatrixKernelSize;
 	private const int DownPixel = CenterPixel + MatrixKernelSize;
 	private const int DownDownPixel = CenterPixel + 2*MatrixKernelSize;
-#if DISABLED
+
     void OnPreprocessTexture()
 	{
 		TextureImporter textureImporter = (TextureImporter)assetImporter;
@@ -40,10 +40,10 @@ public class CaveImporter :  AssetPostprocessor
         //AddCaveBorders (texture);
         //AddCaveBorders(texture, m_innerBorder);
 
-        GameObject cave = GameObject.Find("Cave");
-        Assert.IsNotNull(cave);
+        //GameObject cave = GameObject.Find("Cave");
+        //Assert.IsNotNull(cave);
 
-		CaveManager.GenerateCaveColliders (texture);
+		//CaveManager.GenerateCaveColliders (texture);
 	}
 
     void RemoveCaveBorders(Texture2D texture)
@@ -84,7 +84,7 @@ public class CaveImporter :  AssetPostprocessor
         }
         texture.LoadRawTextureData(newTexture.GetRawTextureData());
     }
-
+#if DISABLED
     void AddCaveBorders(Texture2D texture)
 	{
 		AddCaveBorders (texture, m_innerBorder);

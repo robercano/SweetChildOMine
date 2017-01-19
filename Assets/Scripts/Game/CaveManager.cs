@@ -5,8 +5,17 @@ using UnityEngine.Assertions;
 
 public class CaveManager : MonoBehaviour {
 
-    static public Color OuterBorderColor = new Color(52.0f / 255.0f, 80.0f / 255.0f, 72.0f / 255.0f);
-    static public Color InnerBorderColor = new Color(66.0f / 255.0f, 100.0f / 255.0f, 93.0f / 255.0f);
+    public Color OuterBorderColor = new Color(52.0f / 255.0f, 80.0f / 255.0f, 72.0f / 255.0f);
+    public Color InnerBorderColor = new Color(66.0f / 255.0f, 100.0f / 255.0f, 93.0f / 255.0f);
+
+    public bool OptimizeColliders = false;
+
+    public struct ColliderPosition
+    {
+        public ColliderPosition(int _x, int _y) { x = _x;  y = _y; }
+        public int x, y;
+    };
+    private List<ColliderPosition> m_newColliders;
 
     private const int MatrixKernelSize = 3;
     private const int SidePixels = (MatrixKernelSize - 1) / 2;
@@ -21,8 +30,10 @@ public class CaveManager : MonoBehaviour {
     private IDictionary<uint, GameObject> m_collidersMap;
     private Texture2D m_texture;
 
-    private int ColliderPoolAmount = 1000;
+    private int ColliderPoolAmount = 2000;
     private List<GameObject> m_colliderPool;
+
+    private bool m_textureHasChanged;
 
     // Use this for initialization
     void Start () {
@@ -32,11 +43,32 @@ public class CaveManager : MonoBehaviour {
         m_colliderPrefab = Resources.Load("CaveCollider") as GameObject;
         Assert.IsNotNull(m_colliderPrefab);
 
+        m_newColliders = new List<ColliderPosition>();
         m_collidersMap = new Dictionary<uint, GameObject>();
-		m_texture = m_spriteRenderer.sprite.texture;
+
+        /* Recreate the sprite so we can destroy the in-memory texture instead */
+        Texture2D texture = GameObject.Instantiate(m_spriteRenderer.sprite.texture) as Texture2D;
+        m_spriteRenderer.sprite = Sprite.Create(texture, m_spriteRenderer.sprite.rect, Vector2.zero, 1.0f);
+        m_texture = m_spriteRenderer.sprite.texture;
+        m_textureHasChanged = false;
 
         InitColliderPool();
 	    GenerateCaveColliders ();
+    }
+
+    void Update()
+    {
+        if (m_textureHasChanged)
+        {
+            m_textureHasChanged = false;
+            m_texture.Apply(false, false);
+        }
+
+        foreach (ColliderPosition position in m_newColliders)
+        {
+            AddCaveCollider(position.x, position.y);
+        }
+        m_newColliders.Clear();
     }
 
     void InitColliderPool()
@@ -101,23 +133,42 @@ public class CaveManager : MonoBehaviour {
             colors[RightPixel].a == 0.0f &&
             colors[UpPixel].a == 0.0f &&
             colors[DownPixel].a == 0.0f))
-            return;
+        {
+            /*if (test)
+            {
+                Debug.Log("OPs!! ("+x+", "+y+")");
+                Debug.Log("Center:  " + colors[CenterPixel]);
+                Debug.Log("LeftPixel:  " + colors[LeftPixel]);
+                Debug.Log("RightPixel:  " + colors[RightPixel]);
+                Debug.Log("UpPixel:  " + colors[UpPixel]);
+                Debug.Log("DownPixel:  " + colors[DownPixel]);
+            }*/
+
+             return;
+        }
 
         GameObject collider = null;
 
-        if ((colors[LeftPixel].a == 0.0f) && (m_collidersMap.TryGetValue(GetColliderID(x - 1, y), out collider)))
+        if (m_collidersMap.TryGetValue(GetColliderID(x, y), out collider))
         {
-            collider.transform.localScale = new Vector3(collider.transform.localScale.x + 1.0f,
-                collider.transform.localScale.y,
-                collider.transform.localScale.z);
+            // Collider exists already, bail out
+            return;
         }
-        else if ((colors[DownPixel].a == 0.0f) && (m_collidersMap.TryGetValue(GetColliderID(x, y - 1), out collider)))
+
+        if (OptimizeColliders)
         {
-            collider.transform.localScale = new Vector3(collider.transform.localScale.x,
-                collider.transform.localScale.y + 1.0f,
-                collider.transform.localScale.z);
+            if ((colors[LeftPixel].a == 0.0f) && (m_collidersMap.TryGetValue(GetColliderID(x - 1, y), out collider)))
+            {
+                collider.transform.localScale = new Vector3(collider.transform.localScale.x + 1.0f, collider.transform.localScale.y, collider.transform.localScale.z);
+            }
+            else if ((colors[DownPixel].a == 0.0f) && (m_collidersMap.TryGetValue(GetColliderID(x, y - 1), out collider)))
+            {
+                collider.transform.localScale = new Vector3(collider.transform.localScale.x, collider.transform.localScale.y + 1.0f, collider.transform.localScale.z);
+            }
         }
-        else
+        
+        /* If we don't have a collider yet, get one from the pool and use it */
+        if (collider == null)
         {
             if (GetColliderFromPool(out collider) == false)
             {
@@ -127,31 +178,72 @@ public class CaveManager : MonoBehaviour {
 
             collider.transform.position = new Vector3(m_spriteRenderer.bounds.min.x + x, m_spriteRenderer.bounds.min.y + y, 0.0f);
 
-            CaveCollilder caveColliderScript = collider.GetComponent(typeof(CaveCollilder)) as CaveCollilder;
+            CaveCollider caveColliderScript = collider.GetComponent(typeof(CaveCollider)) as CaveCollider;
 
             if (colors[LeftPixel].a != 0.0f)
-                caveColliderScript.AddDirection(CaveCollilder.ColliderDirection.Left);
+            {
+                caveColliderScript.AddDirection(CaveCollider.ColliderDirection.Left);
+            }
             if (colors[RightPixel].a != 0.0f)
-                caveColliderScript.AddDirection(CaveCollilder.ColliderDirection.Right);
+            {
+                caveColliderScript.AddDirection(CaveCollider.ColliderDirection.Right);
+            }
             if (colors[UpPixel].a != 0.0f)
-                caveColliderScript.AddDirection(CaveCollilder.ColliderDirection.Up);
+            {
+                caveColliderScript.AddDirection(CaveCollider.ColliderDirection.Up);
+            }
             if (colors[DownPixel].a != 0.0f)
-                caveColliderScript.AddDirection(CaveCollilder.ColliderDirection.Down);
-
+            {
+                caveColliderScript.AddDirection(CaveCollider.ColliderDirection.Down);
+            }
             collider.GetComponent<SpriteRenderer>().color = OuterBorderColor;
         }
         m_collidersMap.Add(GetColliderID(x, y), collider);
-
     }
 
     public void RemoveCaveCollider(GameObject collider)
     {
-        uint x = (uint)(collider.transform.position.x - m_spriteRenderer.bounds.min.x);
-        uint y = (uint)(collider.transform.position.y - m_spriteRenderer.bounds.min.y);
+        int x = (int)(collider.transform.position.x - m_spriteRenderer.bounds.min.x);
+        int y = (int)(collider.transform.position.y - m_spriteRenderer.bounds.min.y);
 
         uint id = (uint)(y * m_texture.width + x);
 
+        //Debug.Log("Removing collider at (" + x + ", " + y + ")");
+
+        CaveCollider caveColliderScript = collider.GetComponent(typeof(CaveCollider)) as CaveCollider;
+
         m_collidersMap.Remove(id);
         ReturnColliderToPool(collider);
+
+        //Debug.Log("Collider direction " + (uint)caveColliderScript.m_direction);
+
+        if (caveColliderScript.IsDirectionLeft())
+        {
+            //Debug.Log("   Adding collider to the " + (x - 1) + ", " + y + ")");
+            m_newColliders.Add(new ColliderPosition(x - 1, y));
+            m_texture.SetPixel(x - 1, y, Color.clear);
+            m_textureHasChanged = true;
+        }
+        if (caveColliderScript.IsDirectionRight())
+        {
+            //Debug.Log("   Adding collider to the " + (x+1) +", " + y + ")");
+            m_newColliders.Add(new ColliderPosition(x + 1, y));
+            m_texture.SetPixel(x + 1, y, Color.clear);
+            m_textureHasChanged = true;
+        }
+        if (caveColliderScript.IsDirectionUp())
+        {
+            //Debug.Log("   Adding collider to the " + x + ", " + (y+1) + ")");
+            m_newColliders.Add(new ColliderPosition(x, y + 1));
+            m_texture.SetPixel(x, y + 1, Color.clear);
+            m_textureHasChanged = true;
+        }
+        if (caveColliderScript.IsDirectionDown())
+        {
+            //Debug.Log("   Adding collider to the " + x + ", " + (y - 1) + ")");
+            m_newColliders.Add(new ColliderPosition(x, y - 1));
+            m_texture.SetPixel(x, y - 1, Color.clear);
+            m_textureHasChanged = true;
+        }
     }
 }

@@ -30,7 +30,8 @@ public class Miner : MonoBehaviour
 	private InputEvent m_inputEvent;
 	private BoxCollider2D m_feetCollider;
     private BoxCollider2D m_bodyCollider;
-	private BoxCollider2D m_digCollider;
+
+    private HashSet<GameObject> m_nearCaveColliders;
 
     // Use this for initialization
     void Start()
@@ -46,9 +47,8 @@ public class Miner : MonoBehaviour
         /* Get children components */
         m_feetCollider = transform.FindChild ("FeetCollider").GetComponent<BoxCollider2D> ();
 		m_bodyCollider = transform.FindChild ("BodyCollider").GetComponent<BoxCollider2D> ();
-		m_digCollider = transform.FindChild ("DigCollider").GetComponent<BoxCollider2D> ();
 
-		m_digCollider.enabled = false;
+        m_nearCaveColliders = new HashSet<GameObject>();
     }
 
     // Update is called once per frame
@@ -223,11 +223,6 @@ public class Miner : MonoBehaviour
 
 	void TransitionState(CharacterState state)
 	{
-		// Transition exit code
-		if (m_currentState == CharacterState.Dig &&
-		    state != CharacterState.Dig) {
-			m_digCollider.enabled = false;
-		}
 		m_currentState = state;
 		PlayStateAnimation(state);
 	}
@@ -288,7 +283,7 @@ public class Miner : MonoBehaviour
         m_feetCollider.enabled = true;
         m_bodyCollider.enabled = true;
 
-        if ((hitLeft != null) && (hitRight != null)) {
+        if ((hitLeft.collider != null) && (hitRight.collider != null)) {
             m_rigidBody.position = new Vector2(m_rigidBody.position.x, m_rigidBody.position.y - Mathf.Min(hitLeft.distance, hitRight.distance));
         }
     }
@@ -365,12 +360,29 @@ public class Miner : MonoBehaviour
         }
     }
 
-	void OnDigging(int onoff)
+    public void OnTriggerEnter2DChild(Collider2D coll)
+    {
+        if (coll.tag == "CaveCollider")
+        {
+            m_nearCaveColliders.Add(coll.gameObject);
+        }
+    }
+
+    public void OnTriggerExit2DChild(Collider2D coll)
+    {
+        if (coll.tag == "CaveCollider")
+        {
+            m_nearCaveColliders.Remove(coll.gameObject);
+        }
+    }
+
+    void OnDigging()
 	{
-		if (onoff == 0)
-			m_digCollider.enabled = false;
-		else
-			m_digCollider.enabled = true;
+        foreach (GameObject go in m_nearCaveColliders)
+        {
+            go.SendMessage("PlayerHit", 2, SendMessageOptions.DontRequireReceiver);
+        }
+        m_nearCaveColliders.Clear();
 	}
  };
   
