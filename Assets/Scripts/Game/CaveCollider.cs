@@ -7,6 +7,7 @@ public class CaveCollider : MonoBehaviour {
 
     public Sprite MaskSprite;
     public int ColliderLife = 2;
+	public GameObject DustEffect;
 
     [HideInInspector]
     public enum ColliderDirection
@@ -18,7 +19,6 @@ public class CaveCollider : MonoBehaviour {
 	private SpriteRenderer m_spriteRenderer;
     private BoxCollider2D m_boxCollider;
     private GameObject m_caveManager;
-    private ParticleSystem m_particleSystem;
 
     private static uint ColliderID = 0;
     private static uint m_colliderID;
@@ -51,13 +51,6 @@ public class CaveCollider : MonoBehaviour {
         m_caveManager = GameObject.Find("Cave");
 
         m_spriteRenderer.sprite = MaskSprite;
-
-        m_particleSystem = GetComponent<ParticleSystem>();
-        //m_particleSystem.emissionRate = 0;
-        ParticleSystem.EmissionModule em = m_particleSystem.emission;
-        em.rateOverTime = 0;
-        //em.enabled = false;
-        //m_particleSystem.Stop();
     }
 
     void OnEnable()
@@ -79,16 +72,9 @@ public class CaveCollider : MonoBehaviour {
 
         m_spriteRenderer.color = new Color(m_spriteRenderer.color.r, m_spriteRenderer.color.g, m_spriteRenderer.color.b, m_life / 20.0f);
 
-        //m_particleSystem.Stop();
-        //m_particleSystem.Play();
-        //m_particleSystem.Play();
-        ParticleSystem.EmissionModule em = m_particleSystem.emission;
-        em.rateOverTime = 100;
-        m_particleSystem.Emit(100);
-
         if (m_life > 0) return;
 
-        // Otherwise we have the points of intersection
+		GameObject.Instantiate (DustEffect, transform.position, Quaternion.identity);
         m_caveManager.SendMessage("RemoveCaveCollider", gameObject);
     }
 }
