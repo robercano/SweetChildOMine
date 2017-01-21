@@ -72,6 +72,7 @@ public class Miner : MonoBehaviour
 		case CharacterState.RunLeft:
 		case CharacterState.WalkRight:
 		case CharacterState.RunRight:
+		case CharacterState.Dig:
 			{
 				// Check end of movement
 				float deltaX = m_movementXTarget - Mathf.Round(m_rigidBody.position.x);
@@ -204,15 +205,16 @@ public class Miner : MonoBehaviour
 				if (m_currentState != CharacterState.Dig) {
 					EndMovement();
 					TransitionState(CharacterState.Dig);
+
+					m_movementXTarget = Mathf.Round (Camera.main.ScreenToWorldPoint (Input.mousePosition).x);
+				} else {
+					//EndMovement();
+					//TransitionState(CharacterState.None);
 				}
 			}
 			break;
 		case InputEvent.None:
 			{
-				if (m_currentState == CharacterState.Dig) {
-					EndMovement();
-					TransitionState(CharacterState.None);
-				}
 			}
 			break;
 		}
@@ -376,13 +378,23 @@ public class Miner : MonoBehaviour
         }
     }
 
-    void OnDigging()
+    public void OnDigging()
 	{
         foreach (GameObject go in m_nearCaveColliders)
         {
             go.SendMessage("PlayerHit", 2, SendMessageOptions.DontRequireReceiver);
         }
         m_nearCaveColliders.Clear();
+	}
+
+	public void OnStepForward()
+	{
+		if (transform.localScale.x <= 0.0f) {
+			m_rigidBody.position = new Vector2 (m_rigidBody.position.x - 1.0f, m_rigidBody.position.y);
+		} else {
+			m_rigidBody.position = new Vector2 (m_rigidBody.position.x + 1.0f, m_rigidBody.position.y);
+		}
+		FallDown ();
 	}
  };
   
