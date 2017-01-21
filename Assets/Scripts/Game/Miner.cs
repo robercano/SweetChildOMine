@@ -283,7 +283,7 @@ public class Miner : MonoBehaviour
 
                     bool newDoubleSpeed;
 
-                    if (Input.GetKey(KeyCode.LeftShift))
+                    if (Input.GetKey(KeyCode.LeftControl))
                         newDoubleSpeed = true;
                     else
                         newDoubleSpeed = false;
