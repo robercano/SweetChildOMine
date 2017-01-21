@@ -11,12 +11,15 @@ public class Miner : MonoBehaviour
 	};
 	[HideInInspector]
 	public enum CharacterState {
-		None, WalkLeft, WalkRight, RunLeft, RunRight, Dig
+		Idle, WalkLeft, WalkRight, RunLeft, RunRight, DigLeft, DigRight
 	};
-	public enum InputEvent
+    [HideInInspector]
+    public enum InputEvent
 	{
 		None, ShiftLeftClick, LeftClick, DoubleLeftClick, RightClick
 	}
+
+    public GameObject Target;
 
 	/* Private section */
 	private Animator m_animator;
@@ -24,14 +27,19 @@ public class Miner : MonoBehaviour
 
 	private float m_walkSpeed = 32.0f;
 	private float m_runSpeed = 64.0f;
-	private float m_movementXTarget;
+	private Vector2 m_movementTarget;
 
 	private CharacterState m_currentState;
 	private InputEvent m_inputEvent;
 	private BoxCollider2D m_feetCollider;
     private BoxCollider2D m_bodyCollider;
+    private PolygonCollider2D m_digColliderStraight;
+    private PolygonCollider2D m_digColliderUp;
+    private PolygonCollider2D m_digColliderDown;
 
     private HashSet<GameObject> m_nearCaveColliders;
+
+    private GameObject m_target;
 
     // Use this for initialization
     void Start()
@@ -39,16 +47,25 @@ public class Miner : MonoBehaviour
         m_animator = GetComponent<Animator>();
         m_rigidBody = GetComponent<Rigidbody2D>();
         
-		m_currentState = CharacterState.None;
+		m_currentState = CharacterState.Idle;
 		m_inputEvent = InputEvent.None;
 
-        m_movementXTarget = Mathf.Round(m_rigidBody.position.x);
+        m_movementTarget = new Vector2 (Mathf.Round(m_rigidBody.position.x), Mathf.Round(m_rigidBody.position.y));
 
         /* Get children components */
         m_feetCollider = transform.FindChild ("FeetCollider").GetComponent<BoxCollider2D> ();
 		m_bodyCollider = transform.FindChild ("BodyCollider").GetComponent<BoxCollider2D> ();
+        m_digColliderDown = transform.FindChild("DigColliderDown").GetComponent<PolygonCollider2D>();
+        m_digColliderStraight = transform.FindChild("DigColliderStraight").GetComponent<PolygonCollider2D>();
+        m_digColliderUp = transform.FindChild("DigColliderUp").GetComponent<PolygonCollider2D>();
 
         m_nearCaveColliders = new HashSet<GameObject>();
+
+        m_digColliderDown.enabled = false;
+        m_digColliderStraight.enabled = false;
+        m_digColliderUp.enabled = false;
+
+        m_target = null;
     }
 
     // Update is called once per frame
@@ -60,26 +77,43 @@ public class Miner : MonoBehaviour
         ProcessState();
     }
 
+    void GetMovementTarget()
+    {
+        Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        m_movementTarget = new Vector2(Mathf.Round(mousePosition.x), Mathf.Round(mousePosition.y));
+
+        Debug.Log("pre-instantiating: " + m_target);
+        if (m_target != null)
+        {
+            m_target.SetActive(false);
+            Destroy(m_target);
+        }
+        Debug.Log("Instantiating!");
+        m_target = GameObject.Instantiate(Target, new Vector3(m_movementTarget.x, m_movementTarget.y, 0.0f), Quaternion.identity);
+        Debug.Log("After - instantiating!" + m_target);
+    }
+
     void ProcessState()
     {
 		#region State execution
 		switch (m_currentState)
 		{
-		case CharacterState.None:
+		case CharacterState.Idle:
 			// Empty on purpose
 			break;
 		case CharacterState.WalkLeft:
 		case CharacterState.RunLeft:
 		case CharacterState.WalkRight:
 		case CharacterState.RunRight:
-		case CharacterState.Dig:
-			{
+		case CharacterState.DigLeft:
+        case CharacterState.DigRight:
+                {
 				// Check end of movement
-				float deltaX = m_movementXTarget - Mathf.Round(m_rigidBody.position.x);
+				float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
 				if (deltaX >= -float.Epsilon && deltaX <= float.Epsilon) {
 					EndMovement();
 					FallDown();
-					TransitionState(CharacterState.None);
+					TransitionState(CharacterState.Idle);
 					break;
 				}
 
@@ -107,11 +141,11 @@ public class Miner : MonoBehaviour
 		#endregion
 
 		#region Input processing
-		if (Input.GetMouseButton(0))
+	    if (Input.GetMouseButton(0))
 		{
 			if (Input.GetKey(KeyCode.LeftShift))
 				m_inputEvent = InputEvent.ShiftLeftClick;
-			else
+            else
 				m_inputEvent = InputEvent.LeftClick;
 		}
 		if (Input.GetMouseButton(1))
@@ -119,152 +153,211 @@ public class Miner : MonoBehaviour
 			m_inputEvent = InputEvent.RightClick;
 		}
 
-		switch (m_inputEvent)
-		{
-		case InputEvent.LeftClick:
-			{
-				m_movementXTarget = Mathf.Round (Camera.main.ScreenToWorldPoint (Input.mousePosition).x);
+        switch (m_inputEvent)
+        {
+            case InputEvent.LeftClick:
+                {
+                    GetMovementTarget();
 
-				float deltaX = m_movementXTarget - Mathf.Round(m_rigidBody.position.x);
-				if (deltaX < -float.Epsilon) {
-					switch (m_currentState)
-					{
-					case CharacterState.RunRight:
-						TransitionState(CharacterState.RunLeft);
-						break;
-					case CharacterState.WalkRight:
-					case CharacterState.None:
-					case CharacterState.Dig:
-						TransitionState(CharacterState.WalkLeft);
-						break;
-					}
-				} else if (deltaX > float.Epsilon) {
-					switch (m_currentState)
-					{
-					case CharacterState.RunLeft:
-						TransitionState(CharacterState.RunRight);
-						break;
-					case CharacterState.WalkLeft:
-					case CharacterState.None:
-					case CharacterState.Dig:
-						TransitionState(CharacterState.WalkRight);
-						break;
-					}
-				}
-			}
-			break;
-		case InputEvent.ShiftLeftClick:
-			{
-				m_movementXTarget = Mathf.Round (Camera.main.ScreenToWorldPoint (Input.mousePosition).x);
+                    float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
+                    if (deltaX < -float.Epsilon)
+                    {
+                        switch (m_currentState)
+                        {
+                            case CharacterState.RunRight:
+                                TransitionState(CharacterState.RunLeft);
+                                break;
+                            case CharacterState.WalkRight:
+                            case CharacterState.Idle:
+                            case CharacterState.DigLeft:
+                            case CharacterState.DigRight:
+                                TransitionState(CharacterState.WalkLeft);
+                                break;
+                        }
+                    }
+                    else if (deltaX > float.Epsilon)
+                    {
+                        switch (m_currentState)
+                        {
+                            case CharacterState.RunLeft:
+                                TransitionState(CharacterState.RunRight);
+                                break;
+                            case CharacterState.WalkLeft:
+                            case CharacterState.Idle:
+                            case CharacterState.DigLeft:
+                            case CharacterState.DigRight:
+                                TransitionState(CharacterState.WalkRight);
+                                break;
+                        }
+                    }
+                }
+                break;
+            case InputEvent.ShiftLeftClick:
+                {
+                    GetMovementTarget();
 
-				float deltaX = m_movementXTarget - Mathf.Round(m_rigidBody.position.x);
-				if (deltaX < -float.Epsilon) {
-					switch (m_currentState)
-					{
-					case CharacterState.WalkLeft:
-					case CharacterState.WalkRight:
-					case CharacterState.RunRight:
-					case CharacterState.None:
-					case CharacterState.Dig:
-						TransitionState(CharacterState.RunLeft);
-						break;
-					}
-				} else if (deltaX > float.Epsilon) {
-					switch (m_currentState)
-					{
-					case CharacterState.WalkLeft:
-					case CharacterState.WalkRight:
-					case CharacterState.RunLeft:
-					case CharacterState.None:
-					case CharacterState.Dig:
-						TransitionState(CharacterState.RunRight);
-						break;
-					}
-				}
-			}
-			break;
-		case InputEvent.DoubleLeftClick:
-			{
-				m_movementXTarget = Mathf.Round (Camera.main.ScreenToWorldPoint (Input.mousePosition).x);
+                    float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
+                    if (deltaX < -float.Epsilon)
+                    {
+                        switch (m_currentState)
+                        {
+                            case CharacterState.WalkLeft:
+                            case CharacterState.WalkRight:
+                            case CharacterState.RunRight:
+                            case CharacterState.Idle:
+                            case CharacterState.DigLeft:
+                            case CharacterState.DigRight:
+                                TransitionState(CharacterState.RunLeft);
+                                break;
+                        }
+                    }
+                    else if (deltaX > float.Epsilon)
+                    {
+                        switch (m_currentState)
+                        {
+                            case CharacterState.WalkLeft:
+                            case CharacterState.WalkRight:
+                            case CharacterState.RunLeft:
+                            case CharacterState.Idle:
+                            case CharacterState.DigLeft:
+                            case CharacterState.DigRight:
+                                TransitionState(CharacterState.RunRight);
+                                break;
+                        }
+                    }
+                }
+                break;
+            case InputEvent.DoubleLeftClick:
+                {
+                    GetMovementTarget();
 
-				float deltaX = m_movementXTarget - Mathf.Round(m_rigidBody.position.x);
-				if (deltaX < -float.Epsilon) {
-					if (m_currentState != CharacterState.RunLeft) {
-						TransitionState(CharacterState.RunLeft);
-					}
-				} else if (deltaX > float.Epsilon) {
-					if (m_currentState != CharacterState.RunRight) {
-						TransitionState(CharacterState.RunRight);
-					}
-				}
-			}
-			break;
+                    float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
+                    if (deltaX < -float.Epsilon)
+                    {
+                        if (m_currentState != CharacterState.RunLeft)
+                        {
+                            TransitionState(CharacterState.RunLeft);
+                        }
+                    }
+                    else if (deltaX > float.Epsilon)
+                    {
+                        if (m_currentState != CharacterState.RunRight)
+                        {
+                            TransitionState(CharacterState.RunRight);
+                        }
+                    }
+                }
+                break;
 
-		case InputEvent.RightClick:
-			{
-				if (m_currentState != CharacterState.Dig) {
-					EndMovement();
-					TransitionState(CharacterState.Dig);
+            case InputEvent.RightClick:
+                {
+                    EndMovement();
 
-					m_movementXTarget = Mathf.Round (Camera.main.ScreenToWorldPoint (Input.mousePosition).x);
-				} else {
-					//EndMovement();
-					//TransitionState(CharacterState.None);
-				}
-			}
-			break;
-		case InputEvent.None:
-			{
-			}
-			break;
-		}
-		m_inputEvent = InputEvent.None;
+                    GetMovementTarget();
+
+                    float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
+
+                    if (m_movementTarget.y >= m_bodyCollider.bounds.max.y)
+                    {
+                        m_digColliderDown.enabled = false;
+                        m_digColliderStraight.enabled = false;
+                        m_digColliderUp.enabled = true;
+                    }
+                    else if (m_movementTarget.y <= m_bodyCollider.bounds.min.y)
+                    {
+                        m_digColliderDown.enabled = true;
+                        m_digColliderStraight.enabled = false;
+                        m_digColliderUp.enabled = false;
+                    }
+                    else
+                    {
+                        m_digColliderDown.enabled = false;
+                        m_digColliderStraight.enabled = true;
+                        m_digColliderUp.enabled = false;
+                    }
+
+                    if (deltaX < -float.Epsilon && m_currentState != CharacterState.DigLeft)
+                    {
+                        TransitionState(CharacterState.DigLeft);
+                    }
+                    else if (deltaX > float.Epsilon && m_currentState != CharacterState.DigRight)
+                    {
+                        TransitionState(CharacterState.DigRight);
+                    }
+                }
+                break;
+            case InputEvent.None:
+                {
+                }
+                break;
+        }
+        m_inputEvent = InputEvent.None;
 
 		#endregion
 	}
 
 	void TransitionState(CharacterState state)
 	{
-		m_currentState = state;
+        // TODO: Exit state should be defined in state itself, not here!!
+        if ((m_currentState == CharacterState.DigLeft || m_currentState == CharacterState.DigRight) &&
+            (state != CharacterState.DigLeft && state != CharacterState.DigRight))
+        {
+            m_digColliderDown.enabled = false;
+            m_digColliderUp.enabled = false;
+            m_digColliderStraight.enabled = false;
+        }
+        if (state == CharacterState.Idle && m_target != null)
+        {
+            m_target.SetActive(false);
+            Destroy(m_target);
+            m_target = null;
+        }
+        m_currentState = state;
 		PlayStateAnimation(state);
 	}
 
     void PlayStateAnimation(CharacterState state)
     {
         /* Setup the animation only if this is a new direction */
-		switch (state) {
-		case CharacterState.WalkLeft:
-			m_animator.SetTrigger ("minerWalk");
-			transform.localScale = new Vector2 (-Mathf.Abs (transform.localScale.x), transform.localScale.y);
-			break;
-		case CharacterState.WalkRight:
-			m_animator.SetTrigger ("minerWalk");
-			transform.localScale = new Vector2 (Mathf.Abs (transform.localScale.x), transform.localScale.y);
-			break;
-		case CharacterState.RunLeft:
-			m_animator.SetTrigger ("minerRun");
-			transform.localScale = new Vector2 (-Mathf.Abs (transform.localScale.x), transform.localScale.y);
-			break;
-		case CharacterState.RunRight:
-			m_animator.SetTrigger ("minerRun");
-			transform.localScale = new Vector2 (Mathf.Abs (transform.localScale.x), transform.localScale.y);
-			break;
-		case CharacterState.Dig:
-			m_animator.SetTrigger ("minerDig");
-			break;
-		case CharacterState.None:
-			m_animator.SetTrigger ("minerIdle");
-			break;
-		}
+        switch (state)
+        {
+            case CharacterState.WalkLeft:
+                m_animator.SetTrigger("minerWalk");
+                transform.localScale = new Vector2(-Mathf.Abs(transform.localScale.x), transform.localScale.y);
+                break;
+            case CharacterState.WalkRight:
+                m_animator.SetTrigger("minerWalk");
+                transform.localScale = new Vector2(Mathf.Abs(transform.localScale.x), transform.localScale.y);
+                break;
+            case CharacterState.RunLeft:
+                m_animator.SetTrigger("minerRun");
+                transform.localScale = new Vector2(-Mathf.Abs(transform.localScale.x), transform.localScale.y);
+                break;
+            case CharacterState.RunRight:
+                m_animator.SetTrigger("minerRun");
+                transform.localScale = new Vector2(Mathf.Abs(transform.localScale.x), transform.localScale.y);
+                break;
+            case CharacterState.DigLeft:
+                m_animator.SetTrigger("minerDig");
+                transform.localScale = new Vector2(-Mathf.Abs(transform.localScale.x), transform.localScale.y);
+                break;
+            case CharacterState.DigRight:
+                m_animator.SetTrigger("minerDig");
+                transform.localScale = new Vector2(Mathf.Abs(transform.localScale.x), transform.localScale.y);
+                break;
+            case CharacterState.Idle:
+                m_animator.SetTrigger("minerIdle");
+                break;
+        }
     }
 
-	void EndMovement()
+    void EndMovement()
 	{
 		/* Round the coordinates so they are perfect pixel aligned */
 		m_rigidBody.position = new Vector2 (Mathf.Round (m_rigidBody.position.x), Mathf.Round (m_rigidBody.position.y));
 		m_rigidBody.velocity = Vector2.zero;
 
-		m_movementXTarget = m_rigidBody.position.x;
+		m_movementTarget = m_rigidBody.position;
     }
 
 	void MoveUp()
@@ -294,12 +387,12 @@ public class Miner : MonoBehaviour
     {
         switch (m_currentState)
         {
-            case CharacterState.None:
-            case CharacterState.Dig:
+            case CharacterState.Idle:
                 return;
 
             case CharacterState.WalkLeft:
             case CharacterState.RunLeft:
+            case CharacterState.DigLeft:
                 switch (childCollider)
                 {
                     case ColliderType.ColliderBody:
@@ -316,7 +409,7 @@ public class Miner : MonoBehaviour
                                                                     m_rigidBody.position.y);
                                 EndMovement();
                                 FallDown();
-                                TransitionState(CharacterState.None);
+                                TransitionState(CharacterState.Idle);
                                 break;
                             }
                         }
@@ -331,6 +424,7 @@ public class Miner : MonoBehaviour
 
             case CharacterState.WalkRight:
             case CharacterState.RunRight:
+            case CharacterState.DigRight:
                 switch (childCollider)
                 {
                     case ColliderType.ColliderBody:
@@ -347,7 +441,7 @@ public class Miner : MonoBehaviour
                                                                     m_rigidBody.position.y);
                                 EndMovement();
                                 FallDown();
-                                TransitionState(CharacterState.None);
+                                TransitionState(CharacterState.Idle);
                                 break;
                             }
                         }
@@ -380,6 +474,14 @@ public class Miner : MonoBehaviour
 
     public void OnDigging()
 	{
+        if (m_nearCaveColliders.Count == 0)
+        {
+            EndMovement();
+            FallDown();
+            TransitionState(CharacterState.Idle);
+            return;
+        }
+
         foreach (GameObject go in m_nearCaveColliders)
         {
             go.SendMessage("PlayerHit", 2, SendMessageOptions.DontRequireReceiver);

@@ -53,6 +53,12 @@ public class CaveCollider : MonoBehaviour {
         m_spriteRenderer.sprite = MaskSprite;
     }
 
+    void OnMouseOver()
+    {
+        if (Input.GetMouseButton(0) && Input.GetKey(KeyCode.LeftControl))
+            m_caveManager.SendMessage("RemoveCaveCollider", gameObject);
+    }
+
     void OnEnable()
     {
         m_life = ColliderLife;

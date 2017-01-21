@@ -201,6 +201,18 @@ public class CaveManager : MonoBehaviour {
         m_collidersMap.Add(GetColliderID(x, y), collider);
     }
 
+    void QueueNewCollider(int x, int y)
+    {
+        GameObject coll;
+
+        if (m_collidersMap.TryGetValue(GetColliderID(x, y), out coll))
+            return;
+
+        m_newColliders.Add(new ColliderPosition(x, y));
+        m_texture.SetPixel(x, y, Color.clear);
+        m_textureHasChanged = true;
+    }
+
     public void RemoveCaveCollider(GameObject collider)
     {
         int x = (int)(collider.transform.position.x - m_spriteRenderer.bounds.min.x);
@@ -216,34 +228,21 @@ public class CaveManager : MonoBehaviour {
         ReturnColliderToPool(collider);
 
         //Debug.Log("Collider direction " + (uint)caveColliderScript.m_direction);
-
-        if (caveColliderScript.IsDirectionLeft())
-        {
-            //Debug.Log("   Adding collider to the " + (x - 1) + ", " + y + ")");
-            m_newColliders.Add(new ColliderPosition(x - 1, y));
-            m_texture.SetPixel(x - 1, y, Color.clear);
-            m_textureHasChanged = true;
-        }
-        if (caveColliderScript.IsDirectionRight())
-        {
-            //Debug.Log("   Adding collider to the " + (x+1) +", " + y + ")");
-            m_newColliders.Add(new ColliderPosition(x + 1, y));
-            m_texture.SetPixel(x + 1, y, Color.clear);
-            m_textureHasChanged = true;
-        }
+        if (caveColliderScript.IsDirectionUp() && caveColliderScript.IsDirectionRight())
+            QueueNewCollider(x + 1, y + 1);
+        if (caveColliderScript.IsDirectionDown() && caveColliderScript.IsDirectionRight())
+            QueueNewCollider(x + 1, y - 1);
+        if (caveColliderScript.IsDirectionUp() && caveColliderScript.IsDirectionLeft())
+            QueueNewCollider(x - 1, y + 1);
+        if (caveColliderScript.IsDirectionDown() && caveColliderScript.IsDirectionLeft())
+            QueueNewCollider(x - 1, y - 1);
         if (caveColliderScript.IsDirectionUp())
-        {
-            //Debug.Log("   Adding collider to the " + x + ", " + (y+1) + ")");
-            m_newColliders.Add(new ColliderPosition(x, y + 1));
-            m_texture.SetPixel(x, y + 1, Color.clear);
-            m_textureHasChanged = true;
-        }
+            QueueNewCollider(x, y + 1);
         if (caveColliderScript.IsDirectionDown())
-        {
-            //Debug.Log("   Adding collider to the " + x + ", " + (y - 1) + ")");
-            m_newColliders.Add(new ColliderPosition(x, y - 1));
-            m_texture.SetPixel(x, y - 1, Color.clear);
-            m_textureHasChanged = true;
-        }
+            QueueNewCollider(x, y - 1);
+        if (caveColliderScript.IsDirectionLeft())
+            QueueNewCollider(x - 1, y);
+        if (caveColliderScript.IsDirectionRight())
+            QueueNewCollider(x + 1, y);
     }
 }
