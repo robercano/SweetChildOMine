@@ -40,6 +40,7 @@ public class Miner : MonoBehaviour
     private HashSet<GameObject> m_nearCaveColliders;
 
     private GameObject m_target;
+    private bool m_digDoubleSpeed;
 
     // Use this for initialization
     void Start()
@@ -66,6 +67,7 @@ public class Miner : MonoBehaviour
         m_digColliderUp.enabled = false;
 
         m_target = null;
+        m_digDoubleSpeed = false;
     }
 
     // Update is called once per frame
@@ -82,66 +84,69 @@ public class Miner : MonoBehaviour
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         m_movementTarget = new Vector2(Mathf.Round(mousePosition.x), Mathf.Round(mousePosition.y));
 
-        Debug.Log("pre-instantiating: " + m_target);
         if (m_target != null)
         {
             m_target.SetActive(false);
             Destroy(m_target);
         }
-        Debug.Log("Instantiating!");
         m_target = GameObject.Instantiate(Target, new Vector3(m_movementTarget.x, m_movementTarget.y, 0.0f), Quaternion.identity);
-        Debug.Log("After - instantiating!" + m_target);
     }
 
     void ProcessState()
     {
-		#region State execution
-		switch (m_currentState)
-		{
-		case CharacterState.Idle:
-			// Empty on purpose
-			break;
-		case CharacterState.WalkLeft:
-		case CharacterState.RunLeft:
-		case CharacterState.WalkRight:
-		case CharacterState.RunRight:
-		case CharacterState.DigLeft:
-        case CharacterState.DigRight:
+        #region State execution
+        switch (m_currentState)
+        {
+            case CharacterState.Idle:
+                if (m_target != null)
                 {
-				// Check end of movement
-				float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
-				if (deltaX >= -float.Epsilon && deltaX <= float.Epsilon) {
-					EndMovement();
-					FallDown();
-					TransitionState(CharacterState.Idle);
-					break;
-				}
+                    m_target.SetActive(false);
+                    Destroy(m_target);
+                    m_target = null;
+                }
+                break;
+            case CharacterState.WalkLeft:
+            case CharacterState.RunLeft:
+            case CharacterState.WalkRight:
+            case CharacterState.RunRight:
+            case CharacterState.DigLeft:
+            case CharacterState.DigRight:
+                {
+                    // Check end of movement
+                    float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
+                    if (deltaX >= -float.Epsilon && deltaX <= float.Epsilon)
+                    {
+                        EndMovement();
+                        FallDown();
+                        TransitionState(CharacterState.Idle);
+                        break;
+                    }
 
-				// Still moving, apply speed
-				switch (m_currentState)
-				{
-				case CharacterState.WalkLeft:
-					m_rigidBody.velocity = new Vector2(-m_walkSpeed, m_rigidBody.velocity.y);
-					break;
-				case CharacterState.WalkRight:
-					m_rigidBody.velocity = new Vector2(m_walkSpeed, m_rigidBody.velocity.y);
-					break;
-				case CharacterState.RunLeft:
-					m_rigidBody.velocity = new Vector2(-m_runSpeed, m_rigidBody.velocity.y);
-					break;
-				case CharacterState.RunRight:
-					m_rigidBody.velocity = new Vector2(m_runSpeed, m_rigidBody.velocity.y);
-					break;
-				}
+                    // Still moving, apply speed
+                    switch (m_currentState)
+                    {
+                        case CharacterState.WalkLeft:
+                            m_rigidBody.velocity = new Vector2(-m_walkSpeed, m_rigidBody.velocity.y);
+                            break;
+                        case CharacterState.WalkRight:
+                            m_rigidBody.velocity = new Vector2(m_walkSpeed, m_rigidBody.velocity.y);
+                            break;
+                        case CharacterState.RunLeft:
+                            m_rigidBody.velocity = new Vector2(-m_runSpeed, m_rigidBody.velocity.y);
+                            break;
+                        case CharacterState.RunRight:
+                            m_rigidBody.velocity = new Vector2(m_runSpeed, m_rigidBody.velocity.y);
+                            break;
+                    }
 
-				FallDown();
-			}
-			break;
-		}
-		#endregion
+                    FallDown();
+                }
+                break;
+        }
+        #endregion
 
-		#region Input processing
-	    if (Input.GetMouseButton(0))
+        #region Input processing
+        if (Input.GetMouseButton(0))
 		{
 			if (Input.GetKey(KeyCode.LeftShift))
 				m_inputEvent = InputEvent.ShiftLeftClick;
@@ -276,12 +281,23 @@ public class Miner : MonoBehaviour
                         m_digColliderUp.enabled = false;
                     }
 
-                    if (deltaX < -float.Epsilon && m_currentState != CharacterState.DigLeft)
+                    bool newDoubleSpeed;
+
+                    if (Input.GetKey(KeyCode.LeftShift))
+                        newDoubleSpeed = true;
+                    else
+                        newDoubleSpeed = false;
+
+                    if ((deltaX < -float.Epsilon && m_currentState != CharacterState.DigLeft) ||
+                        (m_currentState == CharacterState.DigLeft && newDoubleSpeed != m_digDoubleSpeed))
                     {
+                        m_digDoubleSpeed = newDoubleSpeed;
                         TransitionState(CharacterState.DigLeft);
                     }
-                    else if (deltaX > float.Epsilon && m_currentState != CharacterState.DigRight)
+                    else if ((deltaX > float.Epsilon && m_currentState != CharacterState.DigRight) ||
+                             (m_currentState == CharacterState.DigRight && newDoubleSpeed != m_digDoubleSpeed))
                     {
+                        m_digDoubleSpeed = newDoubleSpeed;
                         TransitionState(CharacterState.DigRight);
                     }
                 }
@@ -298,6 +314,7 @@ public class Miner : MonoBehaviour
 
 	void TransitionState(CharacterState state)
 	{
+        Debug.Log("Transition from " + m_currentState + " to " + state);
         // TODO: Exit state should be defined in state itself, not here!!
         if ((m_currentState == CharacterState.DigLeft || m_currentState == CharacterState.DigRight) &&
             (state != CharacterState.DigLeft && state != CharacterState.DigRight))
@@ -306,12 +323,6 @@ public class Miner : MonoBehaviour
             m_digColliderUp.enabled = false;
             m_digColliderStraight.enabled = false;
         }
-        if (state == CharacterState.Idle && m_target != null)
-        {
-            m_target.SetActive(false);
-            Destroy(m_target);
-            m_target = null;
-        }
         m_currentState = state;
 		PlayStateAnimation(state);
 	}
@@ -319,6 +330,7 @@ public class Miner : MonoBehaviour
     void PlayStateAnimation(CharacterState state)
     {
         /* Setup the animation only if this is a new direction */
+        m_animator.speed = 1.0f;
         switch (state)
         {
             case CharacterState.WalkLeft:
@@ -340,10 +352,14 @@ public class Miner : MonoBehaviour
             case CharacterState.DigLeft:
                 m_animator.SetTrigger("minerDig");
                 transform.localScale = new Vector2(-Mathf.Abs(transform.localScale.x), transform.localScale.y);
+                if (m_digDoubleSpeed)
+                    m_animator.speed = 6.0f;
                 break;
             case CharacterState.DigRight:
                 m_animator.SetTrigger("minerDig");
                 transform.localScale = new Vector2(Mathf.Abs(transform.localScale.x), transform.localScale.y);
+                if (m_digDoubleSpeed)
+                    m_animator.speed = 6.0f;
                 break;
             case CharacterState.Idle:
                 m_animator.SetTrigger("minerIdle");
