@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class Miner : MonoBehaviour
 {
+	public AudioClip[] m_stepsSounds;
+	public AudioClip[] m_pickSounds;
+	public AudioClip m_gravelSound;
+
 	[HideInInspector]
 	public enum ColliderType {
 		ColliderFeet,
@@ -24,6 +28,7 @@ public class Miner : MonoBehaviour
 	/* Private section */
 	private Animator m_animator;
 	private Rigidbody2D m_rigidBody;
+	private AudioSource m_audioSource;
 
 	private float m_walkSpeed = 32.0f;
 	private float m_runSpeed = 64.0f;
@@ -41,12 +46,16 @@ public class Miner : MonoBehaviour
 
     private GameObject m_target;
     private bool m_digDoubleSpeed;
+	private int m_digSoundCounter;
 
     // Use this for initialization
     void Start()
     {
+		AudioListener.volume = 1.0f;
+
         m_animator = GetComponent<Animator>();
         m_rigidBody = GetComponent<Rigidbody2D>();
+		m_audioSource = GetComponent<AudioSource>();
         
 		m_currentState = CharacterState.Idle;
 		m_inputEvent = InputEvent.None;
@@ -68,6 +77,7 @@ public class Miner : MonoBehaviour
 
         m_target = null;
         m_digDoubleSpeed = false;
+		m_digSoundCounter = 0;
     }
 
     // Update is called once per frame
@@ -314,7 +324,6 @@ public class Miner : MonoBehaviour
 
 	void TransitionState(CharacterState state)
 	{
-        Debug.Log("Transition from " + m_currentState + " to " + state);
         // TODO: Exit state should be defined in state itself, not here!!
         if ((m_currentState == CharacterState.DigLeft || m_currentState == CharacterState.DigRight) &&
             (state != CharacterState.DigLeft && state != CharacterState.DigRight))
@@ -349,17 +358,21 @@ public class Miner : MonoBehaviour
                 m_animator.SetTrigger("minerRun");
                 transform.localScale = new Vector2(Mathf.Abs(transform.localScale.x), transform.localScale.y);
                 break;
-            case CharacterState.DigLeft:
-                m_animator.SetTrigger("minerDig");
-                transform.localScale = new Vector2(-Mathf.Abs(transform.localScale.x), transform.localScale.y);
-                if (m_digDoubleSpeed)
-                    m_animator.speed = 6.0f;
-                break;
-            case CharacterState.DigRight:
-                m_animator.SetTrigger("minerDig");
-                transform.localScale = new Vector2(Mathf.Abs(transform.localScale.x), transform.localScale.y);
-                if (m_digDoubleSpeed)
-                    m_animator.speed = 6.0f;
+			case CharacterState.DigLeft:
+				m_animator.SetTrigger ("minerDig");
+				transform.localScale = new Vector2 (-Mathf.Abs (transform.localScale.x), transform.localScale.y);
+				if (m_digDoubleSpeed) {
+					m_animator.speed = 6.0f;
+					m_digSoundCounter = 0;
+				}
+	            break;
+			case CharacterState.DigRight:
+				m_animator.SetTrigger ("minerDig");
+				transform.localScale = new Vector2 (Mathf.Abs (transform.localScale.x), transform.localScale.y);
+				if (m_digDoubleSpeed) {
+					m_animator.speed = 6.0f;
+					m_digSoundCounter = 0;
+				}
                 break;
             case CharacterState.Idle:
                 m_animator.SetTrigger("minerIdle");
@@ -497,6 +510,8 @@ public class Miner : MonoBehaviour
             TransitionState(CharacterState.Idle);
             return;
         }
+			
+		PlayAudioPickAxe ();
 
         foreach (GameObject go in m_nearCaveColliders)
         {
@@ -504,7 +519,6 @@ public class Miner : MonoBehaviour
         }
         m_nearCaveColliders.Clear();
 	}
-
 	public void OnStepForward()
 	{
 		if (transform.localScale.x <= 0.0f) {
@@ -512,7 +526,46 @@ public class Miner : MonoBehaviour
 		} else {
 			m_rigidBody.position = new Vector2 (m_rigidBody.position.x + 1.0f, m_rigidBody.position.y);
 		}
+		PlayAudioOneStep ();
 		FallDown ();
+	}
+	public void OnStep()
+	{
+		PlayAudioOneStep ();
+	}
+
+	private void PlayAudioPickAxe()
+	{		
+		int pickSoundIdx = Random.Range (0, m_pickSounds.Length);
+		float pickSoundVolume = Random.Range (0.4f, 0.6f);
+
+		bool playSound = false;
+
+		if (m_digDoubleSpeed) {
+			if (++m_digSoundCounter == 3) {
+				m_digSoundCounter = 0;
+				playSound = true;
+			}
+		} else {
+			playSound = true;
+		}
+
+		if (playSound) {
+			m_audioSource.PlayOneShot(m_pickSounds [pickSoundIdx], pickSoundVolume);
+			PlayAudioGravelFall ();
+		}
+	}
+
+	private void PlayAudioOneStep()
+	{
+		int stepSoundIdx = Random.Range (0, m_stepsSounds.Length);
+		float stepSoundVolume = Random.Range (0.7f, 0.9f);
+
+		m_audioSource.PlayOneShot(m_stepsSounds [stepSoundIdx], stepSoundVolume);
+	}
+	private void PlayAudioGravelFall()
+	{
+		AudioSource.PlayClipAtPoint(m_gravelSound, Camera.main.transform.position, 0.1f);
 	}
  };
   
