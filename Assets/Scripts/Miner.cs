@@ -29,6 +29,7 @@ public class Miner : MonoBehaviour
 	private Animator m_animator;
 	private Rigidbody2D m_rigidBody;
 	private AudioSource m_audioSource;
+    private SpriteRenderer m_spriteRenderer;
 
 	private float m_walkSpeed = 32.0f;
 	private float m_runSpeed = 64.0f;
@@ -48,16 +49,17 @@ public class Miner : MonoBehaviour
     private bool m_digDoubleSpeed;
 	private int m_digSoundCounter;
 
+    private int m_layerMask;
+
     // Use this for initialization
     void Start()
     {
-		AudioListener.volume = 1.0f;
-
         m_animator = GetComponent<Animator>();
         m_rigidBody = GetComponent<Rigidbody2D>();
 		m_audioSource = GetComponent<AudioSource>();
-        
-		m_currentState = CharacterState.Idle;
+        m_spriteRenderer = GetComponent<SpriteRenderer>();
+
+        m_currentState = CharacterState.Idle;
 		m_inputEvent = InputEvent.None;
 
         m_movementTarget = new Vector2 (Mathf.Round(m_rigidBody.position.x), Mathf.Round(m_rigidBody.position.y));
@@ -78,6 +80,8 @@ public class Miner : MonoBehaviour
         m_target = null;
         m_digDoubleSpeed = false;
 		m_digSoundCounter = 0;
+
+        m_layerMask = (1 << (LayerMask.NameToLayer("Cave Colliders")));
     }
 
     // Update is called once per frame
@@ -338,7 +342,6 @@ public class Miner : MonoBehaviour
 
     void PlayStateAnimation(CharacterState state)
     {
-        /* Setup the animation only if this is a new direction */
         m_animator.speed = 1.0f;
         switch (state)
         {
@@ -402,8 +405,8 @@ public class Miner : MonoBehaviour
 
         m_feetCollider.enabled = false;
         m_bodyCollider.enabled = false;
-        RaycastHit2D hitLeft = Physics2D.Raycast(leftSource, Vector2.down);
-        RaycastHit2D hitRight = Physics2D.Raycast(rightSource, Vector2.down);
+        RaycastHit2D hitLeft = Physics2D.Raycast(leftSource, Vector2.down, Mathf.Infinity, m_layerMask);
+        RaycastHit2D hitRight = Physics2D.Raycast(rightSource, Vector2.down, Mathf.Infinity, m_layerMask);
         m_feetCollider.enabled = true;
         m_bodyCollider.enabled = true;
 
@@ -563,9 +566,30 @@ public class Miner : MonoBehaviour
 
 		m_audioSource.PlayOneShot(m_stepsSounds [stepSoundIdx], stepSoundVolume);
 	}
-	private void PlayAudioGravelFall()
+
+    private void PlayAudioGravelFall()
 	{
 		AudioSource.PlayClipAtPoint(m_gravelSound, Camera.main.transform.position, 0.1f);
 	}
+
+    public void OnEnemyAttack(Collider2D coll)
+    {
+        if (m_bodyCollider.bounds.Intersects(coll.bounds))
+        {
+            m_spriteRenderer.color = Color.white;
+            StopCoroutine(PlayerHitAnimation());
+            StartCoroutine(PlayerHitAnimation());
+        }
+    }
+
+    private IEnumerator PlayerHitAnimation()
+    {
+        for (int i=0; i<20; ++i)
+        {
+            m_spriteRenderer.color = new Color(1.0f, Random.Range(0.5f, 1.0f), 1.0f);
+            yield return new WaitForSeconds(0.05f);
+        }
+        m_spriteRenderer.color = Color.white;
+    }
  };
   
