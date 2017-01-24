@@ -559,7 +559,7 @@ public class Miner : MonoBehaviour
 	private void PlayAudioOneStep()
 	{
 		int stepSoundIdx = Random.Range (0, m_stepsSounds.Length);
-		float stepSoundVolume = Random.Range (0.7f, 0.9f);
+		float stepSoundVolume = Random.Range (0.4f, 0.6f);
 
 		m_audioSource.PlayOneShot(m_stepsSounds [stepSoundIdx], stepSoundVolume);
 	}
