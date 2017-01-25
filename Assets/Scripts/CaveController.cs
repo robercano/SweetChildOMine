@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class CaveManager : MonoBehaviour {
+public class CaveController : MonoBehaviour {
 
     public Color OuterBorderColor = new Color(52.0f / 255.0f, 80.0f / 255.0f, 72.0f / 255.0f);
     public Color InnerBorderColor = new Color(66.0f / 255.0f, 100.0f / 255.0f, 93.0f / 255.0f);

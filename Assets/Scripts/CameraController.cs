@@ -5,6 +5,8 @@ using UnityEngine.Assertions;
 
 public class CameraController : MonoBehaviour {
 
+    public bool m_doubleSize = true;
+
 	// Use this for initialization
 	void Start () {
 		GameObject sceneObject = GameObject.FindWithTag ("Background");
@@ -22,6 +24,9 @@ public class CameraController : MonoBehaviour {
 		if (ratio > -float.Epsilon && ratio < float.Epsilon)
 			ratio = 1.0f;
 
-		Camera.main.orthographicSize = Screen.height / ratio / 4.0f;
-	}
+        if (m_doubleSize)
+		    Camera.main.orthographicSize = Screen.height / ratio / 4.0f;
+        else
+            Camera.main.orthographicSize = Screen.height / ratio / 2.0f;
+    }
 }
