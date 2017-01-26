@@ -7,6 +7,13 @@ public class Monster : MonoBehaviour {
     public float FollowDistance;
     public float AttackDistance;
     public int Life;
+    public int Damage;
+
+    public AudioClip m_enemyOuch;
+    public AudioClip m_enemyWander;
+    public AudioClip m_enemyChase;
+
+    public static int NumSpawnMonsters = 0;
 
     [HideInInspector]
     public enum MonsterState
@@ -18,6 +25,8 @@ public class Monster : MonoBehaviour {
     private Rigidbody2D m_rigidBody;
     private BoxCollider2D m_collider;
     private SpriteRenderer m_spriteRenderer;
+    private MonsterController m_monsterController;
+    private AudioSource m_audioSource;
 
     private float m_sqrFollowDistance;
     private float m_sqrAttackDistance;
@@ -30,12 +39,19 @@ public class Monster : MonoBehaviour {
 
     private Miner m_player;
 
+    private float m_enemyWanderPitch;
+    private float m_enemyChasePitch;
+
     // Use this for initialization
     void Start () {
+        NumSpawnMonsters++;
+
         m_animator = GetComponent<Animator>();
         m_rigidBody = GetComponent<Rigidbody2D>();
         m_collider = GetComponent<BoxCollider2D>();
         m_spriteRenderer = GetComponent<SpriteRenderer>();
+        m_monsterController = FindObjectOfType<MonsterController>();
+        m_audioSource = GetComponent<AudioSource>();
 
         if (Random.Range(0, 2) == 0)
             m_currentState = MonsterState.WanderLeft;
@@ -49,6 +65,13 @@ public class Monster : MonoBehaviour {
 
         m_sqrFollowDistance = FollowDistance * FollowDistance;
         m_sqrAttackDistance = AttackDistance * AttackDistance;
+
+        m_enemyWanderPitch = Random.Range(1.0f, 1.2f);
+        m_enemyChasePitch = Random.Range(1.0f, 1.5f);
+
+        m_audioSource.clip = m_enemyWander;
+        m_audioSource.pitch = m_enemyWanderPitch;
+        m_audioSource.Play();
     }
 	
     void FixedUpdate()
@@ -62,6 +85,12 @@ public class Monster : MonoBehaviour {
     void ProcessState()
     {
         #region State execution
+        if (m_player == null || m_player.Equals(null))
+        {
+            TransitionState(MonsterState.Idle);
+            return;
+        }
+
         switch (m_currentState)
         {
             case MonsterState.Idle:
@@ -88,9 +117,14 @@ public class Monster : MonoBehaviour {
                     else if (direction.sqrMagnitude <= m_sqrFollowDistance)
                     {
                         if (direction.x <= 0.0f)
-                            TransitionState(MonsterState.ChaseLeft);
-                        else
+                        {
+                            if (m_currentState != MonsterState.ChaseLeft)
+                                TransitionState(MonsterState.ChaseLeft);
+                        }
+                        else if (m_currentState != MonsterState.ChaseRight)
+                        {
                             TransitionState(MonsterState.ChaseRight);
+                        }
 
                         m_rigidBody.position = Vector2.MoveTowards(monsterPos, playerPos, Time.deltaTime * m_moveSpeed);
                     }
@@ -187,9 +221,29 @@ public class Monster : MonoBehaviour {
     void PlayStateAnimation(MonsterState state)
     {
         m_spriteRenderer.color = Color.white;
+
+        // Audio
         switch (state)
         {
             case MonsterState.WanderLeft:
+            case MonsterState.WanderRight:
+                m_audioSource.pitch = m_enemyWanderPitch;
+                m_audioSource.clip = m_enemyWander;
+                m_audioSource.Play();
+                break;
+            case MonsterState.ChaseLeft:
+            case MonsterState.ChaseRight:
+                m_audioSource.pitch = m_enemyChasePitch;
+                m_audioSource.clip = m_enemyChase;
+                m_audioSource.Play();
+                break;
+        }
+
+        // Animation
+        switch (state)
+        {
+            case MonsterState.WanderLeft:
+               
                 m_animator.SetTrigger("monsterWalk");
                 transform.localScale = new Vector2(-Mathf.Abs(transform.localScale.x), transform.localScale.y);
                 break;
@@ -232,14 +286,20 @@ public class Monster : MonoBehaviour {
 
     void OnPlayerAttack()
     {
+        AudioSource.PlayClipAtPoint(m_enemyOuch, Camera.main.transform.position);
         Life--;
         if (Life <= 0)
         {
+            NumSpawnMonsters--;
+            MonsterController.Instance.EnemyDestroyed();
             DestroyObject(gameObject);
         }
-        m_spriteRenderer.color = Color.white;
-        StopCoroutine(MonsterHitAnimation());
-        StartCoroutine(MonsterHitAnimation());
+        else
+        {
+            m_spriteRenderer.color = Color.white;
+            StopCoroutine(MonsterHitAnimation());
+            StartCoroutine(MonsterHitAnimation());
+        }
     }
 
     private IEnumerator MonsterHitAnimation()
@@ -259,6 +319,6 @@ public class Monster : MonoBehaviour {
 
     void OnEnemyAttack()
     {
-        m_player.OnEnemyAttack(m_collider);
+        m_player.OnEnemyAttack(m_collider, Damage);
     }
 }

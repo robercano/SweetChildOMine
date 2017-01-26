@@ -1,12 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Miner : MonoBehaviour
 {
+    public int Life;
+
 	public AudioClip[] m_stepsSounds;
 	public AudioClip[] m_pickSounds;
 	public AudioClip m_gravelSound;
+    public AudioClip m_attackSwing;
 
 	[HideInInspector]
 	public enum ColliderType {
@@ -53,6 +57,8 @@ public class Miner : MonoBehaviour
 
     private int m_layerMask;
 
+    private Text m_lifeText;
+
     // Use this for initialization
     void Start()
     {
@@ -87,6 +93,9 @@ public class Miner : MonoBehaviour
 		m_digSoundCounter = 0;
 
         m_layerMask = (1 << (LayerMask.NameToLayer("Cave Colliders")));
+
+        m_lifeText = GameObject.Find("LifeText").GetComponent<Text>();
+        m_lifeText.text = "Miner Life: " + Life;
     }
 
     // Update is called once per frame
@@ -607,6 +616,9 @@ public class Miner : MonoBehaviour
 
     private void OnAttack()
     {
+        float pickSoundVolume = Random.Range(0.4f, 0.6f);
+        m_audioSource.PlayOneShot(m_attackSwing, pickSoundVolume);
+
         foreach (GameObject go in m_nearEnemies)
         {
             if (go == null || go.Equals(null))
@@ -621,13 +633,23 @@ public class Miner : MonoBehaviour
         TransitionState(CharacterState.Idle);
     }
 
-    public void OnEnemyAttack(Collider2D coll)
+    public void OnEnemyAttack(Collider2D coll, int damage)
     {
         if (m_bodyCollider.bounds.Intersects(coll.bounds))
         {
-            m_spriteRenderer.color = Color.white;
-            StopCoroutine(PlayerHitAnimation());
-            StartCoroutine(PlayerHitAnimation());
+            Life -= damage;
+            m_lifeText.text = "Miner Life: " + Life;
+            if (Life <= 0)
+            {
+                MonsterController.Instance.PlayerDestroyed();
+                Destroy(gameObject);
+            }
+            else
+            {
+                m_spriteRenderer.color = Color.white;
+                StopCoroutine(PlayerHitAnimation());
+                StartCoroutine(PlayerHitAnimation());
+            }
         }
     }
 
