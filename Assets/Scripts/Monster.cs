@@ -6,6 +6,7 @@ public class Monster : MonoBehaviour {
 
     public float FollowDistance;
     public float AttackDistance;
+    public int Life;
 
     [HideInInspector]
     public enum MonsterState
@@ -156,8 +157,6 @@ public class Monster : MonoBehaviour {
                             m_movementTarget = (Vector2)transform.position + direction;
                         }
 
-                        Debug.Log("Current pos: " + transform.position);
-                        Debug.Log("New target: " + m_movementTarget);
                         if (m_movementTarget.x > transform.position.x)
                             TransitionState(MonsterState.WanderRight);
                         else
@@ -172,7 +171,6 @@ public class Monster : MonoBehaviour {
                     direction.Normalize();
 
                     m_rigidBody.position = Vector2.MoveTowards(transform.position, m_movementTarget, Time.deltaTime * m_moveSpeed);
-                    //m_rigidBody.velocity = direction * m_moveSpeed;
                 }
                 break;
 
@@ -227,10 +225,31 @@ public class Monster : MonoBehaviour {
 
     void OnCollisionEnter2D(Collision2D coll)
     {
-        //Debug.Log("Collision!");
         m_targetReached = true;
-        //if (coll.collider.bounds.center.x >= m_rigidBody.position.x)
-        //    MoveUp();
+        if (coll.collider.bounds.center.x >= m_rigidBody.position.x)
+            MoveUp();
+    }
+
+    void OnPlayerAttack()
+    {
+        Life--;
+        if (Life <= 0)
+        {
+            DestroyObject(gameObject);
+        }
+        m_spriteRenderer.color = Color.white;
+        StopCoroutine(MonsterHitAnimation());
+        StartCoroutine(MonsterHitAnimation());
+    }
+
+    private IEnumerator MonsterHitAnimation()
+    {
+        for (int i = 0; i < 20; ++i)
+        {
+            m_spriteRenderer.color = new Color(1.0f, Random.Range(0.5f, 1.0f), 1.0f);
+            yield return new WaitForSeconds(0.05f);
+        }
+        m_spriteRenderer.color = Color.white;
     }
 
     void MoveUp()

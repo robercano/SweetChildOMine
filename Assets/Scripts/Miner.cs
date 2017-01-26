@@ -15,12 +15,12 @@ public class Miner : MonoBehaviour
 	};
 	[HideInInspector]
 	public enum CharacterState {
-		Idle, WalkLeft, WalkRight, RunLeft, RunRight, DigLeft, DigRight
+		Idle, WalkLeft, WalkRight, RunLeft, RunRight, DigLeft, DigRight, Attack
 	};
     [HideInInspector]
     public enum InputEvent
 	{
-		None, ShiftLeftClick, LeftClick, DoubleLeftClick, RightClick
+		None, ShiftLeftClick, LeftClick, DoubleLeftClick, RightClick, Space
 	}
 
     public GameObject Target;
@@ -42,8 +42,10 @@ public class Miner : MonoBehaviour
     private PolygonCollider2D m_digColliderStraight;
     private PolygonCollider2D m_digColliderUp;
     private PolygonCollider2D m_digColliderDown;
+    private BoxCollider2D m_attackCollider;
 
     private HashSet<GameObject> m_nearCaveColliders;
+    private HashSet<GameObject> m_nearEnemies;
 
     private GameObject m_target;
     private bool m_digDoubleSpeed;
@@ -70,12 +72,15 @@ public class Miner : MonoBehaviour
         m_digColliderDown = transform.FindChild("DigColliderDown").GetComponent<PolygonCollider2D>();
         m_digColliderStraight = transform.FindChild("DigColliderStraight").GetComponent<PolygonCollider2D>();
         m_digColliderUp = transform.FindChild("DigColliderUp").GetComponent<PolygonCollider2D>();
+        m_attackCollider = transform.FindChild("AttackCollider").GetComponent<BoxCollider2D>();
 
         m_nearCaveColliders = new HashSet<GameObject>();
+        m_nearEnemies = new HashSet<GameObject>();
 
         m_digColliderDown.enabled = false;
         m_digColliderStraight.enabled = false;
         m_digColliderUp.enabled = false;
+        m_attackCollider.enabled = false;
 
         m_target = null;
         m_digDoubleSpeed = false;
@@ -171,6 +176,10 @@ public class Miner : MonoBehaviour
 		{
 			m_inputEvent = InputEvent.RightClick;
 		}
+        if (Input.GetKey(KeyCode.Space))
+        {
+            m_inputEvent = InputEvent.Space;
+        }
 
         switch (m_inputEvent)
         {
@@ -316,6 +325,17 @@ public class Miner : MonoBehaviour
                     }
                 }
                 break;
+            case InputEvent.Space:
+                {
+                    if (m_currentState != CharacterState.Attack)
+                    {
+                        EndMovement();
+                        FallDown();
+                        m_attackCollider.enabled = true;
+                        TransitionState(CharacterState.Attack);
+                    }
+                }
+                break;
             case InputEvent.None:
                 {
                 }
@@ -376,6 +396,9 @@ public class Miner : MonoBehaviour
 					m_animator.speed = 6.0f;
 					m_digSoundCounter = 0;
 				}
+                break;
+            case CharacterState.Attack:
+                m_animator.SetTrigger("minerAttack");
                 break;
             case CharacterState.Idle:
                 m_animator.SetTrigger("minerIdle");
@@ -494,6 +517,10 @@ public class Miner : MonoBehaviour
         {
             m_nearCaveColliders.Add(coll.gameObject);
         }
+        else if (coll.tag == "Enemy")
+        {
+            m_nearEnemies.Add(coll.gameObject);
+        }
     }
 
     public void OnTriggerExit2DChild(Collider2D coll)
@@ -501,6 +528,10 @@ public class Miner : MonoBehaviour
         if (coll.tag == "CaveCollider")
         {
             m_nearCaveColliders.Remove(coll.gameObject);
+        }
+        else if (coll.tag == "Enemy")
+        {
+            m_nearEnemies.Remove(coll.gameObject);
         }
     }
 
@@ -522,6 +553,7 @@ public class Miner : MonoBehaviour
         }
         m_nearCaveColliders.Clear();
 	}
+
 	public void OnStepForward()
 	{
 		if (transform.localScale.x <= 0.0f) {
@@ -532,6 +564,7 @@ public class Miner : MonoBehaviour
 		PlayAudioOneStep ();
 		FallDown ();
 	}
+
 	public void OnStep()
 	{
 		PlayAudioOneStep ();
@@ -571,6 +604,22 @@ public class Miner : MonoBehaviour
 	{
 		AudioSource.PlayClipAtPoint(m_gravelSound, Camera.main.transform.position, 0.1f);
 	}
+
+    private void OnAttack()
+    {
+        foreach (GameObject go in m_nearEnemies)
+        {
+            if (go == null || go.Equals(null))
+                continue;
+            go.SendMessage("OnPlayerAttack");
+        }
+    }
+
+    private void OnAttackFinished()
+    {
+        m_attackCollider.enabled = false;
+        TransitionState(CharacterState.Idle);
+    }
 
     public void OnEnemyAttack(Collider2D coll)
     {
