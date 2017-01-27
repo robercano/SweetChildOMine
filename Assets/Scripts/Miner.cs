@@ -641,7 +641,7 @@ public class Miner : MonoBehaviour
             m_lifeText.text = "Miner Life: " + Life;
             if (Life <= 0)
             {
-                MonsterController.Instance.PlayerDestroyed();
+                LevelManager.Instance.PlayerDestroyed();
                 Destroy(gameObject);
             }
             else
