@@ -25,7 +25,6 @@ public class Monster : MonoBehaviour {
     private Rigidbody2D m_rigidBody;
     private BoxCollider2D m_collider;
     private SpriteRenderer m_spriteRenderer;
-    private MonsterController m_monsterController;
     private AudioSource m_audioSource;
 
     private float m_sqrFollowDistance;
@@ -50,7 +49,6 @@ public class Monster : MonoBehaviour {
         m_rigidBody = GetComponent<Rigidbody2D>();
         m_collider = GetComponent<BoxCollider2D>();
         m_spriteRenderer = GetComponent<SpriteRenderer>();
-        m_monsterController = FindObjectOfType<MonsterController>();
         m_audioSource = GetComponent<AudioSource>();
 
         if (Random.Range(0, 2) == 0)
@@ -214,8 +212,8 @@ public class Monster : MonoBehaviour {
 
     void TransitionState(MonsterState state)
     {
-        m_currentState = state;
         PlayStateAnimation(state);
+		m_currentState = state;
     }
 
     void PlayStateAnimation(MonsterState state)
@@ -225,17 +223,23 @@ public class Monster : MonoBehaviour {
         // Audio
         switch (state)
         {
-            case MonsterState.WanderLeft:
-            case MonsterState.WanderRight:
-                m_audioSource.pitch = m_enemyWanderPitch;
-                m_audioSource.clip = m_enemyWander;
-                m_audioSource.Play();
+			case MonsterState.WanderLeft:
+			case MonsterState.WanderRight:
+				if (m_currentState != MonsterState.WanderLeft &&
+				    m_currentState != MonsterState.WanderRight) {
+					m_audioSource.pitch = m_enemyWanderPitch;
+					m_audioSource.clip = m_enemyWander;
+					m_audioSource.Play ();
+				}
                 break;
-            case MonsterState.ChaseLeft:
-            case MonsterState.ChaseRight:
-                m_audioSource.pitch = m_enemyChasePitch;
-                m_audioSource.clip = m_enemyChase;
-                m_audioSource.Play();
+			case MonsterState.ChaseLeft:
+			case MonsterState.ChaseRight:
+				if (m_currentState != MonsterState.ChaseLeft &&
+				    m_currentState != MonsterState.ChaseRight) {
+					m_audioSource.pitch = m_enemyChasePitch;
+					m_audioSource.clip = m_enemyChase;
+					m_audioSource.Play ();
+				}
                 break;
         }
 
@@ -291,7 +295,7 @@ public class Monster : MonoBehaviour {
         if (Life <= 0)
         {
             NumSpawnMonsters--;
-            MonsterController.Instance.EnemyDestroyed();
+			LevelManager.Instance.EnemyDestroyed();
             DestroyObject(gameObject);
         }
         else
