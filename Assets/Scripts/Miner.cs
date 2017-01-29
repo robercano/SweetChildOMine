@@ -189,6 +189,10 @@ public class Miner : MonoBehaviour
         {
             m_inputEvent = InputEvent.Space;
         }
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved)
+        {
+            m_inputEvent = InputEvent.Space;
+        }
 
         switch (m_inputEvent)
         {
