@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class Miner : MonoBehaviour
 {
+    public string Name;
     public int Life;
 
 	public AudioClip[] m_stepsSounds;
@@ -57,7 +58,12 @@ public class Miner : MonoBehaviour
 
     private int m_layerMask;
 
-    private Text m_lifeText;
+    // UI elements
+    private Image m_UIMinerImage;
+    private Text m_UIMinerText;
+    private Image m_UILifeBar;
+    private RectTransform m_UILifeBarRectTransform;
+    private float m_UILifeBarRatio;
 
     // Use this for initialization
     void Start()
@@ -94,8 +100,13 @@ public class Miner : MonoBehaviour
 
         m_layerMask = (1 << (LayerMask.NameToLayer("Cave Colliders")));
 
-        m_lifeText = GameObject.Find("LifeText").GetComponent<Text>();
-        m_lifeText.text = "Miner Life: " + Life;
+        m_UIMinerImage = GameObject.Find("MinerImage").GetComponent<Image>();
+        m_UIMinerText = GameObject.Find("MinerName").GetComponent<Text>();
+        m_UILifeBar = GameObject.Find("LifeBar").GetComponent<Image>();
+
+        m_UIMinerText.text = Name;
+        m_UILifeBarRectTransform = m_UILifeBar.rectTransform;
+        m_UILifeBarRatio = m_UILifeBarRectTransform.sizeDelta.x / Life;
     }
 
     // Update is called once per frame
@@ -105,6 +116,10 @@ public class Miner : MonoBehaviour
             Application.Quit();
 
         ProcessState();
+
+        // Update the UI image for this miner
+        if (m_animator.runtimeAnimatorController)
+            m_UIMinerImage.sprite = m_spriteRenderer.sprite;
     }
 
     void GetMovementTarget()
@@ -642,7 +657,8 @@ public class Miner : MonoBehaviour
         if (m_bodyCollider.bounds.Intersects(coll.bounds))
         {
             Life -= damage;
-            m_lifeText.text = "Miner Life: " + Life;
+            m_UILifeBarRectTransform.sizeDelta = new Vector2(Life * m_UILifeBarRatio, m_UILifeBarRectTransform.sizeDelta.y);
+
             if (Life <= 0)
             {
                 LevelManager.Instance.PlayerDestroyed();
