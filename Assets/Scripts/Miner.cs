@@ -8,6 +8,8 @@ public class Miner : MonoBehaviour
     public string Name;
     public int Life;
 
+    public Sprite Weapon;
+
 	public AudioClip[] m_stepsSounds;
 	public AudioClip[] m_pickSounds;
 	public AudioClip m_gravelSound;
@@ -65,6 +67,9 @@ public class Miner : MonoBehaviour
     private RectTransform m_UILifeBarRectTransform;
     private float m_UILifeBarRatio;
 
+    // Weapon selector
+    private UIContainer m_weaponSelector;
+
     // Use this for initialization
     void Start()
     {
@@ -100,6 +105,7 @@ public class Miner : MonoBehaviour
 
         m_layerMask = (1 << (LayerMask.NameToLayer("Cave Colliders")));
 
+        // UI
         m_UIMinerImage = GameObject.Find("MinerImage").GetComponent<Image>();
         m_UIMinerText = GameObject.Find("MinerName").GetComponent<Text>();
         m_UILifeBar = GameObject.Find("LifeBar").GetComponent<Image>();
@@ -107,6 +113,9 @@ public class Miner : MonoBehaviour
         m_UIMinerText.text = Name;
         m_UILifeBarRectTransform = m_UILifeBar.rectTransform;
         m_UILifeBarRatio = m_UILifeBarRectTransform.sizeDelta.x / Life;
+
+        m_weaponSelector = GameObject.Find("WeaponSelector").GetComponent<UIContainer>();
+        m_weaponSelector.SetSlot(1, Weapon);
     }
 
     // Update is called once per frame
