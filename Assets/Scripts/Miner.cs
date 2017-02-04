@@ -2,49 +2,54 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
-public class Miner : MonoBehaviour
+public class Miner : MonoBehaviour, IPointerClickHandler
 {
     public string Name;
-    public int Life;
+    public int MaxLife;
 
     public Sprite Weapon;
 
-	public AudioClip[] m_stepsSounds;
-	public AudioClip[] m_pickSounds;
-	public AudioClip m_gravelSound;
+    public AudioClip[] m_stepsSounds;
+    public AudioClip[] m_pickSounds;
+    public AudioClip m_gravelSound;
     public AudioClip m_attackSwing;
 
-	[HideInInspector]
-	public enum ColliderType {
-		ColliderFeet,
-		ColliderBody
-	};
-	[HideInInspector]
-	public enum CharacterState {
-		Idle, WalkLeft, WalkRight, RunLeft, RunRight, DigLeft, DigRight, Attack
-	};
+    [HideInInspector]
+    public enum ColliderType
+    {
+        ColliderFeet,
+        ColliderBody
+    };
+    [HideInInspector]
+    public enum CharacterState
+    {
+        Idle, WalkLeft, WalkRight, RunLeft, RunRight, DigLeft, DigRight, Attack
+    };
     [HideInInspector]
     public enum InputEvent
-	{
-		None, ShiftLeftClick, LeftClick, DoubleLeftClick, RightClick, Space
-	}
+    {
+        None, ShiftLeftClick, LeftClick, DoubleLeftClick, RightClick, Space
+    }
 
     public GameObject Target;
 
-	/* Private section */
-	private Animator m_animator;
-	private Rigidbody2D m_rigidBody;
-	private AudioSource m_audioSource;
+    /* Private section */
+    private float m_life;
+
+    private Animator m_animator;
+    private Rigidbody2D m_rigidBody;
+    private AudioSource m_audioSource;
     private SpriteRenderer m_spriteRenderer;
 
-	private float m_walkSpeed = 32.0f;
-	private float m_runSpeed = 64.0f;
-	private Vector2 m_movementTarget;
+    private float m_walkSpeed = 32.0f;
+    private float m_runSpeed = 64.0f;
+    private Vector2 m_movementTarget;
 
-	private CharacterState m_currentState;
-	private InputEvent m_inputEvent;
-	private BoxCollider2D m_feetCollider;
+    private CharacterState m_currentState;
+    private InputEvent m_inputEvent;
+    private BoxCollider2D m_feetCollider;
     private BoxCollider2D m_bodyCollider;
     private PolygonCollider2D m_digColliderStraight;
     private PolygonCollider2D m_digColliderUp;
@@ -56,36 +61,38 @@ public class Miner : MonoBehaviour
 
     private GameObject m_target;
     private bool m_digDoubleSpeed;
-	private int m_digSoundCounter;
+    private int m_digSoundCounter;
 
     private int m_layerMask;
 
-    // UI elements
-    private Image m_UIMinerImage;
-    private Text m_UIMinerText;
-    private Image m_UILifeBar;
-    private RectTransform m_UILifeBarRectTransform;
-    private float m_UILifeBarRatio;
+    // Character status
+    private CharacterStatus m_characterStatus;
+    private bool m_updateStatus;
 
     // Weapon selector
     private UIContainer m_weaponSelector;
 
+    // Input manager
+    private InputManager m_inputManager;
+
     // Use this for initialization
     void Start()
     {
+        m_life = MaxLife;
+
         m_animator = GetComponent<Animator>();
         m_rigidBody = GetComponent<Rigidbody2D>();
-		m_audioSource = GetComponent<AudioSource>();
+        m_audioSource = GetComponent<AudioSource>();
         m_spriteRenderer = GetComponent<SpriteRenderer>();
 
         m_currentState = CharacterState.Idle;
-		m_inputEvent = InputEvent.None;
+        m_inputEvent = InputEvent.None;
 
-        m_movementTarget = new Vector2 (Mathf.Round(m_rigidBody.position.x), Mathf.Round(m_rigidBody.position.y));
+        m_movementTarget = new Vector2(Mathf.Round(m_rigidBody.position.x), Mathf.Round(m_rigidBody.position.y));
 
         /* Get children components */
-        m_feetCollider = transform.FindChild ("FeetCollider").GetComponent<BoxCollider2D> ();
-		m_bodyCollider = transform.FindChild ("BodyCollider").GetComponent<BoxCollider2D> ();
+        m_feetCollider = transform.FindChild("FeetCollider").GetComponent<BoxCollider2D>();
+        m_bodyCollider = transform.FindChild("BodyCollider").GetComponent<BoxCollider2D>();
         m_digColliderDown = transform.FindChild("DigColliderDown").GetComponent<PolygonCollider2D>();
         m_digColliderStraight = transform.FindChild("DigColliderStraight").GetComponent<PolygonCollider2D>();
         m_digColliderUp = transform.FindChild("DigColliderUp").GetComponent<PolygonCollider2D>();
@@ -101,21 +108,17 @@ public class Miner : MonoBehaviour
 
         m_target = null;
         m_digDoubleSpeed = false;
-		m_digSoundCounter = 0;
+        m_digSoundCounter = 0;
 
         m_layerMask = (1 << (LayerMask.NameToLayer("Cave Colliders")));
 
         // UI
-        m_UIMinerImage = GameObject.Find("MinerImage").GetComponent<Image>();
-        m_UIMinerText = GameObject.Find("MinerName").GetComponent<Text>();
-        m_UILifeBar = GameObject.Find("LifeBar").GetComponent<Image>();
+        m_characterStatus = GameObject.FindObjectOfType<CharacterStatus>();
+        m_weaponSelector = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
 
-        m_UIMinerText.text = Name;
-        m_UILifeBarRectTransform = m_UILifeBar.rectTransform;
-        m_UILifeBarRatio = m_UILifeBarRectTransform.sizeDelta.x / Life;
+        m_updateStatus = false;
 
-        m_weaponSelector = GameObject.Find("WeaponSelector").GetComponent<UIContainer>();
-        m_weaponSelector.SetSlot(1, Weapon);
+        m_inputManager = GameObject.FindObjectOfType<InputManager>();
     }
 
     // Update is called once per frame
@@ -127,8 +130,25 @@ public class Miner : MonoBehaviour
         ProcessState();
 
         // Update the UI image for this miner
-        if (m_animator.runtimeAnimatorController)
-            m_UIMinerImage.sprite = m_spriteRenderer.sprite;
+        if (m_updateStatus && m_animator.runtimeAnimatorController)
+            m_characterStatus.SetAvatar(m_spriteRenderer.sprite);
+    }
+
+    public void EnableUpdateStatus()
+    {
+        m_updateStatus = true;
+
+        m_characterStatus.SetName(Name);
+        m_characterStatus.SetLife(m_life / MaxLife);
+
+        m_weaponSelector.SetSlot(1, Weapon);
+        m_weaponSelector.SetShortcut(1, '1');
+    }
+    public void DisableUpdateStatus()
+    {
+        m_updateStatus = false;
+        m_characterStatus.ClearAll();
+        m_weaponSelector.ClearAll();
     }
 
     void GetMovementTarget()
@@ -196,27 +216,30 @@ public class Miner : MonoBehaviour
                 break;
         }
         #endregion
+    }
 
+    public void OnInputEvent(PointerEventData data)
+    {
         #region Input processing
-        if (Input.GetMouseButton(0))
-		{
-			if (Input.GetKey(KeyCode.LeftShift))
-				m_inputEvent = InputEvent.ShiftLeftClick;
+        if (data.button == PointerEventData.InputButton.Left)
+        {
+            if (Input.GetKey(KeyCode.LeftShift))
+                m_inputEvent = InputEvent.ShiftLeftClick;
             else
-				m_inputEvent = InputEvent.LeftClick;
-		}
-		if (Input.GetMouseButton(1))
-		{
-			m_inputEvent = InputEvent.RightClick;
-		}
+                m_inputEvent = InputEvent.LeftClick;
+        }
+        if (data.button == PointerEventData.InputButton.Right)
+        {
+            m_inputEvent = InputEvent.RightClick;
+        }
         if (Input.GetKey(KeyCode.Space))
         {
             m_inputEvent = InputEvent.Space;
         }
-        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved)
-        {
-            m_inputEvent = InputEvent.Space;
-        }
+        //if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved)
+        //{
+        //    m_inputEvent = InputEvent.Space;
+        //}
 
         switch (m_inputEvent)
         {
@@ -379,12 +402,11 @@ public class Miner : MonoBehaviour
                 break;
         }
         m_inputEvent = InputEvent.None;
+        #endregion
+    }
 
-		#endregion
-	}
-
-	void TransitionState(CharacterState state)
-	{
+    void TransitionState(CharacterState state)
+    {
         // TODO: Exit state should be defined in state itself, not here!!
         if ((m_currentState == CharacterState.DigLeft || m_currentState == CharacterState.DigRight) &&
             (state != CharacterState.DigLeft && state != CharacterState.DigRight))
@@ -394,8 +416,8 @@ public class Miner : MonoBehaviour
             m_digColliderStraight.enabled = false;
         }
         m_currentState = state;
-		PlayStateAnimation(state);
-	}
+        PlayStateAnimation(state);
+    }
 
     void PlayStateAnimation(CharacterState state)
     {
@@ -418,21 +440,23 @@ public class Miner : MonoBehaviour
                 m_animator.SetTrigger("minerRun");
                 transform.localScale = new Vector2(Mathf.Abs(transform.localScale.x), transform.localScale.y);
                 break;
-			case CharacterState.DigLeft:
-				m_animator.SetTrigger ("minerDig");
-				transform.localScale = new Vector2 (-Mathf.Abs (transform.localScale.x), transform.localScale.y);
-				if (m_digDoubleSpeed) {
-					m_animator.speed = 6.0f;
-					m_digSoundCounter = 0;
-				}
-	            break;
-			case CharacterState.DigRight:
-				m_animator.SetTrigger ("minerDig");
-				transform.localScale = new Vector2 (Mathf.Abs (transform.localScale.x), transform.localScale.y);
-				if (m_digDoubleSpeed) {
-					m_animator.speed = 6.0f;
-					m_digSoundCounter = 0;
-				}
+            case CharacterState.DigLeft:
+                m_animator.SetTrigger("minerDig");
+                transform.localScale = new Vector2(-Mathf.Abs(transform.localScale.x), transform.localScale.y);
+                if (m_digDoubleSpeed)
+                {
+                    m_animator.speed = 6.0f;
+                    m_digSoundCounter = 0;
+                }
+                break;
+            case CharacterState.DigRight:
+                m_animator.SetTrigger("minerDig");
+                transform.localScale = new Vector2(Mathf.Abs(transform.localScale.x), transform.localScale.y);
+                if (m_digDoubleSpeed)
+                {
+                    m_animator.speed = 6.0f;
+                    m_digSoundCounter = 0;
+                }
                 break;
             case CharacterState.Attack:
                 m_animator.SetTrigger("minerAttack");
@@ -444,18 +468,18 @@ public class Miner : MonoBehaviour
     }
 
     void EndMovement()
-	{
-		/* Round the coordinates so they are perfect pixel aligned */
-		m_rigidBody.position = new Vector2 (Mathf.Round (m_rigidBody.position.x), Mathf.Round (m_rigidBody.position.y));
-		m_rigidBody.velocity = Vector2.zero;
+    {
+        /* Round the coordinates so they are perfect pixel aligned */
+        m_rigidBody.position = new Vector2(Mathf.Round(m_rigidBody.position.x), Mathf.Round(m_rigidBody.position.y));
+        m_rigidBody.velocity = Vector2.zero;
 
-		m_movementTarget = m_rigidBody.position;
+        m_movementTarget = m_rigidBody.position;
     }
 
-	void MoveUp()
-	{
-		m_rigidBody.position = new Vector2 (m_rigidBody.position.x, m_rigidBody.position.y + 1.0f);
-	}
+    void MoveUp()
+    {
+        m_rigidBody.position = new Vector2(m_rigidBody.position.x, m_rigidBody.position.y + 1.0f);
+    }
 
     void FallDown()
     {
@@ -470,7 +494,8 @@ public class Miner : MonoBehaviour
         m_feetCollider.enabled = true;
         m_bodyCollider.enabled = true;
 
-        if ((hitLeft.collider != null) && (hitRight.collider != null)) {
+        if ((hitLeft.collider != null) && (hitRight.collider != null))
+        {
             m_rigidBody.position = new Vector2(m_rigidBody.position.x, m_rigidBody.position.y - Mathf.Min(hitLeft.distance, hitRight.distance));
         }
     }
@@ -573,7 +598,7 @@ public class Miner : MonoBehaviour
     }
 
     public void OnDigging()
-	{
+    {
         if (m_nearCaveColliders.Count == 0)
         {
             EndMovement();
@@ -581,66 +606,72 @@ public class Miner : MonoBehaviour
             TransitionState(CharacterState.Idle);
             return;
         }
-			
-		PlayAudioPickAxe ();
+
+        PlayAudioPickAxe();
 
         foreach (GameObject go in m_nearCaveColliders)
         {
             go.SendMessage("PlayerHit", 2, SendMessageOptions.DontRequireReceiver);
         }
         m_nearCaveColliders.Clear();
-	}
+    }
 
-	public void OnStepForward()
-	{
-		if (transform.localScale.x <= 0.0f) {
-			m_rigidBody.position = new Vector2 (m_rigidBody.position.x - 1.0f, m_rigidBody.position.y);
-		} else {
-			m_rigidBody.position = new Vector2 (m_rigidBody.position.x + 1.0f, m_rigidBody.position.y);
-		}
-		PlayAudioOneStep ();
-		FallDown ();
-	}
+    public void OnStepForward()
+    {
+        if (transform.localScale.x <= 0.0f)
+        {
+            m_rigidBody.position = new Vector2(m_rigidBody.position.x - 1.0f, m_rigidBody.position.y);
+        }
+        else {
+            m_rigidBody.position = new Vector2(m_rigidBody.position.x + 1.0f, m_rigidBody.position.y);
+        }
+        PlayAudioOneStep();
+        FallDown();
+    }
 
-	public void OnStep()
-	{
-		PlayAudioOneStep ();
-	}
+    public void OnStep()
+    {
+        PlayAudioOneStep();
+    }
 
-	private void PlayAudioPickAxe()
-	{		
-		int pickSoundIdx = Random.Range (0, m_pickSounds.Length);
-		float pickSoundVolume = Random.Range (0.4f, 0.6f);
+    private void PlayAudioPickAxe()
+    {
+        int pickSoundIdx = Random.Range(0, m_pickSounds.Length);
+        float pickSoundVolume = Random.Range(0.4f, 0.6f);
 
-		bool playSound = false;
+        bool playSound = false;
 
-		if (m_digDoubleSpeed) {
-			if (++m_digSoundCounter == 3) {
-				m_digSoundCounter = 0;
-				playSound = true;
-			}
-		} else {
-			playSound = true;
-		}
+        if (m_digDoubleSpeed)
+        {
+            if (++m_digSoundCounter == 3)
+            {
+                m_digSoundCounter = 0;
+                playSound = true;
+            }
+        }
+        else {
+            playSound = true;
+        }
 
-		if (playSound) {
-			m_audioSource.PlayOneShot(m_pickSounds [pickSoundIdx], pickSoundVolume);
-			PlayAudioGravelFall ();
-		}
-	}
+        if (playSound)
+        {
+            m_audioSource.PlayOneShot(m_pickSounds[pickSoundIdx], pickSoundVolume);
+            PlayAudioGravelFall();
+        }
+    }
 
-	private void PlayAudioOneStep()
-	{
-		int stepSoundIdx = Random.Range (0, m_stepsSounds.Length);
-		float stepSoundVolume = Random.Range (0.4f, 0.6f);
+    private void PlayAudioOneStep()
+    {
+        int stepSoundIdx = Random.Range(0, m_stepsSounds.Length);
+        float stepSoundVolume = Random.Range(0.4f, 0.6f);
 
-		m_audioSource.PlayOneShot(m_stepsSounds [stepSoundIdx], stepSoundVolume);
-	}
+        m_audioSource.PlayOneShot(m_stepsSounds[stepSoundIdx], stepSoundVolume);
+    }
 
     private void PlayAudioGravelFall()
-	{
-		AudioSource.PlayClipAtPoint(m_gravelSound, Camera.main.transform.position, 0.1f);
-	}
+    {
+        AudioSource.PlayClipAtPoint(m_gravelSound, Camera.main.transform.position, 0.1f);
+    }
 
     private void OnAttack()
     {
@@ -665,10 +696,11 @@ public class Miner : MonoBehaviour
     {
         if (m_bodyCollider.bounds.Intersects(coll.bounds))
         {
-            Life -= damage;
-            m_UILifeBarRectTransform.sizeDelta = new Vector2(Life * m_UILifeBarRatio, m_UILifeBarRectTransform.sizeDelta.y);
+            m_life -= damage;
 
-            if (Life <= 0)
+            m_characterStatus.SetLife(m_life / MaxLife);
+
+            if (m_life <= 0)
             {
                 LevelManager.Instance.PlayerDestroyed();
                 Destroy(gameObject);
@@ -684,12 +716,17 @@ public class Miner : MonoBehaviour
 
     private IEnumerator PlayerHitAnimation()
     {
-        for (int i=0; i<20; ++i)
+        for (int i = 0; i < 20; ++i)
         {
             m_spriteRenderer.color = new Color(1.0f, Random.Range(0.5f, 1.0f), 1.0f);
             yield return new WaitForSeconds(0.05f);
         }
         m_spriteRenderer.color = Color.white;
     }
- };
-  
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        EnableUpdateStatus();
+        m_inputManager.SetActiveMiner(this);
+    }
+};

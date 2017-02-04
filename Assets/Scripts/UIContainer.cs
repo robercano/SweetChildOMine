@@ -16,11 +16,11 @@ public class UIContainer : MonoBehaviour {
         set
         {
             Name = value;
-            m_title.text = Name;
+            m_UITexts[0].text = Name;
         }
     }
     
-    private Text m_title;
+    private Text[] m_UITexts;
     private Image[] m_UIImages;
     private Sprite[] m_slots;
 
@@ -41,7 +41,7 @@ public class UIContainer : MonoBehaviour {
     {
         IComparer<Image> comparer = new SlotComparer();
 
-        m_title = GetComponentInChildren<Text>();
+        m_UITexts = GetComponentsInChildren<Text>();
         m_UIImages = GetComponentsInChildren<Image>();
 
         m_slots = new Sprite[m_UIImages.Length];
@@ -60,8 +60,7 @@ public class UIContainer : MonoBehaviour {
 
         return true;
     }
-
-    public bool RemoveSlot(int slot)
+    public bool ClearSlot(int slot)
     {
         if ((slot == 0) || ((slot - 1) > m_slots.Length))
             return false;
@@ -71,5 +70,40 @@ public class UIContainer : MonoBehaviour {
         m_UIImages[slot].color = Color.clear;
 
         return true;
+    }
+    public void ClearAllSlots()
+    {
+        for (int i = 0; i < m_slots.Length; ++i)
+            ClearSlot(i);
+    }
+
+    public bool SetShortcut(int slot, char shortcut)
+    {
+        if ((slot == 0) || ((slot - 1) > m_slots.Length))
+            return false;
+
+        m_UITexts[slot].text = shortcut.ToString();
+
+        return true;
+    }
+    public bool ClearShortcut(int slot)
+    {
+        if ((slot == 0) || ((slot - 1) > m_slots.Length))
+            return false;
+
+        m_UITexts[slot].text = "";
+
+        return true;
+    }
+    public void ClearAllShortcut()
+    {
+        for (int i = 0; i < m_UITexts.Length; ++i)
+            ClearShortcut(i);
+    }
+
+    public void ClearAll()
+    {
+        ClearAllSlots();
+        ClearAllShortcut();
     }
 }
