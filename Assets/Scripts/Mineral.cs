@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Mineral : SelectableObject, IPointerClickHandler {
+public class Mineral : MineableObject, IPointerClickHandler {
     public int m_currentAmount;
 
     public int Amount;
@@ -36,8 +36,10 @@ public class Mineral : SelectableObject, IPointerClickHandler {
         return amount;
     }
 
-    void Update()
+    public override void Update()
     {
+        base.Update();
+
         int index = AmountSprites.Length - ((m_currentAmount - 1) / m_amountPerSprite) - 1;
 
         if (index >= 0 && index < AmountSprites.Length)
@@ -50,8 +52,4 @@ public class Mineral : SelectableObject, IPointerClickHandler {
             ShowMenu();
     }
 
-    public void ShowMenu()
-    {
-        Debug.Log("Show menu");
-    }
 }
