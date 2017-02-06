@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Mineral : MonoBehaviour, IPointerClickHandler {
+public class Mineral : SelectableObject, IPointerClickHandler {
     public int m_currentAmount;
 
     public int Amount;

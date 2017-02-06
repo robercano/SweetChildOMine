@@ -4,9 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class Miner : MonoBehaviour, IPointerClickHandler
+public class Miner : SelectableObject, IPointerClickHandler
 {
-    public string Name;
+    //public string Name;
     public int MaxLife;
 
     public Sprite Weapon;
