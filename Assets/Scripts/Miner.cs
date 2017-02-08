@@ -36,7 +36,10 @@ public class Miner : SelectableObject, IPointerClickHandler
     public GameObject Target;
 
     /* Private section */
-    private float m_life;
+    public float Life
+    {
+        get; private set;
+    }
 
     private Animator m_animator;
     private Rigidbody2D m_rigidBody;
@@ -67,7 +70,6 @@ public class Miner : SelectableObject, IPointerClickHandler
 
     // Character status
     private CharacterStatus m_characterStatus;
-    private bool m_updateStatus;
 
     // Weapon selector
     private UIContainer m_weaponSelector;
@@ -78,7 +80,7 @@ public class Miner : SelectableObject, IPointerClickHandler
     // Use this for initialization
     void Start()
     {
-        m_life = MaxLife;
+        Life = MaxLife;
 
         m_animator = GetComponent<Animator>();
         m_rigidBody = GetComponent<Rigidbody2D>();
@@ -116,8 +118,6 @@ public class Miner : SelectableObject, IPointerClickHandler
         m_characterStatus = GameObject.FindObjectOfType<CharacterStatus>();
         m_weaponSelector = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
 
-        m_updateStatus = false;
-
         m_inputManager = GameObject.FindObjectOfType<InputManager>();
     }
 
@@ -128,27 +128,25 @@ public class Miner : SelectableObject, IPointerClickHandler
             Application.Quit();
 
         ProcessState();
-
-        // Update the UI image for this miner
-        if (m_updateStatus && m_animator.runtimeAnimatorController)
-            m_characterStatus.SetAvatar(m_spriteRenderer.sprite);
     }
 
-    public void EnableUpdateStatus()
+    public void ActivateMiner()
     {
-        m_updateStatus = true;
-
-        m_characterStatus.SetName(Name);
-        m_characterStatus.SetLife(m_life / MaxLife);
+        m_characterStatus.SetActiveMiner(this);
 
         m_weaponSelector.SetSlot(1, Weapon);
         m_weaponSelector.SetShortcut(1, '1');
+
+        m_inputManager.SetActiveMiner(this);
     }
-    public void DisableUpdateStatus()
+    public void DeactivateMiner()
     {
-        m_updateStatus = false;
-        m_characterStatus.ClearAll();
+        m_characterStatus.SetActiveMiner(null);
         m_weaponSelector.ClearAll();
+    }
+    public Sprite GetCurrentAvatar()
+    {
+        return m_spriteRenderer.sprite;
     }
 
     void GetMovementTarget()
@@ -427,6 +425,7 @@ public class Miner : SelectableObject, IPointerClickHandler
             case CharacterState.WalkLeft:
                 m_animator.SetTrigger("minerWalk");
                 transform.localScale = new Vector2(-Mathf.Abs(transform.localScale.x), transform.localScale.y);
+                Debug.Log("Forward" + transform.forward);
                 break;
             case CharacterState.WalkRight:
                 m_animator.SetTrigger("minerWalk");
@@ -696,11 +695,11 @@ public class Miner : SelectableObject, IPointerClickHandler
     {
         if (m_bodyCollider.bounds.Intersects(coll.bounds))
         {
-            m_life -= damage;
+            Life -= damage;
 
-            m_characterStatus.SetLife(m_life / MaxLife);
+            //m_characterStatus.SetLife(Life / MaxLife);
 
-            if (m_life <= 0)
+            if (Life <= 0)
             {
                 LevelManager.Instance.PlayerDestroyed();
                 Destroy(gameObject);
@@ -726,7 +725,6 @@ public class Miner : SelectableObject, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        EnableUpdateStatus();
-        m_inputManager.SetActiveMiner(this);
+        ActivateMiner();
     }
 };

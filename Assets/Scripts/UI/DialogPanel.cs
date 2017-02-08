@@ -14,6 +14,7 @@ public class DialogPanel : MonoBehaviour {
     private float m_spaceDelay;
 
     private AudioSource m_audioSource;
+    private WidgetFader m_widgetFader;
 
     // Use this for initialization
     void Awake()
@@ -25,6 +26,29 @@ public class DialogPanel : MonoBehaviour {
         m_spaceDelay = 3.0f / Speed;
 
         m_audioSource = GetComponent<AudioSource>();
+
+        m_widgetFader = GetComponent<WidgetFader>();
+        m_widgetFader.DisableImmediate();
+    }
+
+    void Update()
+    {
+        // Compensate mirroring when character is facing left
+        transform.localScale = transform.parent.localScale;
+    }
+
+    public void Enable()
+    {
+        m_widgetFader.Enable();
+    }
+
+    public void Disable()
+    {
+        m_widgetFader.Disable();
+    }
+    public void DisableImmediate()
+    {
+        m_widgetFader.DisableImmediate();
     }
 
     public void SetText(string text)

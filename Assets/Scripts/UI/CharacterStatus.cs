@@ -11,7 +11,8 @@ public class CharacterStatus : MonoBehaviour {
 
     private Image m_avatar;
     private Text m_name;
-    
+
+    private Miner m_activeMiner;
 
     // Use this for initialization
     void Start()
@@ -23,7 +24,34 @@ public class CharacterStatus : MonoBehaviour {
         m_avatar = transform.Find("Avatar").gameObject.GetComponent<Image>();
         m_name = transform.Find("Name").gameObject.GetComponent<Text>();
 
+        m_activeMiner = null;
+
         ClearAll();
+    }
+
+    void Update()
+    {
+        if (m_activeMiner != null)
+        {
+            UpdateInfo();
+        }
+    }
+
+    public void UpdateInfo()
+    {
+        SetAvatar(m_activeMiner.GetCurrentAvatar());
+        SetName(m_activeMiner.Name);
+        SetLife(m_activeMiner.Life / m_activeMiner.MaxLife);
+    }
+
+    public void SetActiveMiner(Miner miner)
+    {
+        m_activeMiner = miner;
+
+        if (m_activeMiner == null)
+            ClearAll();
+        else
+            UpdateInfo();
     }
 
     public void SetName(string name)

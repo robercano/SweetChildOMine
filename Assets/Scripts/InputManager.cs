@@ -30,7 +30,7 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
         {
             if (m_miner != null)
             {
-                m_miner.DisableUpdateStatus();
+                m_miner.DeactivateMiner();
                 m_miner = null;
             }
         }
