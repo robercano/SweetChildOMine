@@ -15,6 +15,8 @@ public class MineableObject : SelectableObject
     private GameObject m_actionContextMenuInstance;
     private ActionContextMenu m_actionContextMenu;
 
+    private CharacterStatus m_characterStatus;
+
     public override void Awake()
     {
         base.Awake();
@@ -30,7 +32,9 @@ public class MineableObject : SelectableObject
 
         m_actionContextMenu.Title = Name;
         m_actionContextMenu.ActionName = ActionName;
-        m_actionContextMenu.OnAction = OnMine;
+        m_actionContextMenu.OnAction = OnActionMine;
+
+        m_characterStatus = GameObject.Find("CharacterStatus").GetComponent<CharacterStatus>();
     }
 
     public override void ShowMenu()
@@ -46,12 +50,29 @@ public class MineableObject : SelectableObject
         EnableDialog();
     }
 
-    protected virtual void OnMine(int numItems)
+    protected virtual void OnActionMine(int numItems)
     {
-        Debug.Log("Mining " + numItems + " items");
         HideMenu();
-        m_currentItems -= numItems;
-        if (m_currentItems < 0)
+
+        Miner miner = m_characterStatus.GetActiveMiner();
+        if (miner != null)
+        {
+            miner.MineMaterial(this, numItems);
+        }
+    }
+
+    /* Public interface */
+    public int DoMine(int numItems)
+    {
+        if (m_currentItems > numItems)
+        {
+            m_currentItems -= numItems;
+        }
+        else
+        {
+            numItems = m_currentItems;
             m_currentItems = 0;
+        }
+        return numItems;
     }
 }

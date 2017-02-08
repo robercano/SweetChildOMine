@@ -23,6 +23,12 @@ public class Mineral : MineableObject {
     {
         base.Update();
 
+        if (m_currentItems == 0)
+        {
+            gameObject.SetActive(false);
+            Destroy(gameObject);
+        }
+
         int index = AmountSprites.Length - ((m_currentItems - 1) / m_amountPerSprite) - 1;
 
         if (index >= 0 && index < AmountSprites.Length)

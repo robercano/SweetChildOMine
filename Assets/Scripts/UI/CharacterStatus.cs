@@ -37,6 +37,45 @@ public class CharacterStatus : MonoBehaviour {
         }
     }
 
+    void SetName(string name)
+    {
+        m_name.text = name;
+    }
+    void ClearName()
+    {
+        m_name.text = "";
+    }
+
+    void SetAvatar(Sprite avatar)
+    {
+        m_avatar.sprite = avatar;
+        m_avatar.color = Color.white;
+    }
+    void ClearAvatar()
+    {
+        m_avatar.color = Color.clear;
+        m_avatar.sprite = null;
+    }
+
+    void SetLife(float percentage)
+    {
+        percentage = Mathf.Clamp(percentage, 0.0f, 1.0f);
+
+        m_lifeBarRect.sizeDelta = new Vector2(percentage * m_lifeBarRatio, m_lifeBarRect.sizeDelta.y);
+    }
+    void ClearLife()
+    {
+        m_lifeBarRect.sizeDelta = new Vector2(0.0f, m_lifeBarRect.sizeDelta.y);
+    }
+
+    void ClearAll()
+    {
+        ClearName();
+        ClearAvatar();
+        ClearLife();
+    }
+
+    /* Public API */
     public void UpdateInfo()
     {
         SetAvatar(m_activeMiner.GetCurrentAvatar());
@@ -54,41 +93,8 @@ public class CharacterStatus : MonoBehaviour {
             UpdateInfo();
     }
 
-    public void SetName(string name)
+    public Miner GetActiveMiner()
     {
-        m_name.text = name;
-    }
-    public void ClearName()
-    {
-        m_name.text = "";
-    }
-
-    public void SetAvatar(Sprite avatar)
-    {
-        m_avatar.sprite = avatar;
-        m_avatar.color = Color.white;
-    }
-    public void ClearAvatar()
-    {
-        m_avatar.color = Color.clear;
-        m_avatar.sprite = null;
-    }
-
-    public void SetLife(float percentage)
-    {
-        percentage = Mathf.Clamp(percentage, 0.0f, 1.0f);
-
-        m_lifeBarRect.sizeDelta = new Vector2(percentage * m_lifeBarRatio, m_lifeBarRect.sizeDelta.y);
-    }
-    public void ClearLife()
-    {
-        m_lifeBarRect.sizeDelta = new Vector2(0.0f, m_lifeBarRect.sizeDelta.y);
-    }
-
-    public void ClearAll()
-    {
-        ClearName();
-        ClearAvatar();
-        ClearLife();
+        return m_activeMiner;
     }
 }

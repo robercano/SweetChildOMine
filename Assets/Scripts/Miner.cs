@@ -25,7 +25,7 @@ public class Miner : SelectableObject, IPointerClickHandler
     [HideInInspector]
     public enum CharacterState
     {
-        Idle, WalkLeft, WalkRight, RunLeft, RunRight, DigLeft, DigRight, Attack
+        Idle, WalkLeft, WalkRight, RunLeft, RunRight, DigLeft, DigRight, Attack, MineWalkLeft, MineWalkRight, MineMaterial
     };
     [HideInInspector]
     public enum InputEvent
@@ -77,6 +77,10 @@ public class Miner : SelectableObject, IPointerClickHandler
     // Input manager
     private InputManager m_inputManager;
 
+    // Mining target
+    MineableObject m_mineableTarget;
+    int m_mineableTargetAmount;
+
     // Use this for initialization
     void Start()
     {
@@ -108,7 +112,9 @@ public class Miner : SelectableObject, IPointerClickHandler
         m_digColliderUp.enabled = false;
         m_attackCollider.enabled = false;
 
-        m_target = null;
+        m_target = GameObject.Instantiate(Target, new Vector3(m_movementTarget.x, m_movementTarget.y, 0.0f), Quaternion.identity);
+        DisableVisibleTarget();
+
         m_digDoubleSpeed = false;
         m_digSoundCounter = 0;
 
@@ -119,6 +125,9 @@ public class Miner : SelectableObject, IPointerClickHandler
         m_weaponSelector = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
 
         m_inputManager = GameObject.FindObjectOfType<InputManager>();
+
+        m_mineableTarget = null;
+        m_mineableTargetAmount = 0;
     }
 
     // Update is called once per frame
@@ -149,31 +158,28 @@ public class Miner : SelectableObject, IPointerClickHandler
         return m_spriteRenderer.sprite;
     }
 
-    void GetMovementTarget()
+    void GetMovementTargetFromMouse()
     {
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         m_movementTarget = new Vector2(Mathf.Round(mousePosition.x), Mathf.Round(mousePosition.y));
+    }
 
-        if (m_target != null)
-        {
-            m_target.SetActive(false);
-            Destroy(m_target);
-        }
-        m_target = GameObject.Instantiate(Target, new Vector3(m_movementTarget.x, m_movementTarget.y, 0.0f), Quaternion.identity);
+    void ActivateVisibleTarget()
+    {
+        m_target.transform.position = new Vector2(m_movementTarget.x, m_movementTarget.y);
+        m_target.SetActive(true);
+    }
+    void DisableVisibleTarget()
+    {
+        m_target.SetActive(false);
     }
 
     void ProcessState()
     {
-        #region State execution
         switch (m_currentState)
         {
             case CharacterState.Idle:
-                if (m_target != null)
-                {
-                    m_target.SetActive(false);
-                    Destroy(m_target);
-                    m_target = null;
-                }
+                DisableVisibleTarget();
                 break;
             case CharacterState.WalkLeft:
             case CharacterState.RunLeft:
@@ -212,8 +218,25 @@ public class Miner : SelectableObject, IPointerClickHandler
                     FallDown();
                 }
                 break;
+            case CharacterState.MineWalkLeft:
+            case CharacterState.MineWalkRight:
+                {
+                    switch (m_currentState)
+                    {
+                        case CharacterState.MineWalkLeft:
+                            m_rigidBody.velocity = new Vector2(-m_walkSpeed, m_rigidBody.velocity.y);
+                            break;
+                        case CharacterState.MineWalkRight:
+                            m_rigidBody.velocity = new Vector2(m_walkSpeed, m_rigidBody.velocity.y);
+                            break;
+                    }
+                    FallDown();
+                }
+                break;
+            case CharacterState.MineMaterial:
+                DisableVisibleTarget();
+                break;
         }
-        #endregion
     }
 
     public void OnInputEvent(PointerEventData data)
@@ -243,79 +266,46 @@ public class Miner : SelectableObject, IPointerClickHandler
         {
             case InputEvent.LeftClick:
                 {
-                    GetMovementTarget();
+                    GetMovementTargetFromMouse();
+                    ActivateVisibleTarget();
 
                     float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
                     if (deltaX < -float.Epsilon)
                     {
-                        switch (m_currentState)
-                        {
-                            case CharacterState.RunRight:
-                                TransitionState(CharacterState.RunLeft);
-                                break;
-                            case CharacterState.WalkRight:
-                            case CharacterState.Idle:
-                            case CharacterState.DigLeft:
-                            case CharacterState.DigRight:
-                                TransitionState(CharacterState.WalkLeft);
-                                break;
-                        }
+                        if (m_currentState == CharacterState.RunRight)
+                            TransitionState(CharacterState.RunLeft);
+                        else
+                            TransitionState(CharacterState.WalkLeft);
                     }
                     else if (deltaX > float.Epsilon)
                     {
-                        switch (m_currentState)
-                        {
-                            case CharacterState.RunLeft:
-                                TransitionState(CharacterState.RunRight);
-                                break;
-                            case CharacterState.WalkLeft:
-                            case CharacterState.Idle:
-                            case CharacterState.DigLeft:
-                            case CharacterState.DigRight:
-                                TransitionState(CharacterState.WalkRight);
-                                break;
-                        }
+                        if (m_currentState == CharacterState.RunLeft)
+                            TransitionState(CharacterState.RunRight);
+                        else
+                            TransitionState(CharacterState.WalkRight);
                     }
                 }
                 break;
             case InputEvent.ShiftLeftClick:
                 {
-                    GetMovementTarget();
+                    GetMovementTargetFromMouse();
+                    ActivateVisibleTarget();
 
                     float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
                     if (deltaX < -float.Epsilon)
                     {
-                        switch (m_currentState)
-                        {
-                            case CharacterState.WalkLeft:
-                            case CharacterState.WalkRight:
-                            case CharacterState.RunRight:
-                            case CharacterState.Idle:
-                            case CharacterState.DigLeft:
-                            case CharacterState.DigRight:
-                                TransitionState(CharacterState.RunLeft);
-                                break;
-                        }
+                        TransitionState(CharacterState.RunLeft);
                     }
                     else if (deltaX > float.Epsilon)
                     {
-                        switch (m_currentState)
-                        {
-                            case CharacterState.WalkLeft:
-                            case CharacterState.WalkRight:
-                            case CharacterState.RunLeft:
-                            case CharacterState.Idle:
-                            case CharacterState.DigLeft:
-                            case CharacterState.DigRight:
-                                TransitionState(CharacterState.RunRight);
-                                break;
-                        }
+                        TransitionState(CharacterState.RunRight);
                     }
                 }
                 break;
             case InputEvent.DoubleLeftClick:
                 {
-                    GetMovementTarget();
+                    GetMovementTargetFromMouse();
+                    ActivateVisibleTarget();
 
                     float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
                     if (deltaX < -float.Epsilon)
@@ -339,7 +329,8 @@ public class Miner : SelectableObject, IPointerClickHandler
                 {
                     EndMovement();
 
-                    GetMovementTarget();
+                    GetMovementTargetFromMouse();
+                    ActivateVisibleTarget();
 
                     float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
 
@@ -423,11 +414,12 @@ public class Miner : SelectableObject, IPointerClickHandler
         switch (state)
         {
             case CharacterState.WalkLeft:
+            case CharacterState.MineWalkLeft:
                 m_animator.SetTrigger("minerWalk");
                 transform.localScale = new Vector2(-Mathf.Abs(transform.localScale.x), transform.localScale.y);
-                Debug.Log("Forward" + transform.forward);
                 break;
             case CharacterState.WalkRight:
+            case CharacterState.MineWalkRight:
                 m_animator.SetTrigger("minerWalk");
                 transform.localScale = new Vector2(Mathf.Abs(transform.localScale.x), transform.localScale.y);
                 break;
@@ -440,6 +432,7 @@ public class Miner : SelectableObject, IPointerClickHandler
                 transform.localScale = new Vector2(Mathf.Abs(transform.localScale.x), transform.localScale.y);
                 break;
             case CharacterState.DigLeft:
+            
                 m_animator.SetTrigger("minerDig");
                 transform.localScale = new Vector2(-Mathf.Abs(transform.localScale.x), transform.localScale.y);
                 if (m_digDoubleSpeed)
@@ -449,6 +442,7 @@ public class Miner : SelectableObject, IPointerClickHandler
                 }
                 break;
             case CharacterState.DigRight:
+            
                 m_animator.SetTrigger("minerDig");
                 transform.localScale = new Vector2(Mathf.Abs(transform.localScale.x), transform.localScale.y);
                 if (m_digDoubleSpeed)
@@ -459,6 +453,9 @@ public class Miner : SelectableObject, IPointerClickHandler
                 break;
             case CharacterState.Attack:
                 m_animator.SetTrigger("minerAttack");
+                break;
+            case CharacterState.MineMaterial:
+                m_animator.SetTrigger("minerMine");
                 break;
             case CharacterState.Idle:
                 m_animator.SetTrigger("minerIdle");
@@ -509,6 +506,7 @@ public class Miner : SelectableObject, IPointerClickHandler
             case CharacterState.WalkLeft:
             case CharacterState.RunLeft:
             case CharacterState.DigLeft:
+            case CharacterState.MineWalkLeft:
                 switch (childCollider)
                 {
                     case ColliderType.ColliderBody:
@@ -525,10 +523,22 @@ public class Miner : SelectableObject, IPointerClickHandler
                                                                     m_rigidBody.position.y);
                                 EndMovement();
                                 FallDown();
-                                TransitionState(CharacterState.Idle);
+
+                                // Now check if the collider happens to be our target mineable object
+                                if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject)
+                                {
+                                    TransitionState(CharacterState.MineMaterial);
+                                }
+                                else
+                                {
+                                    TransitionState(CharacterState.Idle);
+                                }
+
                                 break;
                             }
                         }
+
+
                         break;
                     case ColliderType.ColliderFeet:
                         // Only move up if collider is in front of us
@@ -541,6 +551,7 @@ public class Miner : SelectableObject, IPointerClickHandler
             case CharacterState.WalkRight:
             case CharacterState.RunRight:
             case CharacterState.DigRight:
+            case CharacterState.MineWalkRight:
                 switch (childCollider)
                 {
                     case ColliderType.ColliderBody:
@@ -557,10 +568,23 @@ public class Miner : SelectableObject, IPointerClickHandler
                                                                     m_rigidBody.position.y);
                                 EndMovement();
                                 FallDown();
-                                TransitionState(CharacterState.Idle);
+
+
+                                // Now check if the collider happens to be our target mineable object
+                                if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject)
+                                {
+                                    TransitionState(CharacterState.MineMaterial);
+                                }
+                                else
+                                {
+                                    TransitionState(CharacterState.Idle);
+                                }
+
                                 break;
                             }
                         }
+
+
                         break;
                     case ColliderType.ColliderFeet:
                         // Only move up if collider is in front of us
@@ -596,6 +620,25 @@ public class Miner : SelectableObject, IPointerClickHandler
         }
     }
 
+    public void OnMining()
+    {
+        if (m_mineableTarget != null)
+        {
+            
+            int materialMined = m_mineableTarget.DoMine(1);
+            m_mineableTargetAmount -= materialMined;
+
+            if (m_mineableTargetAmount == 0)
+            {
+                TransitionState(CharacterState.Idle);
+            }
+            else
+            {
+                PlayAudioPickAxe();
+            }
+        }
+    }
+
     public void OnDigging()
     {
         if (m_nearCaveColliders.Count == 0)
@@ -605,8 +648,6 @@ public class Miner : SelectableObject, IPointerClickHandler
             TransitionState(CharacterState.Idle);
             return;
         }
-
-        PlayAudioPickAxe();
 
         foreach (GameObject go in m_nearCaveColliders)
         {
@@ -726,5 +767,22 @@ public class Miner : SelectableObject, IPointerClickHandler
     public void OnPointerClick(PointerEventData eventData)
     {
         ActivateMiner();
+    }
+
+    public void MineMaterial(MineableObject obj, int numItems)
+    {
+        if (numItems == 0)
+            return;
+
+        m_mineableTarget = obj;
+        m_mineableTargetAmount = numItems;
+
+        m_movementTarget = obj.gameObject.transform.position;
+        ActivateVisibleTarget();
+
+        if (obj.gameObject.transform.position.x < transform.position.x)
+            TransitionState(CharacterState.MineWalkLeft);
+        else
+            TransitionState(CharacterState.MineWalkRight);
     }
 };
