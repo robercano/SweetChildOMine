@@ -9,10 +9,14 @@ public class Miner : SelectableObject, IPointerClickHandler
     //public string Name;
     public int MaxLife;
 
+    // TODO: Current weapon, this need to be refactored so the weapon selected
+    // in the Weapon selector is used instead
     public Sprite Weapon;
+    public AudioClip[] m_pickSounds;
+    private float m_weaponDamage = 2.5f;
+
 
     public AudioClip[] m_stepsSounds;
-    public AudioClip[] m_pickSounds;
     public AudioClip m_gravelSound;
     public AudioClip m_attackSwing;
 
@@ -80,6 +84,7 @@ public class Miner : SelectableObject, IPointerClickHandler
     // Mining target
     MineableObject m_mineableTarget;
     int m_mineableTargetAmount;
+    bool m_miningWorked;
 
     // Use this for initialization
     void Start()
@@ -128,6 +133,7 @@ public class Miner : SelectableObject, IPointerClickHandler
 
         m_mineableTarget = null;
         m_mineableTargetAmount = 0;
+        m_miningWorked = false;
     }
 
     // Update is called once per frame
@@ -622,20 +628,25 @@ public class Miner : SelectableObject, IPointerClickHandler
 
     public void OnMining()
     {
-        if (m_mineableTarget != null)
-        {
-            
-            int materialMined = m_mineableTarget.DoMine(1);
-            m_mineableTargetAmount -= materialMined;
+        if (m_mineableTarget == null)
+            return;
 
-            if (m_mineableTargetAmount == 0)
-            {
-                TransitionState(CharacterState.Idle);
-            }
-            else
-            {
-                PlayAudioPickAxe();
-            }
+        int materialMined = 0;
+        m_miningWorked = m_mineableTarget.DoMine(m_weaponDamage, m_mineableTargetAmount, out materialMined);
+
+        if (m_miningWorked)
+        {
+            PlayAudioPickAxe();
+            m_mineableTargetAmount -= materialMined;
+        }
+
+    }
+
+    public void OnMiningFinished()
+    {
+        if (m_mineableTarget == null || m_miningWorked == false || m_mineableTargetAmount == 0)
+        {
+            TransitionState(CharacterState.Idle);
         }
     }
 
