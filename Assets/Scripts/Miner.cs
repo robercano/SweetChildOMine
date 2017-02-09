@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class Miner : SelectableObject, IPointerClickHandler
+public class Miner : SelectableObject
 {
     //public string Name;
     public int MaxLife;
@@ -14,7 +14,6 @@ public class Miner : SelectableObject, IPointerClickHandler
     public Sprite Weapon;
     public AudioClip[] m_pickSounds;
     private float m_weaponDamage = 2.5f;
-
 
     public AudioClip[] m_stepsSounds;
     public AudioClip m_gravelSound;
@@ -48,7 +47,6 @@ public class Miner : SelectableObject, IPointerClickHandler
     private Animator m_animator;
     private Rigidbody2D m_rigidBody;
     private AudioSource m_audioSource;
-    private SpriteRenderer m_spriteRenderer;
 
     private float m_walkSpeed = 32.0f;
     private float m_runSpeed = 64.0f;
@@ -75,16 +73,19 @@ public class Miner : SelectableObject, IPointerClickHandler
     // Character status
     private CharacterStatus m_characterStatus;
 
-    // Weapon selector
+    // Weapons
     private UIContainer m_weaponSelector;
+    private MinerInventory m_weaponInventory;
+    private GameObject m_pickAxePrefab;
+    private GameObject m_pickAxeInstance;
 
     // Input manager
     private InputManager m_inputManager;
 
     // Mining target
-    MineableObject m_mineableTarget;
-    int m_mineableTargetAmount;
-    bool m_miningWorked;
+    private MineableObject m_mineableTarget;
+    private int m_mineableTargetAmount;
+    private bool m_miningWorked;
 
     // Use this for initialization
     void Start()
@@ -94,7 +95,6 @@ public class Miner : SelectableObject, IPointerClickHandler
         m_animator = GetComponent<Animator>();
         m_rigidBody = GetComponent<Rigidbody2D>();
         m_audioSource = GetComponent<AudioSource>();
-        m_spriteRenderer = GetComponent<SpriteRenderer>();
 
         m_currentState = CharacterState.Idle;
         m_inputEvent = InputEvent.None;
@@ -134,6 +134,15 @@ public class Miner : SelectableObject, IPointerClickHandler
         m_mineableTarget = null;
         m_mineableTargetAmount = 0;
         m_miningWorked = false;
+
+        m_onSelectedDelegate = ActivateMiner;
+
+        // Weapons
+        m_pickAxePrefab = Resources.Load("PickAxe") as GameObject;
+        m_pickAxeInstance = Instantiate(m_pickAxePrefab, transform, false);
+        m_pickAxeInstance.SetActive(false);
+
+        //m_weaponInventory.AddItem(m_pickAxeInstance.GetComponent<SelectableObject>());
     }
 
     // Update is called once per frame
@@ -660,6 +669,7 @@ public class Miner : SelectableObject, IPointerClickHandler
             return;
         }
 
+        PlayAudioPickAxe();
         foreach (GameObject go in m_nearCaveColliders)
         {
             go.SendMessage("PlayerHit", 2, SendMessageOptions.DontRequireReceiver);
@@ -773,11 +783,6 @@ public class Miner : SelectableObject, IPointerClickHandler
             yield return new WaitForSeconds(0.05f);
         }
         m_spriteRenderer.color = Color.white;
-    }
-
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        ActivateMiner();
     }
 
     public void MineMaterial(MineableObject obj, int numItems)

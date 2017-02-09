@@ -61,7 +61,6 @@ public class ActionContextMenu : MonoBehaviour {
     private Text m_numItems;
     private Text m_info;
     private Text m_action;
-    private CanvasGroup m_canvasGroup;
     private WidgetFader m_widgetFader;
     
     void Awake()

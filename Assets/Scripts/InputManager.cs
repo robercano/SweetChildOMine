@@ -35,12 +35,4 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
             }
         }
     }
-
-    void OnGUI()
-    {
-        Event e = Event.current;
-
-        if (e.isKey)
-            Debug.Log("Received key event");
-    }
 }

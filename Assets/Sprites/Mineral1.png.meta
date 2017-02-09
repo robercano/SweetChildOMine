@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 2704e1adbb31f654682124d20009618d
-timeCreated: 1486245757
+timeCreated: 1486680134
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -86,10 +86,10 @@ TextureImporter:
       name: Mineral1_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 35
-        height: 35
+        x: 8
+        y: 1
+        width: 20
+        height: 26
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -99,10 +99,10 @@ TextureImporter:
       name: Mineral1_1
       rect:
         serializedVersion: 2
-        x: 35
-        y: 0
-        width: 35
-        height: 35
+        x: 43
+        y: 1
+        width: 20
+        height: 24
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -112,10 +112,10 @@ TextureImporter:
       name: Mineral1_2
       rect:
         serializedVersion: 2
-        x: 70
-        y: 0
-        width: 35
-        height: 35
+        x: 78
+        y: 1
+        width: 20
+        height: 20
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -125,10 +125,10 @@ TextureImporter:
       name: Mineral1_3
       rect:
         serializedVersion: 2
-        x: 105
-        y: 0
-        width: 35
-        height: 35
+        x: 113
+        y: 1
+        width: 20
+        height: 15
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -138,10 +138,10 @@ TextureImporter:
       name: Mineral1_4
       rect:
         serializedVersion: 2
-        x: 140
-        y: 0
-        width: 35
-        height: 35
+        x: 148
+        y: 1
+        width: 20
+        height: 12
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}

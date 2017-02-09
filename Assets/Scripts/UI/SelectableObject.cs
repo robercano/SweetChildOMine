@@ -12,6 +12,12 @@ public class SelectableObject : MonoBehaviour, IPointerEnterHandler, IPointerExi
         get; private set;
     }
 
+    public delegate void OnSelectectedDelegate();
+    public OnSelectectedDelegate m_onSelectedDelegate;
+
+    public delegate void OnDeselectedDelegate();
+    public OnDeselectedDelegate m_onDeselectedDelegate;
+
     private GameObject m_dialogPanelPrefab;
     private GameObject m_selectorPrefab;
 
@@ -21,7 +27,8 @@ public class SelectableObject : MonoBehaviour, IPointerEnterHandler, IPointerExi
     private GameObject m_selectorInstance;
     private Selector m_selector;
 
-    protected BoxCollider2D m_boxCollider;
+    //protected BoxCollider2D m_boxCollider;
+    protected SpriteRenderer m_spriteRenderer;
 
     private bool m_dialogEnabled;
 
@@ -30,7 +37,8 @@ public class SelectableObject : MonoBehaviour, IPointerEnterHandler, IPointerExi
         m_dialogPanelPrefab = Resources.Load("DialogPanel") as GameObject;
         m_selectorPrefab = Resources.Load("Selector") as GameObject;
 
-        m_boxCollider = GetComponent<BoxCollider2D>();
+       // m_boxCollider = GetComponent<BoxCollider2D>();
+        m_spriteRenderer = GetComponent<SpriteRenderer>();
 
         m_dialogInstance = GameObject.Instantiate(m_dialogPanelPrefab, transform, false);
         m_dialogPanel = m_dialogInstance.GetComponent<DialogPanel>();
@@ -38,15 +46,18 @@ public class SelectableObject : MonoBehaviour, IPointerEnterHandler, IPointerExi
         m_selectorInstance = GameObject.Instantiate(m_selectorPrefab, transform, false);
         m_selector = m_selectorInstance.GetComponent<Selector>();
 
-        m_dialogInstance.transform.localPosition = new Vector3(0.0f, 2.0f * m_boxCollider.bounds.extents.y + 5.0f, 0.0f);
+        m_dialogInstance.transform.position = new Vector3(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f, 0.0f);
 
         m_dialogPanel.DisableImmediate();
         m_dialogPanel.SetText(Name);
 
         m_selectorInstance.SetActive(false);
-        m_selector.SetBounds(m_boxCollider.bounds);
+        m_selector.SetBounds(m_spriteRenderer.bounds);
 
         m_dialogEnabled = true;
+
+        m_onSelectedDelegate = null;
+        m_onDeselectedDelegate = null;
     }
 
     private void ShowDialog()
@@ -78,7 +89,8 @@ public class SelectableObject : MonoBehaviour, IPointerEnterHandler, IPointerExi
     void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
     {
         if (eventData.button == PointerEventData.InputButton.Left)
-            ShowMenu();
+            if (m_onSelectedDelegate != null)
+                m_onSelectedDelegate();
     }
 
     public void EnableDialog()
@@ -95,12 +107,7 @@ public class SelectableObject : MonoBehaviour, IPointerEnterHandler, IPointerExi
     public virtual void Update()
     {
         if (Input.GetMouseButton(0) && (MouseOnObject == false))
-            HideMenu();
+            if (m_onDeselectedDelegate != null)
+                m_onDeselectedDelegate();
     }
-
-    public virtual void ShowMenu()
-    { /* Empty */ }
-
-    public virtual void HideMenu()
-    { /* Empty */ }
 }

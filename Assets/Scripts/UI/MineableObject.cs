@@ -34,7 +34,7 @@ public class MineableObject : SelectableObject
         m_actionContextMenuInstance = GameObject.Instantiate(m_actionContextMenuPrefab, transform, false);
         m_actionContextMenu = m_actionContextMenuInstance.GetComponent<ActionContextMenu>();
 
-        m_actionContextMenuInstance.transform.localPosition = new Vector3(0.0f, 2.0f * m_boxCollider.bounds.extents.y + 5.0f, 0.0f);
+        m_actionContextMenuInstance.transform.position = new Vector3(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f, 0.0f);
 
         m_currentItems = MaxItems;
 
@@ -45,16 +45,19 @@ public class MineableObject : SelectableObject
         m_actionContextMenu.OnAction = OnActionMine;
 
         m_characterStatus = GameObject.Find("CharacterStatus").GetComponent<CharacterStatus>();
+
+        m_onSelectedDelegate = ShowMenu;
+        m_onDeselectedDelegate = HideMenu;
     }
 
-    public override void ShowMenu()
+    public void ShowMenu()
     {
         DisableDialog();
 
         m_actionContextMenu.MaxNumItems = m_currentItems;
         m_actionContextMenu.Enable();
     }
-    public override void HideMenu()
+    public void HideMenu()
     {
         m_actionContextMenu.Disable();
         EnableDialog();
@@ -106,7 +109,7 @@ public class MineableObject : SelectableObject
         if (extracted > 0)
         {
             GameObject mineralDamageInstance = GameObject.Instantiate(m_mineralDamagePrefab, transform, false);
-            mineralDamageInstance.transform.localPosition = new Vector2(0.0f, 2.0f * m_boxCollider.bounds.extents.y + 5.0f);
+            mineralDamageInstance.transform.position = new Vector2(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f);
 
             MineralDamagePopup mineralDamagePopup = mineralDamageInstance.GetComponent<MineralDamagePopup>();
 

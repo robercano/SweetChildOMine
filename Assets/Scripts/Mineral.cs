@@ -7,7 +7,6 @@ using UnityEngine.Assertions;
 public class Mineral : MineableObject {
     public Sprite[] AmountSprites;
 
-    private SpriteRenderer m_spriteRenderer;
     private int m_amountPerSprite;
 
     // Use this for initialization
@@ -16,7 +15,6 @@ public class Mineral : MineableObject {
         Assert.IsTrue(MaxItems > 0);
 
         m_amountPerSprite = MaxItems / AmountSprites.Length;
-        m_spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     public override void Update()

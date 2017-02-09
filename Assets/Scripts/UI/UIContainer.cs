@@ -49,6 +49,10 @@ public class UIContainer : MonoBehaviour {
         Array.Sort(m_UIImages, comparer);
     }
 
+    //public bool SetInventory(MinerInventory inventory)
+    //{
+
+//    }
     public bool SetSlot(int slot, Sprite sprite)
     {
         if ((slot == 0) || ((slot - 1) > m_slots.Length))
