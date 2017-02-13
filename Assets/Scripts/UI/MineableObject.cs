@@ -10,6 +10,7 @@ public class MineableObject : SelectableObject
     public float DamagePerItem;
     public Color DamageColor;
     public string ActionName;
+    public Sprite InventoryAvatar;
 
     protected int m_currentItems;
 

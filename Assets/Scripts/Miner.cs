@@ -75,9 +75,13 @@ public class Miner : SelectableObject
 
     // Weapons
     private UIContainer m_weaponSelector;
-    private MinerInventory m_weaponInventory;
+    private Inventory m_weaponInventory;
     private GameObject m_pickAxePrefab;
     private GameObject m_pickAxeInstance;
+
+    // Materials
+    private UIContainer m_materialSelector;
+    private Inventory m_materialInventory;
 
     // Input manager
     private InputManager m_inputManager;
@@ -128,6 +132,10 @@ public class Miner : SelectableObject
         // UI
         m_characterStatus = GameObject.FindObjectOfType<CharacterStatus>();
         m_weaponSelector = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
+        m_materialSelector = GameObject.Find("InventoryContainer").GetComponent<UIContainer>();
+
+        m_materialInventory = new Inventory(6);
+        m_weaponInventory = new Inventory(3);
 
         m_inputManager = GameObject.FindObjectOfType<InputManager>();
 
@@ -158,8 +166,9 @@ public class Miner : SelectableObject
     {
         m_characterStatus.SetActiveMiner(this);
 
-        m_weaponSelector.SetSlot(1, Weapon);
-        m_weaponSelector.SetShortcut(1, '1');
+        m_weaponSelector.SetSlot(0, Weapon, "1");
+
+        m_materialSelector.SetInventory(m_materialInventory);
 
         m_inputManager.SetActiveMiner(this);
     }
@@ -167,6 +176,7 @@ public class Miner : SelectableObject
     {
         m_characterStatus.SetActiveMiner(null);
         m_weaponSelector.ClearAll();
+        m_materialSelector.ClearAll();
     }
     public Sprite GetCurrentAvatar()
     {
@@ -647,6 +657,9 @@ public class Miner : SelectableObject
         {
             PlayAudioPickAxe();
             m_mineableTargetAmount -= materialMined;
+
+            Inventory.InventoryItem item = new Inventory.InventoryItem(m_mineableTarget.Name, m_mineableTarget.InventoryAvatar, materialMined);
+            m_materialInventory.AddItem(item);
         }
 
     }

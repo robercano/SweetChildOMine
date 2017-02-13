@@ -22,92 +22,73 @@ public class UIContainer : MonoBehaviour {
     
     private Text[] m_UITexts;
     private Image[] m_UIImages;
-    private Sprite[] m_slots;
-
-    // Used to sort the slots from left to right
-    public class SlotComparer : IComparer<Image>
-    {
-        public int Compare(Image a, Image b)
-        {
-            if (a.transform.position.x < b.transform.position.x)
-                return -1;
-            else
-                return 1;
-        }
-    }
+    private Inventory m_inventory;
 
     // Use this for initialization
     void Start()
     {
-        IComparer<Image> comparer = new SlotComparer();
-
         m_UITexts = GetComponentsInChildren<Text>();
         m_UIImages = GetComponentsInChildren<Image>();
 
-        m_slots = new Sprite[m_UIImages.Length];
-
-        Array.Sort(m_UIImages, comparer);
+        m_inventory = null;
     }
 
-    //public bool SetInventory(MinerInventory inventory)
-    //{
-
-//    }
-    public bool SetSlot(int slot, Sprite sprite)
+    void InventoryUpdate()
     {
-        if ((slot == 0) || ((slot - 1) > m_slots.Length))
+        for (int i = 0; i < m_inventory.GetCount(); ++i)
+        {
+            Inventory.InventoryItem? item = m_inventory.GetItemAtSlot(i);
+            if (SetSlot(i, item.Value.avatar, "x" + item.Value.amount.ToString()) == false)
+                Debug.Log("ERROR setting slot");
+        }
+    }
+
+    public void SetInventory(Inventory inventory)
+    {
+        m_inventory = inventory;
+        m_inventory.m_inventoryUpdateDelegate = InventoryUpdate;
+    }
+
+    public bool SetSlot(int slot, Sprite sprite, string text)
+    {
+        slot++;
+
+        if (slot < 1 || slot >= m_UIImages.Length)
             return false;
 
-        m_slots[slot] = sprite;
         m_UIImages[slot].sprite = sprite;
-        m_UIImages[slot].color = Color.white;
+        m_UIImages[slot].color = sprite == null ? Color.clear : Color.white;
+        m_UITexts[slot].text = text;
 
         return true;
     }
-    public bool ClearSlot(int slot)
-    {
-        if ((slot == 0) || ((slot - 1) > m_slots.Length))
-            return false;
 
-        m_slots[slot] = null;
-        m_UIImages[slot].sprite = null;
-        m_UIImages[slot].color = Color.clear;
-
-        return true;
-    }
     public void ClearAllSlots()
     {
-        for (int i = 0; i < m_slots.Length; ++i)
-            ClearSlot(i);
+        for (int i = 1; i < m_UIImages.Length; ++i)
+            SetSlot(i, null, null);
     }
 
-    public bool SetShortcut(int slot, char shortcut)
+    public bool SetText(int slot, char shortcut)
     {
-        if ((slot == 0) || ((slot - 1) > m_slots.Length))
+        slot++;
+
+        if (slot < 1 || slot >= m_UIImages.Length)
             return false;
 
         m_UITexts[slot].text = shortcut.ToString();
 
         return true;
     }
-    public bool ClearShortcut(int slot)
-    {
-        if ((slot == 0) || ((slot - 1) > m_slots.Length))
-            return false;
-
-        m_UITexts[slot].text = "";
-
-        return true;
-    }
-    public void ClearAllShortcut()
+      public void ClearAllTexts()
     {
         for (int i = 0; i < m_UITexts.Length; ++i)
-            ClearShortcut(i);
+            SetText(i, ' ');
     }
 
     public void ClearAll()
     {
         ClearAllSlots();
-        ClearAllShortcut();
+        ClearAllTexts();
     }
 }
