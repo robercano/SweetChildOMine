@@ -10,7 +10,7 @@ public class MineableObject : SelectableObject
     public float DamagePerItem;
     public Color DamageColor;
     public string ActionName;
-    public Sprite InventoryAvatar;
+    public GameObject MineableItem;
 
     protected int m_currentItems;
 
@@ -76,38 +76,40 @@ public class MineableObject : SelectableObject
     }
 
     /* Public interface */
-    public bool DoMine(float damage, int maxIems, out int extracted)
+    public bool DoMine(float damage, int maxIems, out Item extracted)
     {
-        extracted = 0;
+        extracted = null;
 
         if (m_currentItems == 0)
             return false;
 
         m_remindingDamage += damage;
 
-        extracted = Mathf.FloorToInt(m_remindingDamage / DamagePerItem);
-        if (extracted > maxIems)
+        extracted = GameObject.Instantiate(MineableItem).GetComponent<Item>();
+
+        extracted.Amount= Mathf.FloorToInt(m_remindingDamage / DamagePerItem);
+        if (extracted.Amount > maxIems)
         {
-            extracted = maxIems;
+            extracted.Amount = maxIems;
             m_remindingDamage = 0.0f;
         }
         else
         {
-            m_remindingDamage -= extracted * DamagePerItem;
+            m_remindingDamage -= extracted.Amount * DamagePerItem;
         }
 
-        if (m_currentItems > extracted)
+        if (m_currentItems > extracted.Amount)
         {
-            m_currentItems -= extracted;
+            m_currentItems -= extracted.Amount;
         }
         else
         {
-            extracted = m_currentItems;
+            extracted.Amount = m_currentItems;
             m_remindingDamage = 0.0f;
             m_currentItems = 0;
         }
 
-        if (extracted > 0)
+        if (extracted.Amount > 0)
         {
             GameObject mineralDamageInstance = GameObject.Instantiate(m_mineralDamagePrefab, transform, false);
             mineralDamageInstance.transform.position = new Vector2(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f);
@@ -117,7 +119,7 @@ public class MineableObject : SelectableObject
             mineralDamagePopup.Color = DamageColor;
             mineralDamagePopup.Speed = 10.0f;
             mineralDamagePopup.Seconds = 2.0f;
-            mineralDamagePopup.UnitsExtracted = extracted;
+            mineralDamagePopup.UnitsExtracted = extracted.Amount;
         }
 
         return true;

@@ -31,8 +31,6 @@ public class ActionContextMenu : MonoBehaviour {
     }
     public delegate void OnActionDelegate(int selectedAmount);
     public OnActionDelegate OnAction;
-    public float FadeTime;
-    public int FadeSteps;
 
     int SelectedNumItems
     {

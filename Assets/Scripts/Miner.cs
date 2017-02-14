@@ -78,6 +78,7 @@ public class Miner : SelectableObject
     private Inventory m_weaponInventory;
     private GameObject m_pickAxePrefab;
     private GameObject m_pickAxeInstance;
+    private WeaponItem m_pickAxe;
 
     // Materials
     private UIContainer m_materialSelector;
@@ -89,7 +90,11 @@ public class Miner : SelectableObject
     // Mining target
     private MineableObject m_mineableTarget;
     private int m_mineableTargetAmount;
+    private int m_mineableRemainingAmount;
     private bool m_miningWorked;
+    private GameObject m_miningDialogPrefab;
+    private GameObject m_miningDialogInstance;
+    private MiningProgressDialog m_miningDialog;
 
     // Use this for initialization
     void Start()
@@ -141,16 +146,23 @@ public class Miner : SelectableObject
 
         m_mineableTarget = null;
         m_mineableTargetAmount = 0;
+        m_mineableRemainingAmount = 0;
         m_miningWorked = false;
 
         m_onSelectedDelegate = ActivateMiner;
 
-        // Weapons
-        m_pickAxePrefab = Resources.Load("PickAxe") as GameObject;
-        m_pickAxeInstance = Instantiate(m_pickAxePrefab, transform, false);
-        m_pickAxeInstance.SetActive(false);
+        m_miningDialogPrefab = Resources.Load("MiningProgressDialog") as GameObject;
+        m_miningDialogInstance = GameObject.Instantiate(m_miningDialogPrefab, transform, false);
+        m_miningDialogInstance.transform.position = new Vector3(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f, 0.0f);
+        m_miningDialog = m_miningDialogInstance.GetComponent<MiningProgressDialog>();
+        m_miningDialog.ActionName = "Stop";
+        m_miningDialog.OnAction = OnMiningTerminated;
+        m_miningDialogInstance.SetActive(false);
 
-        //m_weaponInventory.AddItem(m_pickAxeInstance.GetComponent<SelectableObject>());
+        // Weapons
+        m_pickAxePrefab = Resources.Load("PickAxeWeapon") as GameObject;
+        m_pickAxe = m_pickAxePrefab.GetComponent<WeaponItem>();
+        m_weaponInventory.AddItem(m_pickAxe);
     }
 
     // Update is called once per frame
@@ -165,11 +177,8 @@ public class Miner : SelectableObject
     public void ActivateMiner()
     {
         m_characterStatus.SetActiveMiner(this);
-
-        m_weaponSelector.SetSlot(0, Weapon, "1");
-
+        m_weaponSelector.SetInventory(m_weaponInventory);
         m_materialSelector.SetInventory(m_materialInventory);
-
         m_inputManager.SetActiveMiner(this);
     }
     public void DeactivateMiner()
@@ -481,6 +490,7 @@ public class Miner : SelectableObject
                 break;
             case CharacterState.MineMaterial:
                 m_animator.SetTrigger("minerMine");
+                m_miningDialog.Enable();
                 break;
             case CharacterState.Idle:
                 m_animator.SetTrigger("minerIdle");
@@ -650,26 +660,36 @@ public class Miner : SelectableObject
         if (m_mineableTarget == null)
             return;
 
-        int materialMined = 0;
-        m_miningWorked = m_mineableTarget.DoMine(m_weaponDamage, m_mineableTargetAmount, out materialMined);
+        Item materialMined = null;
+        m_miningWorked = m_mineableTarget.DoMine(m_weaponDamage, m_mineableRemainingAmount, out materialMined);
 
         if (m_miningWorked)
         {
             PlayAudioPickAxe();
-            m_mineableTargetAmount -= materialMined;
+            m_mineableRemainingAmount -= materialMined.Amount;
+            m_miningDialog.Percentage = (100 * (m_mineableTargetAmount - m_mineableRemainingAmount) / m_mineableTargetAmount);
 
-            Inventory.InventoryItem item = new Inventory.InventoryItem(m_mineableTarget.Name, m_mineableTarget.InventoryAvatar, materialMined);
-            m_materialInventory.AddItem(item);
+            m_materialInventory.AddItem(materialMined);
         }
 
     }
 
     public void OnMiningFinished()
     {
-        if (m_mineableTarget == null || m_miningWorked == false || m_mineableTargetAmount == 0)
+        if (m_mineableTarget == null || m_miningWorked == false || m_mineableRemainingAmount == 0)
         {
-            TransitionState(CharacterState.Idle);
+            OnMiningTerminated();
         }
+    }
+
+    public void OnMiningTerminated()
+    {
+        m_mineableRemainingAmount = 0;
+        m_mineableTargetAmount = 0;
+        m_mineableTarget = null;
+
+        m_miningDialog.Disable();
+        TransitionState(CharacterState.Idle);
     }
 
     public void OnDigging()
@@ -805,6 +825,10 @@ public class Miner : SelectableObject
 
         m_mineableTarget = obj;
         m_mineableTargetAmount = numItems;
+        m_mineableRemainingAmount = numItems;
+
+        m_miningDialog.Title = "Mining " + obj.Name;
+        m_miningDialog.Percentage = 0;
 
         m_movementTarget = obj.gameObject.transform.position;
         ActivateVisibleTarget();

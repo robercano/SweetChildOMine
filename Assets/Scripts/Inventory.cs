@@ -5,52 +5,44 @@ using UnityEngine;
 
 public class Inventory {
 
-    public struct InventoryItem
-    {
-        public string name;
-        public Sprite avatar;
-        public int amount;
-
-        public InventoryItem(string name, Sprite avatar, int amount)
-        {
-            this.name = name;
-            this.avatar = avatar;
-            this.amount = amount;
-        }
-    };
     public delegate void InventoryUpdate();
     public InventoryUpdate m_inventoryUpdateDelegate;
 
-    private List<InventoryItem> m_inventorySlots;
+    private List<Item> m_inventorySlots;
     private Dictionary<string, int> m_inventoryMap;
 
     public Inventory(int maxSlots)
     {
-        m_inventorySlots = new List<InventoryItem>(maxSlots);
+        m_inventorySlots = new List<Item>(maxSlots);
         m_inventoryMap = new Dictionary<string, int>(maxSlots);
         m_inventoryUpdateDelegate = null;
     }
 
-    public bool AddItem(InventoryItem item)
+    public bool AddItem(Item item)
     {
         int slot;
 
-        if (m_inventoryMap.TryGetValue(item.name, out slot))
+        if (m_inventoryMap.TryGetValue(item.Name, out slot))
         {
-            InventoryItem curItem = m_inventorySlots[slot];
-            curItem.amount += item.amount;
+            Item curItem = m_inventorySlots[slot];
+            curItem.Amount += item.Amount;
             m_inventorySlots[slot] = curItem;
 
             if (m_inventoryUpdateDelegate != null)
                 m_inventoryUpdateDelegate();
+
+            GameObject.Destroy(item.gameObject);
             return true;
         }
 
         if (m_inventorySlots.Count == m_inventorySlots.Capacity)
+        {
+            GameObject.Destroy(item.gameObject);
             return false;
+        }
 
         m_inventorySlots.Add(item);
-        m_inventoryMap[item.name] = m_inventorySlots.Count - 1;
+        m_inventoryMap[item.Name] = m_inventorySlots.Count - 1;
 
         if (m_inventoryUpdateDelegate != null)
             m_inventoryUpdateDelegate();
@@ -58,7 +50,7 @@ public class Inventory {
         return true;
     }
 
-    public InventoryItem? GetItemAtSlot(int slot)
+    public Item GetItemAtSlot(int slot)
     {
         if (slot >= m_inventorySlots.Count)
         {

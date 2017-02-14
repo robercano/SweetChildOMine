@@ -37,8 +37,8 @@ public class UIContainer : MonoBehaviour {
     {
         for (int i = 0; i < m_inventory.GetCount(); ++i)
         {
-            Inventory.InventoryItem? item = m_inventory.GetItemAtSlot(i);
-            if (SetSlot(i, item.Value.avatar, "x" + item.Value.amount.ToString()) == false)
+            Item item = m_inventory.GetItemAtSlot(i);
+            if (SetSlot(i, item.Avatar, "x" + item.Amount.ToString()) == false)
                 Debug.Log("ERROR setting slot");
         }
     }
@@ -47,6 +47,7 @@ public class UIContainer : MonoBehaviour {
     {
         m_inventory = inventory;
         m_inventory.m_inventoryUpdateDelegate = InventoryUpdate;
+        InventoryUpdate();
     }
 
     public bool SetSlot(int slot, Sprite sprite, string text)
