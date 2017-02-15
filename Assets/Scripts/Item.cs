@@ -8,4 +8,7 @@ public class Item : MonoBehaviour
     public Sprite Avatar;
     public string Description;
     public int Amount;
+    public int Weight;
+
+    public GameObject ObjectPrefab;
 };

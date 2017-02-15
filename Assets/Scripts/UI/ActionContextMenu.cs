@@ -17,7 +17,6 @@ public class ActionContextMenu : MonoBehaviour {
             m_title.text = value;
         }
     }
-    public int MaxNumItems;
     public string ActionName
     {
         get
@@ -32,7 +31,11 @@ public class ActionContextMenu : MonoBehaviour {
     public delegate void OnActionDelegate(int selectedAmount);
     public OnActionDelegate OnAction;
 
-    int SelectedNumItems
+    public delegate int OnRetrieveDelegate();
+    public OnRetrieveDelegate OnRetrieveMaxItems;
+    public OnRetrieveDelegate OnRetrieveCurrentItems;
+
+    public int SelectedNumItems
     {
         get
         {
@@ -59,6 +62,9 @@ public class ActionContextMenu : MonoBehaviour {
     private Text m_numItems;
     private Text m_info;
     private Text m_action;
+    private Button m_buttonLeft;
+    private Button m_buttonRight;
+    private Button m_buttonAction;
     private WidgetFader m_widgetFader;
     
     void Awake()
@@ -68,20 +74,59 @@ public class ActionContextMenu : MonoBehaviour {
         m_info = transform.FindDeepChild("Info").GetComponent<Text>();
         m_action = transform.FindDeepChild("ActionText").GetComponent<Text>();
 
+        m_buttonLeft = transform.FindDeepChild("ButtonLeft").GetComponent<Button>();
+        m_buttonRight = transform.FindDeepChild("ButtonRight").GetComponent<Button>();
+        m_buttonAction = transform.FindDeepChild("Action").GetComponent<Button>();
+
+        m_buttonLeft.interactable = false;
+        m_buttonRight.interactable = false;
+        m_buttonAction.interactable = false;
+
         m_widgetFader = GetComponent<WidgetFader>();
         m_widgetFader.DisableImmediate();
+
+        SelectedNumItems = 1;
     }
 
-    void UpdateInfo()
+    void Update()
     {
-        Info = "(" + (MaxNumItems - SelectedNumItems) + " left)";
-    }
+        Info = "(" + (OnRetrieveCurrentItems() - SelectedNumItems) + " left)";
 
-      /* Public interface */
+        if (OnAction == null)
+        {
+            m_buttonLeft.interactable = false;
+            m_buttonRight.interactable = false;
+            m_buttonAction.interactable = false;
+        }
+        else
+        {
+            m_buttonAction.interactable = true;
+
+            if (SelectedNumItems <= 1)
+            {
+                SelectedNumItems = 1;
+                m_buttonLeft.interactable = false;
+            }
+            else
+            {
+                m_buttonLeft.interactable = true;
+            }
+
+            if (SelectedNumItems >= OnRetrieveMaxItems())
+            {
+                SelectedNumItems = OnRetrieveMaxItems();
+                m_buttonRight.interactable = false;
+            }
+            else
+            {
+                m_buttonRight.interactable = true;
+            }
+        }
+    }
+    
+    /* Public interface */
     public void Enable()
     {
-        SelectedNumItems = 0;
-        UpdateInfo();
         m_widgetFader.Enable();
     }
     public void Disable()
@@ -92,19 +137,11 @@ public class ActionContextMenu : MonoBehaviour {
     /* Events */
     public void OnLeftClick()
     {
-        if (SelectedNumItems > 0)
-        {
-            SelectedNumItems--;
-            UpdateInfo();
-        }
+        SelectedNumItems--;
     }
     public void OnRightClick()
     {
-        if(SelectedNumItems < MaxNumItems)
-        {
-            SelectedNumItems++;
-            UpdateInfo();
-        }
+        SelectedNumItems++;
     }
     public void OnActionClick()
     {

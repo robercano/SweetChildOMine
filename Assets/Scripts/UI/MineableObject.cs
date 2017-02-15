@@ -16,6 +16,8 @@ public class MineableObject : SelectableObject
 
     private float m_remindingDamage;
 
+    private int m_mineableItemWeight;
+
     private GameObject m_actionContextMenuPrefab;
     private GameObject m_actionContextMenuInstance;
     private ActionContextMenu m_actionContextMenu;
@@ -41,9 +43,13 @@ public class MineableObject : SelectableObject
 
         m_remindingDamage = 0.0f;
 
+        m_mineableItemWeight = MineableItem.GetComponent<Item>().Weight;
+
         m_actionContextMenu.Title = Name;
         m_actionContextMenu.ActionName = ActionName;
-        m_actionContextMenu.OnAction = OnActionMine;
+        m_actionContextMenu.OnAction = null;
+        m_actionContextMenu.OnRetrieveMaxItems = OnRetrieveMaxItems;
+        m_actionContextMenu.OnRetrieveCurrentItems = OnRetrieveCurrentItems;
 
         m_characterStatus = GameObject.Find("CharacterStatus").GetComponent<CharacterStatus>();
 
@@ -53,15 +59,41 @@ public class MineableObject : SelectableObject
 
     public void ShowMenu()
     {
-        DisableDialog();
+        Miner miner = m_characterStatus.GetActiveMiner();
+        if (miner != null)
+        {
+            m_actionContextMenu.OnAction = OnActionMine;
 
-        m_actionContextMenu.MaxNumItems = m_currentItems;
+            int minerMaxItems = miner.MaterialInventory.RemainingWeight / m_mineableItemWeight;
+            m_actionContextMenu.SelectedNumItems = minerMaxItems;
+        }
+        else
+        {
+            m_actionContextMenu.SelectedNumItems = 0;
+        }
+
+        DisableDialog();
         m_actionContextMenu.Enable();
     }
     public void HideMenu()
     {
         m_actionContextMenu.Disable();
         EnableDialog();
+    }
+
+    protected int OnRetrieveMaxItems()
+    {
+        int minerMaxItems = 0;
+
+        Miner miner = m_characterStatus.GetActiveMiner();
+        if (miner != null)
+            minerMaxItems = miner.MaterialInventory.RemainingWeight / m_mineableItemWeight;
+
+        return Mathf.Min(minerMaxItems, m_currentItems);
+    }
+    protected int OnRetrieveCurrentItems()
+    {
+        return m_currentItems;
     }
 
     protected virtual void OnActionMine(int numItems)
@@ -76,8 +108,9 @@ public class MineableObject : SelectableObject
     }
 
     /* Public interface */
-    public bool DoMine(float damage, int maxIems, out Item extracted)
+    public bool DoMine(float damage, int maxItems, int maxWeight, out Item extracted)
     {
+        bool continueMining = true;
         extracted = null;
 
         if (m_currentItems == 0)
@@ -85,32 +118,40 @@ public class MineableObject : SelectableObject
 
         m_remindingDamage += damage;
 
+        // Calculate expected number of items to extract
+        int amountToExtract = Mathf.FloorToInt(m_remindingDamage / DamagePerItem);
+
+        // Then adjust to the different limitations: maximum number of items allowed,
+        // maximum weight allowed and maximum available number of items
+        if (amountToExtract > maxItems)
+        {
+            amountToExtract = maxItems;
+            continueMining = false;
+        }
+        if ((amountToExtract * m_mineableItemWeight) > maxWeight)
+        {
+            amountToExtract = maxWeight / m_mineableItemWeight;
+            continueMining = false;
+        }
+        if (amountToExtract > m_currentItems)
+        {
+            amountToExtract = m_currentItems;
+            continueMining = false;
+        }
+
+        if (amountToExtract == 0)
+            return false;
+
         extracted = GameObject.Instantiate(MineableItem).GetComponent<Item>();
+        extracted.Amount = amountToExtract;
 
-        extracted.Amount= Mathf.FloorToInt(m_remindingDamage / DamagePerItem);
-        if (extracted.Amount > maxIems)
-        {
-            extracted.Amount = maxIems;
-            m_remindingDamage = 0.0f;
-        }
-        else
-        {
-            m_remindingDamage -= extracted.Amount * DamagePerItem;
-        }
-
-        if (m_currentItems > extracted.Amount)
-        {
-            m_currentItems -= extracted.Amount;
-        }
-        else
-        {
-            extracted.Amount = m_currentItems;
-            m_remindingDamage = 0.0f;
-            m_currentItems = 0;
-        }
+        m_currentItems -= extracted.Amount;
+        m_remindingDamage -= (extracted.Amount * DamagePerItem);
 
         if (extracted.Amount > 0)
         {
+            extracted.Weight *= extracted.Amount;
+
             GameObject mineralDamageInstance = GameObject.Instantiate(m_mineralDamagePrefab, transform, false);
             mineralDamageInstance.transform.position = new Vector2(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f);
 
@@ -122,6 +163,6 @@ public class MineableObject : SelectableObject
             mineralDamagePopup.UnitsExtracted = extracted.Amount;
         }
 
-        return true;
+        return continueMining;
     }
 }

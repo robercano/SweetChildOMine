@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class UIContainer : MonoBehaviour {
 
@@ -21,14 +22,14 @@ public class UIContainer : MonoBehaviour {
     }
     
     private Text[] m_UITexts;
-    private Image[] m_UIImages;
+    private ContainerSlot[] m_slots;
     private Inventory m_inventory;
 
     // Use this for initialization
     void Start()
     {
         m_UITexts = GetComponentsInChildren<Text>();
-        m_UIImages = GetComponentsInChildren<Image>();
+        m_slots = GetComponentsInChildren<ContainerSlot>();
 
         m_inventory = null;
     }
@@ -38,7 +39,7 @@ public class UIContainer : MonoBehaviour {
         for (int i = 0; i < m_inventory.GetCount(); ++i)
         {
             Item item = m_inventory.GetItemAtSlot(i);
-            if (SetSlot(i, item.Avatar, "x" + item.Amount.ToString()) == false)
+            if (SetSlot(i, item, "x" + item.Amount.ToString()) == false)
                 Debug.Log("ERROR setting slot");
         }
     }
@@ -50,23 +51,20 @@ public class UIContainer : MonoBehaviour {
         InventoryUpdate();
     }
 
-    public bool SetSlot(int slot, Sprite sprite, string text)
+    public bool SetSlot(int slot, Item item, string text)
     {
-        slot++;
-
-        if (slot < 1 || slot >= m_UIImages.Length)
+        if (slot < 0 || slot >= m_slots.Length)
             return false;
 
-        m_UIImages[slot].sprite = sprite;
-        m_UIImages[slot].color = sprite == null ? Color.clear : Color.white;
-        m_UITexts[slot].text = text;
+        m_slots[slot].SlotItem = item;
+        m_UITexts[slot+1].text = text;
 
         return true;
     }
 
     public void ClearAllSlots()
     {
-        for (int i = 1; i < m_UIImages.Length; ++i)
+        for (int i = 1; i < m_slots.Length; ++i)
             SetSlot(i, null, null);
     }
 
@@ -74,7 +72,7 @@ public class UIContainer : MonoBehaviour {
     {
         slot++;
 
-        if (slot < 1 || slot >= m_UIImages.Length)
+        if (slot < 1 || slot >= m_slots.Length)
             return false;
 
         m_UITexts[slot].text = shortcut.ToString();
