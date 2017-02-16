@@ -91,7 +91,7 @@ Shader "Sprites/Outline"
 
 				// If outline is enabled and there is a pixel, try to draw an outline.
 				if (_Outline > 0 && c.a == 0.0) {
-					//float totalAlpha = 1.0;
+					float totalAlpha = 0;
 
 					[unroll(16)]
 					for (int i = 1; i < _OutlineSize + 1; i++) {
@@ -100,14 +100,12 @@ Shader "Sprites/Outline"
 						fixed4 pixelRight = tex2D(_MainTex, IN.texcoord + fixed2(i * _MainTex_TexelSize.x, 0));
 						fixed4 pixelLeft = tex2D(_MainTex, IN.texcoord - fixed2(i * _MainTex_TexelSize.x, 0));
 
-						if (pixelUp.a != 0 || pixelDown.a != 0 || pixelRight.a != 0 || pixelLeft.a != 0) {
-							c.rgba = fixed4(1, 1, 1, 1) * _OutlineColor;
-						}
+						totalAlpha += pixelUp.a + pixelDown.a + pixelLeft.a + pixelRight.a;
 					}
 
-					//if (totalAlpha == 0) {
-						//c.rgba = fixed4(1, 1, 1, 1) * _OutlineColor;
-					//}
+					if (totalAlpha != 0) {
+						c.rgba = fixed4(1, 1, 1, 1) * _OutlineColor;
+					}
 				}
 
 				c.rgb *= c.a;
