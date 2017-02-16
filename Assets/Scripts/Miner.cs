@@ -27,7 +27,7 @@ public class Miner : SelectableObject
     [HideInInspector]
     public enum CharacterState
     {
-        Idle, WalkLeft, WalkRight, RunLeft, RunRight, DigLeft, DigRight, Attack, MineWalkLeft, MineWalkRight, MineMaterial
+        Idle, Walk, Run, Dig, Attack, MineWalk, MineMaterial
     };
     [HideInInspector]
     public enum InputEvent
@@ -49,6 +49,7 @@ public class Miner : SelectableObject
 
     private float m_walkSpeed = 32.0f;
     private float m_runSpeed = 64.0f;
+	private float m_faceDirection = 1.0f;
     private Vector2 m_movementTarget;
 
     private CharacterState m_currentState;
@@ -228,12 +229,9 @@ void FixedUpdate()
             case CharacterState.Idle:
                 DisableVisibleTarget();
                 break;
-            case CharacterState.WalkLeft:
-            case CharacterState.RunLeft:
-            case CharacterState.WalkRight:
-            case CharacterState.RunRight:
-            case CharacterState.DigLeft:
-            case CharacterState.DigRight:
+            case CharacterState.Walk:
+            case CharacterState.Run:
+            case CharacterState.Dig:
                 {
                     // Check end of movement
                     float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
@@ -248,35 +246,20 @@ void FixedUpdate()
                     // Still moving, apply speed
                     switch (m_currentState)
                     {
-                        case CharacterState.WalkLeft:
-                            m_rigidBody.velocity = new Vector2(-m_walkSpeed, m_rigidBody.velocity.y);
-                            break;
-                        case CharacterState.WalkRight:
-                            m_rigidBody.velocity = new Vector2(m_walkSpeed, m_rigidBody.velocity.y);
-                            break;
-                        case CharacterState.RunLeft:
-                            m_rigidBody.velocity = new Vector2(-m_runSpeed, m_rigidBody.velocity.y);
-                            break;
-                        case CharacterState.RunRight:
-                            m_rigidBody.velocity = new Vector2(m_runSpeed, m_rigidBody.velocity.y);
+                        case CharacterState.Walk:
+							m_rigidBody.velocity = new Vector2(m_faceDirection * m_walkSpeed, m_rigidBody.velocity.y);
+                            break;                        
+                        case CharacterState.Run:
+                            m_rigidBody.velocity = new Vector2(m_faceDirection * m_runSpeed, m_rigidBody.velocity.y);
                             break;
                     }
 
                     FallDown();
                 }
                 break;
-            case CharacterState.MineWalkLeft:
-            case CharacterState.MineWalkRight:
+            case CharacterState.MineWalk:
                 {
-                    switch (m_currentState)
-                    {
-                        case CharacterState.MineWalkLeft:
-                            m_rigidBody.velocity = new Vector2(-m_walkSpeed, m_rigidBody.velocity.y);
-                            break;
-                        case CharacterState.MineWalkRight:
-                            m_rigidBody.velocity = new Vector2(m_walkSpeed, m_rigidBody.velocity.y);
-                            break;
-                    }
+					m_rigidBody.velocity = new Vector2(m_faceDirection * m_walkSpeed, m_rigidBody.velocity.y);
                     FallDown();
                 }
                 break;
@@ -323,17 +306,19 @@ void FixedUpdate()
                     float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
                     if (deltaX < -float.Epsilon)
                     {
-                        if (m_currentState == CharacterState.RunRight)
-                            TransitionState(CharacterState.RunLeft);
+						m_faceDirection = -1.0f;
+                        if (m_currentState == CharacterState.Run)
+                            TransitionState(CharacterState.Run);
                         else
-                            TransitionState(CharacterState.WalkLeft);
+                            TransitionState(CharacterState.Walk);
                     }
                     else if (deltaX > float.Epsilon)
                     {
-                        if (m_currentState == CharacterState.RunLeft)
-                            TransitionState(CharacterState.RunRight);
+						m_faceDirection = 1.0f;
+                        if (m_currentState == CharacterState.Run)
+                            TransitionState(CharacterState.Run);
                         else
-                            TransitionState(CharacterState.WalkRight);
+                            TransitionState(CharacterState.Walk);
                     }
                 }
                 break;
@@ -345,11 +330,13 @@ void FixedUpdate()
                     float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
                     if (deltaX < -float.Epsilon)
                     {
-                        TransitionState(CharacterState.RunLeft);
+						m_faceDirection = -1.0f;
+                        TransitionState(CharacterState.Run);
                     }
                     else if (deltaX > float.Epsilon)
                     {
-                        TransitionState(CharacterState.RunRight);
+						m_faceDirection = 1.0f;
+                        TransitionState(CharacterState.Run);
                     }
                 }
                 break;
@@ -361,16 +348,18 @@ void FixedUpdate()
                     float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
                     if (deltaX < -float.Epsilon)
                     {
-                        if (m_currentState != CharacterState.RunLeft)
+                        if (m_currentState != CharacterState.Run)
                         {
-                            TransitionState(CharacterState.RunLeft);
+							m_faceDirection = -1.0f;
+                            TransitionState(CharacterState.Run);
                         }
                     }
                     else if (deltaX > float.Epsilon)
                     {
-                        if (m_currentState != CharacterState.RunRight)
+                        if (m_currentState != CharacterState.Run)
                         {
-                            TransitionState(CharacterState.RunRight);
+							m_faceDirection = 1.0f;
+                            TransitionState(CharacterState.Run);
                         }
                     }
                 }
@@ -411,17 +400,19 @@ void FixedUpdate()
                     else
                         newDoubleSpeed = false;
 
-                    if ((deltaX < -float.Epsilon && m_currentState != CharacterState.DigLeft) ||
-                        (m_currentState == CharacterState.DigLeft && newDoubleSpeed != m_digDoubleSpeed))
+					if ((deltaX < -float.Epsilon && m_faceDirection == -1.0f) ||
+                        (m_currentState == CharacterState.Dig && newDoubleSpeed != m_digDoubleSpeed))
                     {
                         m_digDoubleSpeed = newDoubleSpeed;
-                        TransitionState(CharacterState.DigLeft);
+						m_faceDirection = -1.0f;
+                        TransitionState(CharacterState.Dig);
                     }
-                    else if ((deltaX > float.Epsilon && m_currentState != CharacterState.DigRight) ||
-                             (m_currentState == CharacterState.DigRight && newDoubleSpeed != m_digDoubleSpeed))
+					else if ((deltaX > float.Epsilon && m_faceDirection == 1.0f) ||
+                             (m_currentState == CharacterState.Dig && newDoubleSpeed != m_digDoubleSpeed))
                     {
                         m_digDoubleSpeed = newDoubleSpeed;
-                        TransitionState(CharacterState.DigRight);
+						m_faceDirection = 1.0f;
+                        TransitionState(CharacterState.Dig);
                     }
                 }
                 break;
@@ -448,8 +439,7 @@ void FixedUpdate()
     void TransitionState(CharacterState state)
     {
         // TODO: Exit state should be defined in state itself, not here!!
-        if ((m_currentState == CharacterState.DigLeft || m_currentState == CharacterState.DigRight) &&
-            (state != CharacterState.DigLeft && state != CharacterState.DigRight))
+        if ((m_currentState == CharacterState.Dig) &&(state != CharacterState.Dig))
         {
             m_digColliderDown.enabled = false;
             m_digColliderUp.enabled = false;
@@ -468,38 +458,18 @@ void FixedUpdate()
         m_animator.speed = 1.0f;
         switch (state)
         {
-            case CharacterState.WalkLeft:
-            case CharacterState.MineWalkLeft:
+            case CharacterState.Walk:
+            case CharacterState.MineWalk:
                 m_animator.SetTrigger("minerWalk");
-                transform.localScale = new Vector2(-Mathf.Abs(transform.localScale.x), transform.localScale.y);
-                break;
-            case CharacterState.WalkRight:
-            case CharacterState.MineWalkRight:
-                m_animator.SetTrigger("minerWalk");
-                transform.localScale = new Vector2(Mathf.Abs(transform.localScale.x), transform.localScale.y);
-                break;
-            case CharacterState.RunLeft:
+                transform.localScale = new Vector2(m_faceDirection * Mathf.Abs(transform.localScale.x), transform.localScale.y);
+                break;            
+            case CharacterState.Run:
                 m_animator.SetTrigger("minerRun");
-                transform.localScale = new Vector2(-Mathf.Abs(transform.localScale.x), transform.localScale.y);
+                transform.localScale = new Vector2(m_faceDirection * Mathf.Abs(transform.localScale.x), transform.localScale.y);
                 break;
-            case CharacterState.RunRight:
-                m_animator.SetTrigger("minerRun");
-                transform.localScale = new Vector2(Mathf.Abs(transform.localScale.x), transform.localScale.y);
-                break;
-            case CharacterState.DigLeft:
-            
+            case CharacterState.Dig:
                 m_animator.SetTrigger("minerDig");
-                transform.localScale = new Vector2(-Mathf.Abs(transform.localScale.x), transform.localScale.y);
-                if (m_digDoubleSpeed)
-                {
-                    m_animator.speed = 6.0f;
-                    m_digSoundCounter = 0;
-                }
-                break;
-            case CharacterState.DigRight:
-            
-                m_animator.SetTrigger("minerDig");
-                transform.localScale = new Vector2(Mathf.Abs(transform.localScale.x), transform.localScale.y);
+                transform.localScale = new Vector2(m_faceDirection * Mathf.Abs(transform.localScale.x), transform.localScale.y);
                 if (m_digDoubleSpeed)
                 {
                     m_animator.speed = 6.0f;
@@ -560,92 +530,62 @@ void FixedUpdate()
             case CharacterState.Idle:
                 return;
 
-            case CharacterState.WalkLeft:
-            case CharacterState.RunLeft:
-            case CharacterState.DigLeft:
-            case CharacterState.MineWalkLeft:
+            case CharacterState.Walk:
+            case CharacterState.Run:
+            case CharacterState.Dig:
+            case CharacterState.MineWalk:
                 switch (childCollider)
                 {
-                    case ColliderType.ColliderBody:
+			case ColliderType.ColliderBody:
                         // Check if any of the contact points is in the direction
                         // of the current movent. If so we have collided against a wall,
                         // readjust position and end movement
-                        for (int i = 0; i < coll.contacts.Length; ++i)
-                        {
-                            if (coll.contacts[i].point.x < m_rigidBody.position.x)
-                            {
-                                m_rigidBody.position = new Vector2(coll.collider.bounds.center.x +
-                                                                    coll.collider.bounds.extents.x +
-                                                                    m_bodyCollider.bounds.extents.x,
-                                                                    m_rigidBody.position.y);
-                                EndMovement();
-                                FallDown();
+						for (int i = 0; i < coll.contacts.Length; ++i) {
+							if (m_faceDirection == -1.0) {
+								if (coll.contacts [i].point.x < m_rigidBody.position.x) {
+									m_rigidBody.position = new Vector2 (coll.collider.bounds.center.x +
+									coll.collider.bounds.extents.x +
+									m_bodyCollider.bounds.extents.x,
+										m_rigidBody.position.y);
+									EndMovement ();
+									FallDown ();
 
-                                // Now check if the collider happens to be our target mineable object
-                                if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject)
-                                {
-                                    TransitionState(CharacterState.MineMaterial);
-                                }
-                                else
-                                {
-                                    TransitionState(CharacterState.Idle);
-                                }
+									// Now check if the collider happens to be our target mineable object
+									if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject) {
+										TransitionState (CharacterState.MineMaterial);
+									} else {
+										TransitionState (CharacterState.Idle);
+									}
 
-                                break;
-                            }
-                        }
+									break;
+								}
+							} else {
+								if (coll.contacts [i].point.x > m_rigidBody.position.x) {
+									m_rigidBody.position = new Vector2 (coll.collider.bounds.center.x -
+									coll.collider.bounds.extents.x -
+									m_bodyCollider.bounds.extents.x,
+										m_rigidBody.position.y);
+									EndMovement ();
+									FallDown ();
+
+
+									// Now check if the collider happens to be our target mineable object
+									if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject) {
+										TransitionState (CharacterState.MineMaterial);
+									} else {
+										TransitionState (CharacterState.Idle);
+									}
+
+									break;
+								}
+							}
+						}
 
 
                         break;
                     case ColliderType.ColliderFeet:
                         // Only move up if collider is in front of us
                         if (coll.collider.bounds.center.x <= m_rigidBody.position.x)
-                            MoveUp();
-                        break;
-                }
-                break;
-
-            case CharacterState.WalkRight:
-            case CharacterState.RunRight:
-            case CharacterState.DigRight:
-            case CharacterState.MineWalkRight:
-                switch (childCollider)
-                {
-                    case ColliderType.ColliderBody:
-                        // Check if any of the contact points is in the direction
-                        // of the current movent. If so we have collided against a wall,
-                        // readjust position and end movement
-                        for (int i = 0; i < coll.contacts.Length; ++i)
-                        {
-                            if (coll.contacts[i].point.x > m_rigidBody.position.x)
-                            {
-                                m_rigidBody.position = new Vector2(coll.collider.bounds.center.x -
-                                                                    coll.collider.bounds.extents.x -
-                                                                    m_bodyCollider.bounds.extents.x,
-                                                                    m_rigidBody.position.y);
-                                EndMovement();
-                                FallDown();
-
-
-                                // Now check if the collider happens to be our target mineable object
-                                if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject)
-                                {
-                                    TransitionState(CharacterState.MineMaterial);
-                                }
-                                else
-                                {
-                                    TransitionState(CharacterState.Idle);
-                                }
-
-                                break;
-                            }
-                        }
-
-
-                        break;
-                    case ColliderType.ColliderFeet:
-                        // Only move up if collider is in front of us
-                        if (coll.collider.bounds.center.x >= m_rigidBody.position.x)
                             MoveUp();
                         break;
                 }
@@ -854,9 +794,12 @@ void FixedUpdate()
         m_movementTarget = obj.gameObject.transform.position;
         ActivateVisibleTarget();
 
-        if (obj.gameObject.transform.position.x < transform.position.x)
-            TransitionState(CharacterState.MineWalkLeft);
-        else
-            TransitionState(CharacterState.MineWalkRight);
+		if (obj.gameObject.transform.position.x < transform.position.x) {
+			m_faceDirection = -1.0f;
+			TransitionState (CharacterState.MineWalk);
+		} else {
+			m_faceDirection = 1.0f;
+			TransitionState (CharacterState.MineWalk);
+		}
     }
 };
