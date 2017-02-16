@@ -400,18 +400,9 @@ void FixedUpdate()
                     else
                         newDoubleSpeed = false;
 
-					if ((deltaX < -float.Epsilon && m_faceDirection == -1.0f) ||
-                        (m_currentState == CharacterState.Dig && newDoubleSpeed != m_digDoubleSpeed))
+					if (deltaX < -float.Epsilon || deltaX > float.Epsilon)
                     {
                         m_digDoubleSpeed = newDoubleSpeed;
-						m_faceDirection = -1.0f;
-                        TransitionState(CharacterState.Dig);
-                    }
-					else if ((deltaX > float.Epsilon && m_faceDirection == 1.0f) ||
-                             (m_currentState == CharacterState.Dig && newDoubleSpeed != m_digDoubleSpeed))
-                    {
-                        m_digDoubleSpeed = newDoubleSpeed;
-						m_faceDirection = 1.0f;
                         TransitionState(CharacterState.Dig);
                     }
                 }
@@ -536,56 +527,36 @@ void FixedUpdate()
             case CharacterState.MineWalk:
                 switch (childCollider)
                 {
-			case ColliderType.ColliderBody:
+                    case ColliderType.ColliderBody:
                         // Check if any of the contact points is in the direction
                         // of the current movent. If so we have collided against a wall,
                         // readjust position and end movement
-						for (int i = 0; i < coll.contacts.Length; ++i) {
-							if (m_faceDirection == -1.0) {
-								if (coll.contacts [i].point.x < m_rigidBody.position.x) {
-									m_rigidBody.position = new Vector2 (coll.collider.bounds.center.x +
-									coll.collider.bounds.extents.x +
-									m_bodyCollider.bounds.extents.x,
-										m_rigidBody.position.y);
-									EndMovement ();
-									FallDown ();
+                        for (int i = 0; i < coll.contacts.Length; ++i)
+                        {
+                            if (m_faceDirection * (m_rigidBody.position.x - coll.contacts[i].point.x) < 0.0f)
+                            {
+                                m_rigidBody.position = new Vector2(coll.collider.bounds.center.x -
+                                m_faceDirection * (coll.collider.bounds.extents.x + m_bodyCollider.bounds.extents.x),
+                                    m_rigidBody.position.y);
+                                EndMovement();
+                                FallDown();
 
-									// Now check if the collider happens to be our target mineable object
-									if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject) {
-										TransitionState (CharacterState.MineMaterial);
-									} else {
-										TransitionState (CharacterState.Idle);
-									}
+                                // Now check if the collider happens to be our target mineable object
+                                if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject)
+                                {
+                                    TransitionState(CharacterState.MineMaterial);
+                                }
+                                else {
+                                    TransitionState(CharacterState.Idle);
+                                }
 
-									break;
-								}
-							} else {
-								if (coll.contacts [i].point.x > m_rigidBody.position.x) {
-									m_rigidBody.position = new Vector2 (coll.collider.bounds.center.x -
-									coll.collider.bounds.extents.x -
-									m_bodyCollider.bounds.extents.x,
-										m_rigidBody.position.y);
-									EndMovement ();
-									FallDown ();
-
-
-									// Now check if the collider happens to be our target mineable object
-									if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject) {
-										TransitionState (CharacterState.MineMaterial);
-									} else {
-										TransitionState (CharacterState.Idle);
-									}
-
-									break;
-								}
-							}
-						}
-
-
+                                break;
+                            }
+                        }
                         break;
                     case ColliderType.ColliderFeet:
                         // Only move up if collider is in front of us
-                        if (coll.collider.bounds.center.x <= m_rigidBody.position.x)
+                        if (m_faceDirection * (m_rigidBody.position.x - coll.collider.bounds.center.x) <= 0.0f)
                             MoveUp();
                         break;
                 }
