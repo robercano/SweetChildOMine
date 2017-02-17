@@ -35,6 +35,13 @@ public class CaveController : MonoBehaviour {
 
     private bool m_textureHasChanged;
 
+    private GameObject m_diggingContextMenuPrefab;
+    private GameObject m_diggingContextMenuInstance;
+    private DiggingContextMenu m_diggingContextMenu;
+
+    private CharacterStatus m_characterStatus;
+    private Vector2 m_digTarget;
+
     // Use this for initialization
     void Start () {
         m_spriteRenderer = GetComponent<SpriteRenderer>();
@@ -54,6 +61,15 @@ public class CaveController : MonoBehaviour {
 
         InitColliderPool();
 	    GenerateCaveColliders ();
+
+        m_diggingContextMenuPrefab = Resources.Load("DiggingContextMenu") as GameObject;
+        m_diggingContextMenuInstance = GameObject.Instantiate(m_diggingContextMenuPrefab, transform, false);
+        m_diggingContextMenu = m_diggingContextMenuInstance.GetComponent<DiggingContextMenu>();
+        m_diggingContextMenu.ActionName = "Dig here";
+        m_diggingContextMenu.OnAction = OnDigCave;
+        m_diggingContextMenu.Disable();
+
+        m_characterStatus = GameObject.FindObjectOfType<CharacterStatus>();
     }
 
     void Update()
@@ -244,5 +260,30 @@ public class CaveController : MonoBehaviour {
             QueueNewCollider(x - 1, y);
         if (caveColliderScript.IsDirectionRight())
             QueueNewCollider(x + 1, y);
+    }
+
+    public bool HandlePointerClick(Vector2 mousePosition)
+    {
+        m_digTarget = Camera.main.ScreenToWorldPoint(mousePosition);
+        m_digTarget = new Vector2(Mathf.Round(m_digTarget.x), Mathf.Round(m_digTarget.y));
+
+        Color mousePixel = m_texture.GetPixel((int)m_digTarget.x, (int)m_digTarget.y);
+        if (mousePixel.a != 0.0f)
+        {
+            m_diggingContextMenuInstance.transform.position = m_digTarget;
+            m_diggingContextMenu.Enable();
+            return true;
+        }
+        m_diggingContextMenu.Disable();
+        return false;
+    }
+
+    public void OnDigCave()
+    {
+        m_diggingContextMenu.Disable();
+
+        Miner miner = m_characterStatus.GetActiveMiner();
+        if (miner != null)
+            miner.DigCave(m_digTarget);
     }
 }

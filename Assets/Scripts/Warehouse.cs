@@ -8,7 +8,6 @@ public class Warehouse : BuildableObject {
     public Sprite[] ProgressSprites;
 
 	private DragDropController m_dragDropController;
-	private CharacterStatus m_characterStatus;
 
     private int m_progressPerSprite;
     private bool m_complete;
@@ -23,8 +22,6 @@ public class Warehouse : BuildableObject {
 
 		m_dragDropController = GetComponent<DragDropController> ();
 		m_dragDropController.OnDragDropFinished = OnDragDropFinished;
-
-		m_characterStatus = GameObject.Find("CharacterStatus").GetComponent<CharacterStatus>(); 
     }
 
 	public void OnDragDropFinished()

@@ -834,4 +834,46 @@ void FixedUpdate()
         m_buildableTarget = obj;
         StartAction("Building", m_buildableTarget, CharacterState.MineWalk);
     }
+
+    public void DigCave(Vector2 digTarget)
+    {
+        EndMovement();
+
+        m_movementTarget = digTarget;
+        ActivateVisibleTarget();
+
+        float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
+
+        if (m_movementTarget.y >= m_bodyCollider.bounds.max.y)
+        {
+            m_digColliderDown.enabled = false;
+            m_digColliderStraight.enabled = false;
+            m_digColliderUp.enabled = true;
+        }
+        else if (m_movementTarget.y <= m_bodyCollider.bounds.min.y)
+        {
+            m_digColliderDown.enabled = true;
+            m_digColliderStraight.enabled = false;
+            m_digColliderUp.enabled = false;
+        }
+        else
+        {
+            m_digColliderDown.enabled = false;
+            m_digColliderStraight.enabled = true;
+            m_digColliderUp.enabled = false;
+        }
+
+        bool newDoubleSpeed;
+
+        if (Input.GetKey(KeyCode.LeftControl))
+            newDoubleSpeed = true;
+        else
+            newDoubleSpeed = false;
+
+        if (deltaX < -float.Epsilon || deltaX > float.Epsilon)
+        {
+            m_digDoubleSpeed = newDoubleSpeed;
+            TransitionState(CharacterState.Dig);
+        }
+    }
 };

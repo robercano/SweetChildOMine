@@ -24,7 +24,7 @@ public class BuildableObject : SelectableObject
     private GameObject m_buildingContextMenuInstance;
     private BuildingContextMenu m_buildingContextMenu;
 
-    private CharacterStatus m_characterStatus;
+    protected CharacterStatus m_characterStatus;
 
     public override void Awake()
     {
@@ -54,7 +54,7 @@ public class BuildableObject : SelectableObject
     public void ShowMenu()
     {
         Miner miner = m_characterStatus.GetActiveMiner();
-        if (miner != null)
+        if (miner != null && (m_currentWork < m_totalWork))
         {
             m_buildingContextMenu.OnAction = OnActionBuild;
         }
@@ -93,6 +93,9 @@ public class BuildableObject : SelectableObject
             m_currentWork += workAmount;
 
         progress = 100 * m_currentWork / m_totalWork;
+
+        if (m_currentWork >= m_totalWork)
+            m_buildingContextMenu.OnAction = null;
 
         return (m_currentWork < m_totalWork);
     }
