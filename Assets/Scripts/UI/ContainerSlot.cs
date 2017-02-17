@@ -81,6 +81,8 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     {
         if (m_slotItem != null && m_slotItem.ObjectPrefab != null)
         {
+			// TODO: Check if recipe is valid
+
             Vector2 mousePosition = Camera.main.ScreenToWorldPoint(eventData.position);
             m_dragDropObject = GameObject.Instantiate(m_slotItem.ObjectPrefab, mousePosition, Quaternion.identity);
             m_dragDropObjectController = m_dragDropObject.GetComponent<DragDropController>();

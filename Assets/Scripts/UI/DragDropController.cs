@@ -7,6 +7,9 @@ public class DragDropController : MonoBehaviour {
     public float SnapValue = 1;
     public LayerMask RaycastMask;
 
+	public delegate void OnDragDropFinishedDelegate();
+	public OnDragDropFinishedDelegate OnDragDropFinished;
+
     private SpriteRenderer m_spriteRenderer;
     private BoxCollider2D m_boxCollider;
     private SpriteOutline m_spriteOutline;
@@ -102,13 +105,15 @@ public class DragDropController : MonoBehaviour {
     {
         m_spriteRenderer.sortingLayerName = "Items";
 
-        // TODO: If position is suitable let the object leave, otherwise destroy the object
+        // TODO: If position is suitable let the object live, otherwise destroy the object
         if (!CheckValidPosition())
         {
             Destroy(gameObject);
         }
         else
         {
+			if (OnDragDropFinished != null)
+				OnDragDropFinished ();
             m_spriteOutline.enabled = false;
             this.enabled = false;
         }

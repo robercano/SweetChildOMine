@@ -6,8 +6,8 @@ using UnityEngine.EventSystems;
 
 public class Miner : SelectableObject
 {
-    //public string Name;
     public int MaxLife;
+	public int BuildPower;
 
     // TODO: Current weapon, this need to be refactored so the weapon selected
     // in the Weapon selector is used instead
@@ -642,9 +642,9 @@ void FixedUpdate()
 
         int progress = 0;
 
-        m_actionWorked = m_buildableTarget.DoBuild(5, out progress);
+		m_actionWorked = m_buildableTarget.DoBuild(BuildPower, out progress);
 
-        if (m_actionWorked)
+		if (m_actionWorked || progress == 100)
         {
             PlayAudioPickAxe();
             m_actionProgressDialog.Percentage = progress;

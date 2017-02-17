@@ -7,6 +7,9 @@ public class Warehouse : BuildableObject {
 
     public Sprite[] ProgressSprites;
 
+	private DragDropController m_dragDropController;
+	private CharacterStatus m_characterStatus;
+
     private int m_progressPerSprite;
     private bool m_complete;
 
@@ -15,9 +18,22 @@ public class Warehouse : BuildableObject {
     {
         Assert.IsTrue(NumSteps > 0);
 
-        m_progressPerSprite = (NumSteps * WorkPerStep) / ProgressSprites.Length;
+		m_progressPerSprite = (NumSteps * WorkPerStep) / (ProgressSprites.Length - 1);
         m_complete = false;
+
+		m_dragDropController = GetComponent<DragDropController> ();
+		m_dragDropController.OnDragDropFinished = OnDragDropFinished;
+
+		m_characterStatus = GameObject.Find("CharacterStatus").GetComponent<CharacterStatus>(); 
     }
+
+	public void OnDragDropFinished()
+	{
+		Miner miner = m_characterStatus.GetActiveMiner();
+		if (miner != null) {
+			miner.BuildStructure (this);
+		}
+	}
 
     public override void Update()
     {

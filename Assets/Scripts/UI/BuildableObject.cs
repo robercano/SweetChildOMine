@@ -10,6 +10,13 @@ public class BuildableObject : SelectableObject
     public int WorkPerStep;
     public string ActionName;
 
+	[Serializable]
+	public class RecipeItem {
+		public string Name;
+		public int Amount;
+	}
+	public RecipeItem[] Recipe;
+
     protected int m_totalWork;
     protected int m_currentWork;
 
