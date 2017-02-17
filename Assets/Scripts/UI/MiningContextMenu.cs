@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
-public class ActionContextMenu : MonoBehaviour {
+public class MiningContextMenu : MonoBehaviour {
 
     public string Title
     {

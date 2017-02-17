@@ -27,7 +27,7 @@ public class Miner : SelectableObject
     [HideInInspector]
     public enum CharacterState
     {
-        Idle, Walk, Run, Dig, Attack, MineWalk, MineMaterial
+        Idle, Walk, Run, Dig, Attack, MineWalk, MineMaterial, BuildStructure
     };
     [HideInInspector]
     public enum InputEvent
@@ -96,10 +96,13 @@ public class Miner : SelectableObject
     private MineableObject m_mineableTarget;
     private int m_mineableTargetAmount;
     private int m_mineableRemainingAmount;
-    private bool m_miningWorked;
-    private GameObject m_miningDialogPrefab;
-    private GameObject m_miningDialogInstance;
-    private MiningProgressDialog m_miningDialog;
+    private bool m_actionWorked;
+    private GameObject m_actionProgressDialogPrefab;
+    private GameObject m_actionProgressDialogInstance;
+    private ActionProgressDialog m_actionProgressDialog;
+
+    // Building target
+    private BuildableObject m_buildableTarget;
 
     // Use this for initialization
     void Start()
@@ -154,17 +157,17 @@ public class Miner : SelectableObject
         m_mineableTarget = null;
         m_mineableTargetAmount = 0;
         m_mineableRemainingAmount = 0;
-        m_miningWorked = false;
+        m_actionWorked = false;
 
         m_onSelectedDelegate = ActivateMiner;
 
-        m_miningDialogPrefab = Resources.Load("MiningProgressDialog") as GameObject;
-        m_miningDialogInstance = GameObject.Instantiate(m_miningDialogPrefab, transform, false);
-        m_miningDialogInstance.transform.position = new Vector3(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f, 0.0f);
-        m_miningDialog = m_miningDialogInstance.GetComponent<MiningProgressDialog>();
-        m_miningDialog.ActionName = "Stop";
-        m_miningDialog.OnAction = OnMiningTerminated;
-        m_miningDialog.Disable();
+        m_actionProgressDialogPrefab = Resources.Load("ActionProgressDialog") as GameObject;
+        m_actionProgressDialogInstance = GameObject.Instantiate(m_actionProgressDialogPrefab, transform, false);
+        m_actionProgressDialogInstance.transform.position = new Vector3(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f, 0.0f);
+        m_actionProgressDialog = m_actionProgressDialogInstance.GetComponent<ActionProgressDialog>();
+        m_actionProgressDialog.ActionName = "Stop";
+        m_actionProgressDialog.OnAction = OnActionTerminated;
+        m_actionProgressDialog.Disable();
 
         // Weapons
         m_pickAxePrefab = Resources.Load("PickAxeWeapon") as GameObject;
@@ -266,6 +269,13 @@ void FixedUpdate()
             case CharacterState.MineMaterial:
                 DisableVisibleTarget();
                 if (m_mineableTarget == null)
+                {
+                    TransitionState(CharacterState.Idle);
+                }
+                break;
+            case CharacterState.BuildStructure:
+                DisableVisibleTarget();
+                if (m_buildableTarget == null)
                 {
                     TransitionState(CharacterState.Idle);
                 }
@@ -436,9 +446,10 @@ void FixedUpdate()
             m_digColliderUp.enabled = false;
             m_digColliderStraight.enabled = false;
         }
-        if (m_currentState == CharacterState.MineMaterial)
+        if (m_currentState == CharacterState.MineMaterial ||
+            m_currentState == CharacterState.BuildStructure)
         {
-            OnMiningTerminated();
+            OnActionTerminated();
         }
         m_currentState = state;
         PlayStateAnimation(state);
@@ -473,7 +484,12 @@ void FixedUpdate()
             case CharacterState.MineMaterial:
                 m_animator.SetTrigger("minerMine");
                 DisableDialog();
-                m_miningDialog.Enable();
+                m_actionProgressDialog.Enable();
+                break;
+            case CharacterState.BuildStructure:
+                m_animator.SetTrigger("minerBuild");
+                DisableDialog();
+                m_actionProgressDialog.Enable();
                 break;
             case CharacterState.Idle:
                 m_animator.SetTrigger("minerIdle");
@@ -541,12 +557,17 @@ void FixedUpdate()
                                 EndMovement();
                                 FallDown();
 
-                                // Now check if the collider happens to be our target mineable object
+                                // Check which object have we collided with
                                 if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject)
                                 {
                                     TransitionState(CharacterState.MineMaterial);
                                 }
-                                else {
+                                else if (m_buildableTarget != null && coll.gameObject == m_buildableTarget.gameObject)
+                                {
+                                    TransitionState(CharacterState.BuildStructure);
+                                }
+                                else
+                                {
                                     TransitionState(CharacterState.Idle);
                                 }
 
@@ -594,13 +615,13 @@ void FixedUpdate()
             return;
 
         Item materialMined = null;
-        m_miningWorked = m_mineableTarget.DoMine(m_pickAxe.Damage, m_mineableRemainingAmount, MaterialInventory.RemainingWeight, out materialMined);
+        m_actionWorked = m_mineableTarget.DoMine(m_pickAxe.Damage, m_mineableRemainingAmount, MaterialInventory.RemainingWeight, out materialMined);
 
-        if (m_miningWorked)
+        if (m_actionWorked)
         {
             PlayAudioPickAxe();
             m_mineableRemainingAmount -= materialMined.Amount;
-            m_miningDialog.Percentage = (100 * (m_mineableTargetAmount - m_mineableRemainingAmount) / m_mineableTargetAmount);
+            m_actionProgressDialog.Percentage = (100 * (m_mineableTargetAmount - m_mineableRemainingAmount) / m_mineableTargetAmount);
 
             MaterialInventory.AddItem(materialMined);
         }
@@ -608,20 +629,45 @@ void FixedUpdate()
 
     public void OnMiningFinished()
     {
-        if (m_mineableTarget == null || m_miningWorked == false || m_mineableRemainingAmount == 0)
+        if (m_mineableTarget == null || m_actionWorked == false || m_mineableRemainingAmount == 0)
         {
-            OnMiningTerminated();
+            OnActionTerminated();
         }
     }
 
-    public void OnMiningTerminated()
+    public void OnBuilding()
+    {
+        if (m_buildableTarget == null)
+            return;
+
+        int progress = 0;
+
+        m_actionWorked = m_buildableTarget.DoBuild(5, out progress);
+
+        if (m_actionWorked)
+        {
+            PlayAudioPickAxe();
+            m_actionProgressDialog.Percentage = progress;
+        }
+    }
+
+    public void OnBuildingFinished()
+    {
+        if (m_buildableTarget == null || m_actionWorked == false)
+        {
+            OnActionTerminated();
+        }
+    }
+
+    public void OnActionTerminated()
     {
         m_mineableRemainingAmount = 0;
         m_mineableTargetAmount = 0;
         m_mineableTarget = null;
+        m_buildableTarget = null;
 
         EnableDialog();
-        m_miningDialog.Disable();
+        m_actionProgressDialog.Disable();
     }
 
     public void OnDigging()
@@ -750,6 +796,27 @@ void FixedUpdate()
         m_spriteRenderer.color = Color.white;
     }
 
+    private void StartAction(string action, SelectableObject target, CharacterState nextState)
+    {
+
+        m_actionProgressDialog.Title = action + " " + target.Name;
+        m_actionProgressDialog.Percentage = 0;
+
+        m_movementTarget = target.gameObject.transform.position;
+        ActivateVisibleTarget();
+
+        if (target.gameObject.transform.position.x < transform.position.x)
+        {
+            m_faceDirection = -1.0f;
+            TransitionState(nextState);
+        }
+        else
+        {
+            m_faceDirection = 1.0f;
+            TransitionState(nextState);
+        }
+    }
+
     public void MineMaterial(MineableObject obj, int numItems)
     {
         if (numItems == 0)
@@ -759,18 +826,12 @@ void FixedUpdate()
         m_mineableTargetAmount = numItems;
         m_mineableRemainingAmount = numItems;
 
-        m_miningDialog.Title = "Mining " + obj.Name;
-        m_miningDialog.Percentage = 0;
+        StartAction("Mining", m_mineableTarget, CharacterState.MineWalk);
+    }
 
-        m_movementTarget = obj.gameObject.transform.position;
-        ActivateVisibleTarget();
-
-		if (obj.gameObject.transform.position.x < transform.position.x) {
-			m_faceDirection = -1.0f;
-			TransitionState (CharacterState.MineWalk);
-		} else {
-			m_faceDirection = 1.0f;
-			TransitionState (CharacterState.MineWalk);
-		}
+    public void BuildStructure(BuildableObject obj)
+    {
+        m_buildableTarget = obj;
+        StartAction("Building", m_buildableTarget, CharacterState.MineWalk);
     }
 };

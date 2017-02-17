@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
-public class MiningProgressDialog : MonoBehaviour {
+public class ActionProgressDialog : MonoBehaviour {
 
     public string Title
     {

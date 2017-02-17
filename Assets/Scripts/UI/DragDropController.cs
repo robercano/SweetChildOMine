@@ -90,8 +90,6 @@ public class DragDropController : MonoBehaviour {
         {
             return false;
         }
-        Debug.Log(hit1.collider.name);
-        Debug.Log(hit2.collider.name);
         return true;
     }
 

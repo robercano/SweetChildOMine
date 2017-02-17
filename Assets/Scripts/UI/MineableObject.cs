@@ -14,13 +14,13 @@ public class MineableObject : SelectableObject
 
     protected int m_currentItems;
 
-    private float m_remindingDamage;
+    private float m_remainingDamage;
 
     private int m_mineableItemWeight;
 
     private GameObject m_actionContextMenuPrefab;
     private GameObject m_actionContextMenuInstance;
-    private ActionContextMenu m_actionContextMenu;
+    private MiningContextMenu m_actionContextMenu;
 
     private GameObject m_mineralDamagePrefab;
 
@@ -30,18 +30,18 @@ public class MineableObject : SelectableObject
     {
         base.Awake();
 
-        m_actionContextMenuPrefab = Resources.Load("ActionContextMenu") as GameObject;
+        m_actionContextMenuPrefab = Resources.Load("MiningContextMenu") as GameObject;
 
         m_mineralDamagePrefab = Resources.Load("MineralDamagePopup") as GameObject;
 
         m_actionContextMenuInstance = GameObject.Instantiate(m_actionContextMenuPrefab, transform, false);
-        m_actionContextMenu = m_actionContextMenuInstance.GetComponent<ActionContextMenu>();
+        m_actionContextMenu = m_actionContextMenuInstance.GetComponent<MiningContextMenu>();
 
         m_actionContextMenuInstance.transform.position = new Vector3(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f, 0.0f);
 
         m_currentItems = MaxItems;
 
-        m_remindingDamage = 0.0f;
+        m_remainingDamage = 0.0f;
 
         m_mineableItemWeight = MineableItem.GetComponent<Item>().Weight;
 
@@ -116,10 +116,10 @@ public class MineableObject : SelectableObject
         if (m_currentItems == 0)
             return false;
 
-        m_remindingDamage += damage;
+        m_remainingDamage += damage;
 
         // Calculate expected number of items to extract
-        int amountToExtract = Mathf.FloorToInt(m_remindingDamage / DamagePerItem);
+        int amountToExtract = Mathf.FloorToInt(m_remainingDamage / DamagePerItem);
 
         // Then adjust to the different limitations: maximum number of items allowed,
         // maximum weight allowed and maximum available number of items
@@ -146,7 +146,7 @@ public class MineableObject : SelectableObject
         extracted.Amount = amountToExtract;
 
         m_currentItems -= extracted.Amount;
-        m_remindingDamage -= (extracted.Amount * DamagePerItem);
+        m_remainingDamage -= (extracted.Amount * DamagePerItem);
 
         if (extracted.Amount > 0)
         {
