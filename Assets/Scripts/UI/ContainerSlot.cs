@@ -21,12 +21,14 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             {
                 m_slotImage.sprite = value.Avatar;
                 m_slotImage.color = Color.white;
-                m_dialogPanel.SetText(m_slotItem.Name + "\n" + m_slotItem.Description);
+                m_descriptionPanel.Title = m_slotItem.Name;
+                m_descriptionPanel.Description = m_slotItem.Description;
             }
             else
             {
                 m_slotImage.color = Color.clear;
-                m_dialogPanel.SetText(" ");
+                m_descriptionPanel.Title = "";
+                m_descriptionPanel.Description = "";
             }
         }
     }
@@ -34,9 +36,10 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     private Image m_slotImage;
     private RectTransform m_rectTransform;
 
-    private GameObject m_dialogPanelPrefab;
-    private GameObject m_dialogInstance;
-    private DialogPanel m_dialogPanel;
+    private GameObject m_descriptionPanelPrefab;
+    private GameObject m_descriptionInstance;
+    private InventoryDescriptionPanel m_descriptionPanel;
+    private RectTransform m_descriptionInstanceRectTransform;
 
     private GameObject m_dragDropObject;
     private DragDropController m_dragDropObjectController;
@@ -47,11 +50,11 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         m_slotImage = GetComponent<Image>();
         m_rectTransform = GetComponent<RectTransform>();
 
-        m_dialogPanelPrefab = Resources.Load("DialogPanel") as GameObject;
-        m_dialogInstance = GameObject.Instantiate(m_dialogPanelPrefab, transform, false);
-        m_dialogPanel = m_dialogInstance.GetComponent<DialogPanel>();
-
-        m_dialogInstance.transform.position = new Vector3(gameObject.transform.position.x, m_rectTransform.sizeDelta.y + 5.0f, 0.0f);
+        m_descriptionPanelPrefab = Resources.Load("InventoryDescriptionPanel") as GameObject;
+        m_descriptionInstance = GameObject.Instantiate(m_descriptionPanelPrefab, transform, false);
+        m_descriptionPanel = m_descriptionInstance.GetComponent<InventoryDescriptionPanel>();
+        m_descriptionInstanceRectTransform = m_descriptionInstance.GetComponent<RectTransform>();
+        m_descriptionInstanceRectTransform.anchoredPosition = new Vector2(m_rectTransform.sizeDelta.x / 2.0f, m_rectTransform.sizeDelta.y);
 
         m_dragDropObject = null;
     }
@@ -59,22 +62,25 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     private void ShowDialog()
     {
         if (m_slotItem != null)
-            m_dialogPanel.Enable();
+        {
+            m_descriptionPanel.Enable();
+        }
+            
     }
     private void HideDialog()
     {
         if (m_slotItem != null)
-            m_dialogPanel.Disable();
+            m_descriptionPanel.Disable();
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        //ShowDialog();
+        ShowDialog();
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        //HideDialog();
+        HideDialog();
     }
 
     public void OnBeginDrag(PointerEventData eventData)
