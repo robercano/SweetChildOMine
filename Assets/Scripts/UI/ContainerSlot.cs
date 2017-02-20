@@ -44,6 +44,8 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     private GameObject m_dragDropObject;
     private DragDropController m_dragDropObjectController;
 
+	private CharacterStatus m_characterStatus;
+
     // Use this for initialization
     void Start()
     {
@@ -57,6 +59,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         m_descriptionInstanceRectTransform.anchoredPosition = new Vector2(m_rectTransform.sizeDelta.x / 2.0f, m_rectTransform.sizeDelta.y);
 
         m_dragDropObject = null;
+		m_characterStatus = GameObject.FindObjectOfType<CharacterStatus>();
     }
 
     private void ShowDialog()
@@ -87,12 +90,18 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     {
         if (m_slotItem != null && m_slotItem.ObjectPrefab != null)
         {
-			// TODO: Check if recipe is valid
-
-            Vector2 mousePosition = Camera.main.ScreenToWorldPoint(eventData.position);
-            m_dragDropObject = GameObject.Instantiate(m_slotItem.ObjectPrefab, mousePosition, Quaternion.identity);
-            m_dragDropObjectController = m_dragDropObject.GetComponent<DragDropController>();
-            m_dragDropObjectController.StartDrag();
+			Miner miner = m_characterStatus.GetActiveMiner ();
+			if (miner == null)
+				return;
+			
+			if (miner.CheckRecipeForBuildableObject (m_slotItem.ObjectPrefab)) {
+				Vector2 mousePosition = Camera.main.ScreenToWorldPoint (eventData.position);
+				m_dragDropObject = GameObject.Instantiate (m_slotItem.ObjectPrefab, mousePosition, Quaternion.identity);
+				m_dragDropObjectController = m_dragDropObject.GetComponent<DragDropController> ();
+				m_dragDropObjectController.StartDrag ();
+			} else {
+				// TODO: make inventory go red and play error sound
+			}		
         }
     }
 

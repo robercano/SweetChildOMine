@@ -829,9 +829,40 @@ void FixedUpdate()
         StartAction("Mining", m_mineableTarget, CharacterState.MineWalk);
     }
 
+	public bool CheckRecipeForBuildableObject(GameObject buildableObject)
+	{
+		return CheckRecipeForBuildableObject(buildableObject.GetComponent<BuildableObject> ());
+	}
+
+	public bool CheckRecipeForBuildableObject(BuildableObject buildableObject)
+	{
+		if (buildableObject == null)
+			return false;
+
+		foreach (BuildableObject.RecipeItem recipeItem in buildableObject.Recipe) {
+			if (MaterialInventory.GetItemAmount (recipeItem.Name) < recipeItem.Amount)
+				return false;
+		}
+		return true;
+	}
+
     public void BuildStructure(BuildableObject obj)
     {
-        m_buildableTarget = obj;
+		if (CheckRecipeForBuildableObject (obj) == false) {
+			// TODO: something bad happened, indicate to the user
+			Debug.Log("Something bad happened while building an structure");
+			return;
+		}
+
+		foreach (BuildableObject.RecipeItem recipeItem in obj.Recipe) {
+			int amount = recipeItem.Amount;
+			if (MaterialInventory.RemoveItemAmount (recipeItem.Name, ref amount) == false) {
+				Debug.Log("Something bad happened while building an structure");
+				return;
+			}
+		}
+
+		m_buildableTarget = obj;
         StartAction("Building", m_buildableTarget, CharacterState.MineWalk);
     }
 

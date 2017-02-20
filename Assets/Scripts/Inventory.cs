@@ -39,8 +39,7 @@ public class Inventory {
             CurrentWeight += item.Weight;
             RemainingWeight -= item.Weight;
 
-            if (m_inventoryUpdateDelegate != null)
-                m_inventoryUpdateDelegate();
+			RefreshInventory ();
 
             GameObject.Destroy(item.gameObject);
             return true;
@@ -57,11 +56,33 @@ public class Inventory {
         CurrentWeight += item.Weight;
         RemainingWeight -= item.Weight;
 
-        if (m_inventoryUpdateDelegate != null)
-            m_inventoryUpdateDelegate();
+		RefreshInventory ();
 
         return true;
     }
+
+	public bool RemoveItemAmount(string name, ref int amount)
+	{
+		Item item = GetItemByName (name);
+		if (item == null)
+			return false;
+		if (item.Amount > amount) {
+			item.Amount -= amount;
+		} else {
+			amount = item.Amount;
+			item.Amount = 0;
+		}
+		RefreshInventory ();
+		return true;
+	}
+
+	public Item GetItemByName(string name)
+	{
+		int slotIndex;
+		if (m_inventoryMap.TryGetValue (name, out slotIndex) == false)
+			return null;
+		return m_inventorySlots [slotIndex];
+	}
 
     public Item GetItemAtSlot(int slot)
     {
@@ -73,8 +94,22 @@ public class Inventory {
         return m_inventorySlots[slot];
     }
 
+	public int GetItemAmount(string name)
+	{
+		Item item = GetItemByName (name);
+		if (item == null)
+			return 0;
+		return item.Amount;
+	}
+
     public int GetCount()
     {
         return m_inventorySlots.Count;
     }
+
+	public void RefreshInventory()
+	{
+		if (m_inventoryUpdateDelegate != null)
+			m_inventoryUpdateDelegate();
+	}
 }
