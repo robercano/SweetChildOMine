@@ -27,7 +27,7 @@ public class Miner : SelectableObject
     [HideInInspector]
     public enum CharacterState
     {
-        Idle, Walk, Run, Dig, Attack, MineWalk, MineMaterial, BuildStructure
+        Idle, Walk, Run, DigWalk, Dig, Attack, MineWalk, MineMaterial, BuildStructure
     };
     [HideInInspector]
     public enum InputEvent
@@ -178,10 +178,10 @@ public class Miner : SelectableObject
         m_warehouseItemPrefab = Resources.Load("WarehouseItem") as GameObject;
         m_warehouseItem = m_warehouseItemPrefab.GetComponent<Item>();
         m_buildInventory.AddItem(m_warehouseItem);
-}
+	}
 
-// Update is called once per frame
-void FixedUpdate()
+	// Update is called once per frame
+	void FixedUpdate()
     {
         if (Input.GetKey(KeyCode.Escape))
             Application.Quit();
@@ -261,6 +261,7 @@ void FixedUpdate()
                 }
                 break;
             case CharacterState.MineWalk:
+			case CharacterState.DigWalk:
                 {
 					m_rigidBody.velocity = new Vector2(m_faceDirection * m_walkSpeed, m_rigidBody.velocity.y);
                     FallDown();
@@ -440,7 +441,7 @@ void FixedUpdate()
     void TransitionState(CharacterState state)
     {
         // TODO: Exit state should be defined in state itself, not here!!
-        if ((m_currentState == CharacterState.Dig) &&(state != CharacterState.Dig))
+        if ((m_currentState == CharacterState.Dig) && (state != CharacterState.Dig))
         {
             m_digColliderDown.enabled = false;
             m_digColliderUp.enabled = false;
@@ -462,6 +463,7 @@ void FixedUpdate()
         {
             case CharacterState.Walk:
             case CharacterState.MineWalk:
+			case CharacterState.DigWalk:
                 m_animator.SetTrigger("minerWalk");
                 transform.localScale = new Vector2(m_faceDirection * Mathf.Abs(transform.localScale.x), transform.localScale.y);
                 break;            
@@ -541,6 +543,7 @@ void FixedUpdate()
             case CharacterState.Run:
             case CharacterState.Dig:
             case CharacterState.MineWalk:
+			case CharacterState.DigWalk:
                 switch (childCollider)
                 {
                     case ColliderType.ColliderBody:
@@ -558,16 +561,13 @@ void FixedUpdate()
                                 FallDown();
 
                                 // Check which object have we collided with
-                                if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject)
-                                {
-                                    TransitionState(CharacterState.MineMaterial);
-                                }
-                                else if (m_buildableTarget != null && coll.gameObject == m_buildableTarget.gameObject)
-                                {
-                                    TransitionState(CharacterState.BuildStructure);
-                                }
-                                else
-                                {
+								if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject) {
+									TransitionState (CharacterState.MineMaterial);
+								} else if (m_buildableTarget != null && coll.gameObject == m_buildableTarget.gameObject) {
+									TransitionState (CharacterState.BuildStructure);
+								} else if (m_currentState == CharacterState.DigWalk && coll.gameObject.tag == "CaveCollider") {
+									TransitionState (CharacterState.Dig);
+								} else {
                                     TransitionState(CharacterState.Idle);
                                 }
 
@@ -904,7 +904,7 @@ void FixedUpdate()
         if (deltaX < -float.Epsilon || deltaX > float.Epsilon)
         {
             m_digDoubleSpeed = newDoubleSpeed;
-            TransitionState(CharacterState.Dig);
+			TransitionState(CharacterState.DigWalk);
         }
     }
 };
