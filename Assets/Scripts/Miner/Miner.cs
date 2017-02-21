@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using SCOM.Utils;
 
 public class Miner : SelectableObject
 {
@@ -37,11 +38,13 @@ public class Miner : SelectableObject
 
     public GameObject Target;
 
-    /* Private section */
+    
     public float Life
     {
         get; private set;
     }
+
+	private FiniteStateMachine<Miner> FSM;
 
     private Animator m_animator;
     private Rigidbody2D m_rigidBody;
@@ -107,6 +110,8 @@ public class Miner : SelectableObject
     // Use this for initialization
     void Start()
     {
+		FSM = new FiniteStateMachine<Miner> (this, MinerStateIdle.Instance);
+
         Life = MaxLife;
 
         m_animator = GetComponent<Animator>();
@@ -209,24 +214,85 @@ public class Miner : SelectableObject
         return m_spriteRenderer.sprite;
     }
 
+	public void SetMovementTarget(Vector2 target)
+	{
+		m_movementTarget = new Vector2(Mathf.Round(target.x), Mathf.Round(target.y));
+		float deltaX = GetDistanceToMovementTarget ();
+		if (deltaX < -float.Epsilon) {
+			m_faceDirection = -1.0f;
+		} else if (deltaX > float.Epsilon) {
+			m_faceDirection = 1.0f;
+
+		}
+		transform.localScale = new Vector2(m_faceDirection * Mathf.Abs(transform.localScale.x), transform.localScale.y);
+		ActivateVisibleTarget();
+	}
+	float GetDistanceToMovementTarget()
+	{
+		return m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
+	}
+	public bool HasReachedMovementTarget()
+	{
+		float deltaX = GetDistanceToMovementTarget();
+		if (deltaX >= -float.Epsilon && deltaX <= float.Epsilon) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	public InputEvent PeakInputEvent() {
+		return m_inputEvent;
+	}
+	public InputEvent ConsumeInputEvent() {
+		InputEvent InputEvent = m_inputEvent;
+		m_inputEvent = InputEvent.None;
+		return InputEvent;
+	}
+
     void GetMovementTargetFromMouse()
     {
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        m_movementTarget = new Vector2(Mathf.Round(mousePosition.x), Mathf.Round(mousePosition.y));
+		m_movementTarget = new Vector2(Mathf.Round(mousePosition.x), Mathf.Round(mousePosition.y));
     }
 
-    void ActivateVisibleTarget()
+    public void ActivateVisibleTarget()
     {
         m_target.transform.position = new Vector2(m_movementTarget.x, m_movementTarget.y);
         m_target.SetActive(true);
     }
-    void DisableVisibleTarget()
+    public void DisableVisibleTarget()
     {
         m_target.SetActive(false);
     }
+	public void PlayAnimation(string animation)
+	{
+		m_animator.SetTrigger (animation);
+	}
+	public void Walk()
+	{
+		m_rigidBody.velocity = new Vector2(m_faceDirection * m_walkSpeed, m_rigidBody.velocity.y);
+		FallDown();
+	}
+	public void Run()
+	{
+		m_rigidBody.velocity = new Vector2(m_faceDirection * m_runSpeed, m_rigidBody.velocity.y);
+		FallDown();
+	}
+	public void Stop() {
+		EndMovement();
+		FallDown();
+	}
+
+	public void ChangeState(FSMState<Miner> newState)
+	{
+		FSM.ChangeState (newState);
+	}
 
     void ProcessState()
     {
+		FSM.ProcessState ();
+
+		/*
         switch (m_currentState)
         {
             case CharacterState.Idle:
@@ -282,11 +348,11 @@ public class Miner : SelectableObject
                 }
                 break;
         }
+        */
     }
 
     public void OnInputEvent(PointerEventData data)
     {
-        #region Input processing
         if (data.button == PointerEventData.InputButton.Left)
         {
             if (Input.GetKey(KeyCode.LeftShift))
@@ -302,11 +368,12 @@ public class Miner : SelectableObject
         {
             m_inputEvent = InputEvent.Space;
         }
+
         //if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved)
         //{
         //    m_inputEvent = InputEvent.Space;
         //}
-
+		/*
         switch (m_inputEvent)
         {
             case InputEvent.LeftClick:
@@ -435,7 +502,7 @@ public class Miner : SelectableObject
                 break;
         }
         m_inputEvent = InputEvent.None;
-        #endregion
+        */
     }
 
     void TransitionState(CharacterState state)
@@ -534,8 +601,34 @@ public class Miner : SelectableObject
     }
 
     public void OnCollisionEnter2DChild(Collision2D coll, ColliderType childCollider)
-    {
-        switch (m_currentState)
+	{
+		if (FSM.CurrentState == MinerStateWalk.Instance) {
+			switch (childCollider) {
+			case ColliderType.ColliderBody:
+					// Check if any of the contact points is in the direction
+					// of the current movent. If so we have collided against a wall,
+					// readjust position and end movement
+				for (int i = 0; i < coll.contacts.Length; ++i) {
+					if (m_faceDirection * (m_rigidBody.position.x - coll.contacts [i].point.x) < 0.0f) {
+						m_rigidBody.position = new Vector2 (coll.collider.bounds.center.x -
+						m_faceDirection * (coll.collider.bounds.extents.x + m_bodyCollider.bounds.extents.x),
+							m_rigidBody.position.y);
+						Stop ();
+						FSM.ChangeState (MinerStateIdle.Instance);
+						break;
+					}
+				}
+				break;
+			case ColliderType.ColliderFeet:
+					// Only move up if collider is in front of us
+				if (m_faceDirection * (m_rigidBody.position.x - coll.collider.bounds.center.x) <= 0.0f)
+					MoveUp ();
+				break;
+			}
+		}
+
+
+        /*switch (m_currentState)
         {
             case CharacterState.Idle:
                 return;
@@ -585,6 +678,7 @@ public class Miner : SelectableObject
                 }
                 break;
         }
+        */
     }
 
     public void OnTriggerEnter2DChild(Collider2D coll)
