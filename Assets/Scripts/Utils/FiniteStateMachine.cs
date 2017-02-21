@@ -11,8 +11,15 @@
 				return m_currentState;
 			}
 		}
+        public FSMState<T> PreviousState
+        {
+            get
+            {
+                return m_previousState;
+            }
+        }
 
-		private T m_owner;
+        private T m_owner;
 		private FSMState<T> m_currentState;
 		private FSMState<T> m_previousState;
 		private FSMState<T> m_globalState;
@@ -40,6 +47,7 @@
 			}
 
 			m_currentState.Exit (m_owner);
+            m_previousState = m_currentState;
 			m_currentState = newState;
 
 			if (m_currentState != null) {
@@ -47,7 +55,7 @@
 			}
 		}
 
-		public void ReverToPreviousState() {
+		public void RevertToPreviousState() {
 			if (m_previousState != null) {
 				ChangeState (m_previousState);
 			}

@@ -24,7 +24,18 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
             if (m_caveController.HandlePointerClick(eventData.position) == false)
             {
                 // Otherwise redirect to the miner
-                m_miner.OnInputEvent(eventData);
+                m_miner.OnMouseEvent(eventData);
+            }
+        }
+    }
+
+    void OnGUI()
+    {
+        if (m_miner != null)
+        {
+            if (Event.current.type == EventType.KeyDown)
+            {
+                m_miner.OnKeyEvent(Event.current.keyCode);
             }
         }
     }
@@ -43,6 +54,10 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
                 m_miner.DeactivateMiner();
                 m_miner = null;
             }
+        }
+        if (Input.GetKey(KeyCode.Escape))
+        {
+            Application.Quit();
         }
     }
 }

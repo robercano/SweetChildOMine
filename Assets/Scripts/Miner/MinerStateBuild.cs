@@ -32,5 +32,6 @@ public sealed class MinerStateBuild : FSMState<Miner> {
 
 	public void Exit(Miner miner)
 	{
-	}
+        miner.OnActionTerminated();
+    }
 }

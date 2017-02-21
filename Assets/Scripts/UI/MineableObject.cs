@@ -43,7 +43,7 @@ public class MineableObject : SelectableObject
 
         m_remainingDamage = 0.0f;
 
-        m_mineableItemWeight = MineableItem.GetComponent<Item>().Weight;
+        m_mineableItemWeight = MineableItem.GetComponent<Item>().TotalWeight;
 
         m_actionContextMenu.Title = Name;
         m_actionContextMenu.ActionName = ActionName;
@@ -150,8 +150,6 @@ public class MineableObject : SelectableObject
 
         if (extracted.Amount > 0)
         {
-            extracted.Weight *= extracted.Amount;
-
             GameObject mineralDamageInstance = GameObject.Instantiate(m_mineralDamagePrefab, transform, false);
             mineralDamageInstance.transform.position = new Vector2(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f);
 

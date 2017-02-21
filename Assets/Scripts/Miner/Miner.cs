@@ -180,9 +180,6 @@ public class Miner : SelectableObject
 	// Update is called once per frame
 	void FixedUpdate()
     {
-        if (Input.GetKey(KeyCode.Escape))
-            Application.Quit();
-
         ProcessState();
     }
 
@@ -262,13 +259,21 @@ public class Miner : SelectableObject
 	{
 		FSM.ChangeState (newState);
 	}
+    public FSMState<Miner> GetCurrentState()
+    {
+        return FSM.CurrentState;
+    }
+    public FSMState<Miner> GetPreviousState()
+    {
+        return FSM.PreviousState;
+    }
 
     void ProcessState()
     {
 		FSM.ProcessState ();
     }
 
-    public void OnInputEvent(PointerEventData data)
+    public void OnMouseEvent(PointerEventData data)
     {
         if (data.button == PointerEventData.InputButton.Left)
         {
@@ -282,9 +287,12 @@ public class Miner : SelectableObject
                 ChangeState(MinerStateWalk.Instance);
             }
         }
+    }
+    public void OnKeyEvent(KeyCode keycode)
+    {
         if (Input.GetKey(KeyCode.Space))
         {
-			ChangeState (MinerStateAttack.Instance);
+            ChangeState(MinerStateAttack.Instance);
         }
     }
 
@@ -364,6 +372,7 @@ public class Miner : SelectableObject
 						m_faceDirection * (coll.collider.bounds.extents.x + m_bodyCollider.bounds.extents.x),
 							m_rigidBody.position.y);
 						Stop ();
+
 						if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject) {
 							FSM.ChangeState (MinerStateMineMaterial.Instance);
 						} else if (m_buildableTarget != null && coll.gameObject == m_buildableTarget.gameObject) {
@@ -620,23 +629,31 @@ public class Miner : SelectableObject
 		return true;
 	}
 
+    public bool RequestMaterialsForStructure(BuildableObject obj)
+    {
+        if (CheckRecipeForBuildableObject(obj) == false)
+        {
+            return false;
+        }
+
+        foreach (BuildableObject.RecipeItem recipeItem in obj.Recipe)
+        {
+            int amount = recipeItem.Amount;
+            if (MaterialInventory.RemoveItemAmount(recipeItem.Ingredient.Name, ref amount) == false)
+            {
+                Debug.Log("Something bad happened while building an structure");
+                return false;
+            }
+        }
+
+        MaterialInventory.RefreshInventory();
+        m_buildInventory.RefreshInventory();
+        return true;
+    }
+
     public void BuildStructure(BuildableObject obj)
     {
-		if (CheckRecipeForBuildableObject (obj) == false) {
-			// TODO: something bad happened, indicate to the user
-			Debug.Log("Something bad happened while building an structure");
-			return;
-		}
-
-		foreach (BuildableObject.RecipeItem recipeItem in obj.Recipe) {
-			int amount = recipeItem.Amount;
-			if (MaterialInventory.RemoveItemAmount (recipeItem.Ingredient.Name, ref amount) == false) {
-				Debug.Log("Something bad happened while building an structure");
-				return;
-			}
-		}
-
-		m_buildableTarget = obj;
+        m_buildableTarget = obj;
         StartAction("Building", m_buildableTarget, MinerStateWalk.Instance);
     }
     #endregion /* Building structures methods */

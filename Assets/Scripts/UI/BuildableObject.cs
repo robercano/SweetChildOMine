@@ -26,6 +26,8 @@ public class BuildableObject : SelectableObject
 
     protected CharacterStatus m_characterStatus;
 
+    private bool m_hasMaterials;
+
     public override void Awake()
     {
         base.Awake();
@@ -49,22 +51,26 @@ public class BuildableObject : SelectableObject
 
         m_onSelectedDelegate = ShowMenu;
         m_onDeselectedDelegate = HideMenu;
+
+        m_hasMaterials = false;
     }
 
     public void ShowMenu()
     {
         Miner miner = m_characterStatus.GetActiveMiner();
-        if (miner != null && (m_currentWork < m_totalWork))
+        if (miner != null && 
+            miner.BuildableTarget != this &&
+            (m_currentWork < m_totalWork))
         {
             m_buildingContextMenu.OnAction = OnActionBuild;
+            m_buildingContextMenu.Enable();
+            DisableDialog();
         }
-
-        DisableDialog();
-        m_buildingContextMenu.Enable();
     }
     public void HideMenu()
     {
-        m_buildingContextMenu.Disable();
+        if (m_buildingContextMenu)
+            m_buildingContextMenu.Disable();
         EnableDialog();
     }
 
@@ -78,10 +84,17 @@ public class BuildableObject : SelectableObject
         HideMenu();
 
         Miner miner = m_characterStatus.GetActiveMiner();
-        if (miner != null)
+        if (miner == null)
+            return;
+
+        if (m_hasMaterials == false)
         {
-            miner.BuildStructure(this);
+            if (miner.RequestMaterialsForStructure(this) == false)
+                return;
+
+            m_hasMaterials = true;
         }
+        miner.BuildStructure(this);
     }
 
     /* Public interface */
@@ -95,7 +108,7 @@ public class BuildableObject : SelectableObject
         progress = 100 * m_currentWork / m_totalWork;
 
         if (m_currentWork >= m_totalWork)
-            m_buildingContextMenu.OnAction = null;
+            m_buildingContextMenu = null;
 
         return (m_currentWork < m_totalWork);
     }

@@ -21,16 +21,8 @@ public class Warehouse : BuildableObject {
         m_complete = false;
 
 		m_dragDropController = GetComponent<DragDropController> ();
-		m_dragDropController.OnDragDropFinished = OnDragDropFinished;
+		m_dragDropController.OnDragDropFinished = OnActionBuild;
     }
-
-	public void OnDragDropFinished()
-	{
-		Miner miner = m_characterStatus.GetActiveMiner();
-		if (miner != null) {
-			miner.BuildStructure (this);
-		}
-	}
 
     public override void Update()
     {

@@ -24,12 +24,24 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
                 m_descriptionPanel.Title = "";
                 m_descriptionPanel.Description = "";
                 m_buildableDescriptionPanel.Title = "";
+
+                if (m_slotAmount != null)
+                {
+                    m_slotAmount.text = "";
+                }
+                if (m_slotShortcut != null)
+                {
+                    m_slotShortcut.text = "";
+                }
                 return;
             }
 
             // Set common fields
             m_slotImage.sprite = m_slotItem.Avatar;
-
+            if (m_slotAmount != null)
+            {
+                m_slotAmount.text = "x" + m_slotItem.Amount.ToString();
+            }
 
             // Non-buildable object
             if (m_slotItem.ObjectPrefab == null)
@@ -64,8 +76,32 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             m_buildableDescriptionPanel.Material = m_buildableObject.Recipe[0].Ingredient.Avatar;
         }
     }
+    public char Shortcut
+    {
+        set
+        {
+            if (m_slotShortcut != null)
+            {
+                m_slotShortcut.text = value.ToString();
+            }
+        }
+        get
+        {
+            if (m_slotShortcut != null)
+            {
+                return m_slotShortcut.text[0];
+            }
+            else
+            {
+                return ' ';
+            }
+        }
+    }
     private Item m_slotItem;
     private Image m_slotImage;
+    private Text m_slotShortcut;
+    private Text m_slotAmount;
+
     private RectTransform m_rectTransform;
 
     private GameObject m_descriptionPanelPrefab;
@@ -104,6 +140,26 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
         m_dragDropObject = null;
 		m_characterStatus = GameObject.FindObjectOfType<CharacterStatus>();
+
+        Transform shortcutGO = transform.FindDeepChild("Shortcut");
+        if (shortcutGO != null)
+        {
+            m_slotShortcut = shortcutGO.GetComponent<Text>();
+        }
+        else
+        {
+            m_slotShortcut = null;
+        }
+
+        Transform amountGO = transform.FindDeepChild("Amount");
+        if (amountGO != null)
+        {
+            m_slotAmount = amountGO.GetComponent<Text>();
+        }
+        else
+        {
+            m_slotAmount = null;
+        }
     }
 
     private void ShowDialog()
@@ -172,7 +228,6 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             Vector2 mousePosition = Camera.main.ScreenToWorldPoint(eventData.position);
             m_dragDropObject.transform.position = mousePosition;
         }
-            
     }
 
     public void OnEndDrag(PointerEventData eventData)

@@ -17,7 +17,11 @@ public sealed class MinerStateAttack : FSMState<Miner> {
 
 	public void Enter(Miner miner)
 	{
-		miner.PlayAnimation("minerAttack");
+        if (miner.GetPreviousState() != MinerStateAttack.Instance)
+        {
+            miner.Stop();
+            miner.PlayAnimation("minerAttack");
+        }
 	}
 
 	public void Execute(Miner miner)
@@ -26,6 +30,5 @@ public sealed class MinerStateAttack : FSMState<Miner> {
 
 	public void Exit(Miner miner)
 	{
-		miner.Stop ();
 	}
 }

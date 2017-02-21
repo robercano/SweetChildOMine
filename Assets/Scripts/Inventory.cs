@@ -28,7 +28,7 @@ public class Inventory {
     {
         int slot;
 
-        if (item.Weight > RemainingWeight)
+        if (item.TotalWeight > RemainingWeight)
             return false;
 
         if (m_inventoryMap.TryGetValue(item.Name, out slot))
@@ -36,8 +36,8 @@ public class Inventory {
             Item curItem = m_inventorySlots[slot];
             curItem.Amount += item.Amount;
             m_inventorySlots[slot] = curItem;
-            CurrentWeight += item.Weight;
-            RemainingWeight -= item.Weight;
+            CurrentWeight += item.TotalWeight;
+            RemainingWeight -= item.TotalWeight;
 
 			RefreshInventory ();
 
@@ -53,8 +53,8 @@ public class Inventory {
 
         m_inventorySlots.Add(item);
         m_inventoryMap[item.Name] = m_inventorySlots.Count - 1;
-        CurrentWeight += item.Weight;
-        RemainingWeight -= item.Weight;
+        CurrentWeight += item.TotalWeight;
+        RemainingWeight -= item.TotalWeight;
 
 		RefreshInventory ();
 
@@ -66,13 +66,17 @@ public class Inventory {
 		Item item = GetItemByName (name);
 		if (item == null)
 			return false;
-		if (item.Amount > amount) {
+		if (item.Amount >= amount) {
 			item.Amount -= amount;
 		} else {
 			amount = item.Amount;
 			item.Amount = 0;
 		}
-		RefreshInventory ();
+
+        CurrentWeight -= amount*item.WeightPerUnit;
+        RemainingWeight += amount*item.WeightPerUnit;
+
+        RefreshInventory ();
 		return true;
 	}
 

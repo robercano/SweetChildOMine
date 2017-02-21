@@ -17,18 +17,18 @@ public class UIContainer : MonoBehaviour {
         set
         {
             Name = value;
-            m_UITexts[0].text = Name;
+            m_title.text = Name;
         }
     }
-    
-    private Text[] m_UITexts;
+
+    private Text m_title;
     private ContainerSlot[] m_slots;
     private Inventory m_inventory;
 
     // Use this for initialization
     void Start()
     {
-        m_UITexts = GetComponentsInChildren<Text>();
+        m_title = transform.FindDeepChild("Title").GetComponent<Text>();
         m_slots = GetComponentsInChildren<ContainerSlot>();
 
         m_inventory = null;
@@ -39,7 +39,7 @@ public class UIContainer : MonoBehaviour {
         for (int i = 0; i < m_inventory.GetCount(); ++i)
         {
             Item item = m_inventory.GetItemAtSlot(i);
-            if (SetSlot(i, item, "x" + item.Amount.ToString()) == false)
+            if (SetSlot(i, item) == false)
                 Debug.Log("ERROR setting slot");
         }
     }
@@ -51,43 +51,41 @@ public class UIContainer : MonoBehaviour {
         InventoryUpdate();
     }
 
-    public bool SetSlot(int slot, Item item, string text)
+    public bool SetSlot(int slot, Item item, char shortcut = ' ')
     {
         if (slot < 0 || slot >= m_slots.Length)
             return false;
 
         m_slots[slot].SlotItem = item;
-        m_UITexts[slot+1].text = text;
-
+        m_slots[slot].Shortcut = shortcut;
         return true;
     }
 
     public void ClearAllSlots()
     {
         for (int i = 1; i < m_slots.Length; ++i)
-            SetSlot(i, null, null);
+            SetSlot(i, null);
     }
 
-    public bool SetText(int slot, char shortcut)
+    public bool SetShortcut(int slot, char shortcut)
     {
         slot++;
 
         if (slot < 1 || slot >= m_slots.Length)
             return false;
 
-        m_UITexts[slot].text = shortcut.ToString();
+        //m_UITexts[slot].text = shortcut.ToString();
 
         return true;
     }
-      public void ClearAllTexts()
+      public void ClearTitle()
     {
-        for (int i = 0; i < m_UITexts.Length; ++i)
-            SetText(i, ' ');
+        m_title.text = "";
     }
 
     public void ClearAll()
     {
         ClearAllSlots();
-        ClearAllTexts();
+        ClearTitle();
     }
 }
