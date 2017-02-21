@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using SCOM.Utils;
 
-public sealed class MinerStateWalk : FSMState<Miner> {
+public class MinerStateWalk : FSMState<Miner> {
 
 	static readonly MinerStateWalk instance = new MinerStateWalk();
 	public static MinerStateWalk Instance {
@@ -13,27 +13,25 @@ public sealed class MinerStateWalk : FSMState<Miner> {
 	}
 
 	static MinerStateWalk() {}
-	private MinerStateWalk() {}
+	protected MinerStateWalk() {}
 
-	public void Enter(Miner miner)
+	public virtual void Enter(Miner miner)
 	{
 		miner.SetMovementTarget (Camera.main.ScreenToWorldPoint (Input.mousePosition));
 		miner.PlayAnimation("minerWalk");
 	}
 
-	public void Execute(Miner miner)
+	public virtual void Execute(Miner miner)
 	{
 		if (miner.HasReachedMovementTarget()) {
-			miner.Stop ();
 			miner.ChangeState(MinerStateIdle.Instance);
-		}
-		else
-		{
+		} else {
 			miner.Walk ();
 		}
 	}
 
-	public void Exit(Miner miner)
+	public virtual void Exit(Miner miner)
 	{
+		miner.Stop ();
 	}
 }

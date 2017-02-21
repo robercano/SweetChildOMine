@@ -17,16 +17,13 @@ public sealed class MinerStateIdle : FSMState<Miner> {
 
 	public void Enter(Miner miner)
 	{
+		miner.Stop ();
 		miner.DisableVisibleTarget ();
 		miner.PlayAnimation("minerIdle");
 	}
 
 	public void Execute(Miner miner)
 	{
-		if (miner.PeakInputEvent() == Miner.InputEvent.LeftClick) {
-			miner.ConsumeInputEvent ();
-			miner.ChangeState (MinerStateWalk.Instance);
-		}
 	}
 
 	public void Exit(Miner miner)

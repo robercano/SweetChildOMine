@@ -25,20 +25,8 @@ public class Miner : SelectableObject
         ColliderFeet,
         ColliderBody
     };
-    [HideInInspector]
-    public enum CharacterState
-    {
-        Idle, Walk, Run, DigWalk, Dig, Attack, MineWalk, MineMaterial, BuildStructure
-    };
-    [HideInInspector]
-    public enum InputEvent
-    {
-        None, ShiftLeftClick, LeftClick, DoubleLeftClick, RightClick, Space
-    }
 
     public GameObject Target;
-
-    
     public float Life
     {
         get; private set;
@@ -55,8 +43,6 @@ public class Miner : SelectableObject
 	private float m_faceDirection = 1.0f;
     private Vector2 m_movementTarget;
 
-    private CharacterState m_currentState;
-    private InputEvent m_inputEvent;
     private BoxCollider2D m_feetCollider;
     private BoxCollider2D m_bodyCollider;
     private PolygonCollider2D m_digColliderStraight;
@@ -96,6 +82,11 @@ public class Miner : SelectableObject
     private InputManager m_inputManager;
 
     // Mining target
+	public MineableObject MineableTarget {
+		get {
+			return m_mineableTarget;
+		}
+	}
     private MineableObject m_mineableTarget;
     private int m_mineableTargetAmount;
     private int m_mineableRemainingAmount;
@@ -105,6 +96,11 @@ public class Miner : SelectableObject
     private ActionProgressDialog m_actionProgressDialog;
 
     // Building target
+	public BuildableObject BuildableTarget {
+		get {
+			return m_buildableTarget;
+		}
+	}
     private BuildableObject m_buildableTarget;
 
     // Use this for initialization
@@ -118,8 +114,6 @@ public class Miner : SelectableObject
         m_rigidBody = GetComponent<Rigidbody2D>();
         m_audioSource = GetComponent<AudioSource>();
 
-        m_currentState = CharacterState.Idle;
-        m_inputEvent = InputEvent.None;
 
         m_movementTarget = new Vector2(Mathf.Round(m_rigidBody.position.x), Mathf.Round(m_rigidBody.position.y));
 
@@ -240,20 +234,16 @@ public class Miner : SelectableObject
 			return false;
 		}
 	}
-	public InputEvent PeakInputEvent() {
-		return m_inputEvent;
-	}
-	public InputEvent ConsumeInputEvent() {
-		InputEvent InputEvent = m_inputEvent;
-		m_inputEvent = InputEvent.None;
-		return InputEvent;
-	}
 
     void GetMovementTargetFromMouse()
     {
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 		m_movementTarget = new Vector2(Mathf.Round(mousePosition.x), Mathf.Round(mousePosition.y));
     }
+
+	void ResetMovementTarget() {
+		m_movementTarget = m_rigidBody.position;
+	}
 
     public void ActivateVisibleTarget()
     {
@@ -291,64 +281,6 @@ public class Miner : SelectableObject
     void ProcessState()
     {
 		FSM.ProcessState ();
-
-		/*
-        switch (m_currentState)
-        {
-            case CharacterState.Idle:
-                DisableVisibleTarget();
-                break;
-            case CharacterState.Walk:
-            case CharacterState.Run:
-            case CharacterState.Dig:
-                {
-                    // Check end of movement
-                    float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
-                    if (deltaX >= -float.Epsilon && deltaX <= float.Epsilon)
-                    {
-                        EndMovement();
-                        FallDown();
-                        TransitionState(CharacterState.Idle);
-                        break;
-                    }
-
-                    // Still moving, apply speed
-                    switch (m_currentState)
-                    {
-                        case CharacterState.Walk:
-							m_rigidBody.velocity = new Vector2(m_faceDirection * m_walkSpeed, m_rigidBody.velocity.y);
-                            break;                        
-                        case CharacterState.Run:
-                            m_rigidBody.velocity = new Vector2(m_faceDirection * m_runSpeed, m_rigidBody.velocity.y);
-                            break;
-                    }
-
-                    FallDown();
-                }
-                break;
-            case CharacterState.MineWalk:
-			case CharacterState.DigWalk:
-                {
-					m_rigidBody.velocity = new Vector2(m_faceDirection * m_walkSpeed, m_rigidBody.velocity.y);
-                    FallDown();
-                }
-                break;
-            case CharacterState.MineMaterial:
-                DisableVisibleTarget();
-                if (m_mineableTarget == null)
-                {
-                    TransitionState(CharacterState.Idle);
-                }
-                break;
-            case CharacterState.BuildStructure:
-                DisableVisibleTarget();
-                if (m_buildableTarget == null)
-                {
-                    TransitionState(CharacterState.Idle);
-                }
-                break;
-        }
-        */
     }
 
     public void OnInputEvent(PointerEventData data)
@@ -356,213 +288,13 @@ public class Miner : SelectableObject
         if (data.button == PointerEventData.InputButton.Left)
         {
             if (Input.GetKey(KeyCode.LeftShift))
-                m_inputEvent = InputEvent.ShiftLeftClick;
+				ChangeState (MinerStateRun.Instance);
             else
-                m_inputEvent = InputEvent.LeftClick;
-        }
-        if (data.button == PointerEventData.InputButton.Right)
-        {
-            m_inputEvent = InputEvent.RightClick;
+				ChangeState (MinerStateWalk.Instance);
         }
         if (Input.GetKey(KeyCode.Space))
         {
-            m_inputEvent = InputEvent.Space;
-        }
-
-        //if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved)
-        //{
-        //    m_inputEvent = InputEvent.Space;
-        //}
-		/*
-        switch (m_inputEvent)
-        {
-            case InputEvent.LeftClick:
-                {
-                    GetMovementTargetFromMouse();
-                    ActivateVisibleTarget();
-
-                    float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
-                    if (deltaX < -float.Epsilon)
-                    {
-						m_faceDirection = -1.0f;
-                        if (m_currentState == CharacterState.Run)
-                            TransitionState(CharacterState.Run);
-                        else
-                            TransitionState(CharacterState.Walk);
-                    }
-                    else if (deltaX > float.Epsilon)
-                    {
-						m_faceDirection = 1.0f;
-                        if (m_currentState == CharacterState.Run)
-                            TransitionState(CharacterState.Run);
-                        else
-                            TransitionState(CharacterState.Walk);
-                    }
-                }
-                break;
-            case InputEvent.ShiftLeftClick:
-                {
-                    GetMovementTargetFromMouse();
-                    ActivateVisibleTarget();
-
-                    float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
-                    if (deltaX < -float.Epsilon)
-                    {
-						m_faceDirection = -1.0f;
-                        TransitionState(CharacterState.Run);
-                    }
-                    else if (deltaX > float.Epsilon)
-                    {
-						m_faceDirection = 1.0f;
-                        TransitionState(CharacterState.Run);
-                    }
-                }
-                break;
-            case InputEvent.DoubleLeftClick:
-                {
-                    GetMovementTargetFromMouse();
-                    ActivateVisibleTarget();
-
-                    float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
-                    if (deltaX < -float.Epsilon)
-                    {
-                        if (m_currentState != CharacterState.Run)
-                        {
-							m_faceDirection = -1.0f;
-                            TransitionState(CharacterState.Run);
-                        }
-                    }
-                    else if (deltaX > float.Epsilon)
-                    {
-                        if (m_currentState != CharacterState.Run)
-                        {
-							m_faceDirection = 1.0f;
-                            TransitionState(CharacterState.Run);
-                        }
-                    }
-                }
-                break;
-
-            case InputEvent.RightClick:
-                {
-                    EndMovement();
-
-                    GetMovementTargetFromMouse();
-                    ActivateVisibleTarget();
-
-                    float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
-
-                    if (m_movementTarget.y >= m_bodyCollider.bounds.max.y)
-                    {
-                        m_digColliderDown.enabled = false;
-                        m_digColliderStraight.enabled = false;
-                        m_digColliderUp.enabled = true;
-                    }
-                    else if (m_movementTarget.y <= m_bodyCollider.bounds.min.y)
-                    {
-                        m_digColliderDown.enabled = true;
-                        m_digColliderStraight.enabled = false;
-                        m_digColliderUp.enabled = false;
-                    }
-                    else
-                    {
-                        m_digColliderDown.enabled = false;
-                        m_digColliderStraight.enabled = true;
-                        m_digColliderUp.enabled = false;
-                    }
-
-                    bool newDoubleSpeed;
-
-                    if (Input.GetKey(KeyCode.LeftControl))
-                        newDoubleSpeed = true;
-                    else
-                        newDoubleSpeed = false;
-
-					if (deltaX < -float.Epsilon || deltaX > float.Epsilon)
-                    {
-                        m_digDoubleSpeed = newDoubleSpeed;
-                        TransitionState(CharacterState.Dig);
-                    }
-                }
-                break;
-            case InputEvent.Space:
-                {
-                    if (m_currentState != CharacterState.Attack)
-                    {
-                        EndMovement();
-                        FallDown();
-                        m_attackCollider.enabled = true;
-                        TransitionState(CharacterState.Attack);
-                    }
-                }
-                break;
-            case InputEvent.None:
-                {
-                }
-                break;
-        }
-        m_inputEvent = InputEvent.None;
-        */
-    }
-
-    void TransitionState(CharacterState state)
-    {
-        // TODO: Exit state should be defined in state itself, not here!!
-        if ((m_currentState == CharacterState.Dig) && (state != CharacterState.Dig))
-        {
-            m_digColliderDown.enabled = false;
-            m_digColliderUp.enabled = false;
-            m_digColliderStraight.enabled = false;
-        }
-        if (m_currentState == CharacterState.MineMaterial ||
-            m_currentState == CharacterState.BuildStructure)
-        {
-            OnActionTerminated();
-        }
-        m_currentState = state;
-        PlayStateAnimation(state);
-    }
-
-    void PlayStateAnimation(CharacterState state)
-    {
-        m_animator.speed = 1.0f;
-        switch (state)
-        {
-            case CharacterState.Walk:
-            case CharacterState.MineWalk:
-			case CharacterState.DigWalk:
-                m_animator.SetTrigger("minerWalk");
-                transform.localScale = new Vector2(m_faceDirection * Mathf.Abs(transform.localScale.x), transform.localScale.y);
-                break;            
-            case CharacterState.Run:
-                m_animator.SetTrigger("minerRun");
-                transform.localScale = new Vector2(m_faceDirection * Mathf.Abs(transform.localScale.x), transform.localScale.y);
-                break;
-            case CharacterState.Dig:
-                m_animator.SetTrigger("minerDig");
-                transform.localScale = new Vector2(m_faceDirection * Mathf.Abs(transform.localScale.x), transform.localScale.y);
-                if (m_digDoubleSpeed)
-                {
-                    m_animator.speed = 6.0f;
-                    m_digSoundCounter = 0;
-                }
-                break;
-            case CharacterState.Attack:
-                m_animator.SetTrigger("minerAttack");
-                break;
-            case CharacterState.MineMaterial:
-                m_animator.SetTrigger("minerMine");
-                DisableDialog();
-                m_actionProgressDialog.Enable();
-                break;
-            case CharacterState.BuildStructure:
-                m_animator.SetTrigger("minerBuild");
-                DisableDialog();
-                m_actionProgressDialog.Enable();
-                break;
-            case CharacterState.Idle:
-                m_animator.SetTrigger("minerIdle");
-                break;
+			ChangeState (MinerStateAttack.Instance);
         }
     }
 
@@ -571,9 +303,6 @@ public class Miner : SelectableObject
         /* Round the coordinates so they are perfect pixel aligned */
         m_rigidBody.position = new Vector2(Mathf.Round(m_rigidBody.position.x), Mathf.Round(m_rigidBody.position.y));
         m_rigidBody.velocity = Vector2.zero;
-
-        if (resetTarget)
-            m_movementTarget = m_rigidBody.position;
     }
 
     void MoveUp()
@@ -602,11 +331,14 @@ public class Miner : SelectableObject
 
     public void OnCollisionEnter2DChild(Collision2D coll, ColliderType childCollider)
 	{
-		if (FSM.CurrentState == MinerStateWalk.Instance) {
+		if (FSM.CurrentState == MinerStateWalk.Instance ||
+			FSM.CurrentState == MinerStateRun.Instance ||
+			FSM.CurrentState == MinerStateDigWalk.Instance ||
+			FSM.CurrentState == MinerStateDig.Instance) {
 			switch (childCollider) {
 			case ColliderType.ColliderBody:
 					// Check if any of the contact points is in the direction
-					// of the current movent. If so we have collided against a wall,
+					// of the current movement. If so we have collided against a wall,
 					// readjust position and end movement
 				for (int i = 0; i < coll.contacts.Length; ++i) {
 					if (m_faceDirection * (m_rigidBody.position.x - coll.contacts [i].point.x) < 0.0f) {
@@ -614,7 +346,16 @@ public class Miner : SelectableObject
 						m_faceDirection * (coll.collider.bounds.extents.x + m_bodyCollider.bounds.extents.x),
 							m_rigidBody.position.y);
 						Stop ();
-						FSM.ChangeState (MinerStateIdle.Instance);
+						if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject) {
+							FSM.ChangeState (MinerStateMineMaterial.Instance);
+						} else if (m_buildableTarget != null && coll.gameObject == m_buildableTarget.gameObject) {
+							FSM.ChangeState (MinerStateBuild.Instance);
+						} else if (FSM.CurrentState == MinerStateDigWalk.Instance && coll.gameObject.tag == "CaveCollider") {
+							FSM.ChangeState (MinerStateDig.Instance);
+						} else {
+							ResetMovementTarget (); 
+							FSM.ChangeState (MinerStateIdle.Instance);
+						}
 						break;
 					}
 				}
@@ -626,59 +367,6 @@ public class Miner : SelectableObject
 				break;
 			}
 		}
-
-
-        /*switch (m_currentState)
-        {
-            case CharacterState.Idle:
-                return;
-
-            case CharacterState.Walk:
-            case CharacterState.Run:
-            case CharacterState.Dig:
-            case CharacterState.MineWalk:
-			case CharacterState.DigWalk:
-                switch (childCollider)
-                {
-                    case ColliderType.ColliderBody:
-                        // Check if any of the contact points is in the direction
-                        // of the current movent. If so we have collided against a wall,
-                        // readjust position and end movement
-                        for (int i = 0; i < coll.contacts.Length; ++i)
-                        {
-                            if (m_faceDirection * (m_rigidBody.position.x - coll.contacts[i].point.x) < 0.0f)
-                            {
-                                m_rigidBody.position = new Vector2(coll.collider.bounds.center.x -
-                                m_faceDirection * (coll.collider.bounds.extents.x + m_bodyCollider.bounds.extents.x),
-                                    m_rigidBody.position.y);
-
-                                EndMovement(m_currentState != CharacterState.DigWalk);
-                                FallDown();
-
-                                // Check which object have we collided with
-								if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject) {
-									TransitionState (CharacterState.MineMaterial);
-								} else if (m_buildableTarget != null && coll.gameObject == m_buildableTarget.gameObject) {
-									TransitionState (CharacterState.BuildStructure);
-								} else if (m_currentState == CharacterState.DigWalk && coll.gameObject.tag == "CaveCollider") {
-									TransitionState (CharacterState.Dig);
-								} else {
-                                    TransitionState(CharacterState.Idle);
-                                }
-
-                                break;
-                            }
-                        }
-                        break;
-                    case ColliderType.ColliderFeet:
-                        // Only move up if collider is in front of us
-                        if (m_faceDirection * (m_rigidBody.position.x - coll.collider.bounds.center.x) <= 0.0f)
-                            MoveUp();
-                        break;
-                }
-                break;
-        }
-        */
     }
 
     public void OnTriggerEnter2DChild(Collider2D coll)
@@ -756,24 +444,13 @@ public class Miner : SelectableObject
         }
     }
 
-    public void OnActionTerminated()
-    {
-        m_mineableRemainingAmount = 0;
-        m_mineableTargetAmount = 0;
-        m_mineableTarget = null;
-        m_buildableTarget = null;
-
-        EnableDialog();
-        m_actionProgressDialog.Disable();
-    }
-
     public void OnDigging()
     {
         if (m_nearCaveColliders.Count == 0)
         {
             EndMovement();
             FallDown();
-            TransitionState(CharacterState.Idle);
+			FSM.ChangeState(MinerStateIdle.Instance);
             return;
         }
 
@@ -858,7 +535,7 @@ public class Miner : SelectableObject
     private void OnAttackFinished()
     {
         m_attackCollider.enabled = false;
-        TransitionState(CharacterState.Idle);
+		FSM.ChangeState (MinerStateIdle.Instance);
     }
 
     public void OnEnemyAttack(Collider2D coll, int damage)
@@ -893,9 +570,23 @@ public class Miner : SelectableObject
         m_spriteRenderer.color = Color.white;
     }
 
-    private void StartAction(string action, SelectableObject target, CharacterState nextState)
-    {
+	public void OnActionStarted()
+	{
+		DisableDialog();
+		m_actionProgressDialog.Enable();
+	}
+	public void OnActionTerminated()
+	{
+		m_mineableRemainingAmount = 0;
+		m_mineableTargetAmount = 0;
+		m_mineableTarget = null;
+		m_buildableTarget = null;
 
+		EnableDialog();
+		m_actionProgressDialog.Disable();
+	}
+	private void StartAction(string action, SelectableObject target, FSMState<Miner> nextState)
+    {
         m_actionProgressDialog.Title = action + " " + target.Name;
         m_actionProgressDialog.Percentage = 0;
 
@@ -905,12 +596,12 @@ public class Miner : SelectableObject
         if (target.gameObject.transform.position.x < transform.position.x)
         {
             m_faceDirection = -1.0f;
-            TransitionState(nextState);
+			FSM.ChangeState(nextState);
         }
         else
         {
             m_faceDirection = 1.0f;
-            TransitionState(nextState);
+			FSM.ChangeState(nextState);
         }
     }
 
@@ -923,7 +614,7 @@ public class Miner : SelectableObject
         m_mineableTargetAmount = numItems;
         m_mineableRemainingAmount = numItems;
 
-        StartAction("Mining", m_mineableTarget, CharacterState.MineWalk);
+		StartAction("Mining", m_mineableTarget, MinerStateWalk.Instance);
     }
 
 	public bool CheckRecipeForBuildableObject(GameObject buildableObject)
@@ -960,35 +651,50 @@ public class Miner : SelectableObject
 		}
 
 		m_buildableTarget = obj;
-        StartAction("Building", m_buildableTarget, CharacterState.MineWalk);
+        StartAction("Building", m_buildableTarget, MinerStateWalk.Instance);
     }
+
+
+	/*** Digging methods ***/
+	public void StopDigging()
+	{
+		m_digColliderDown.enabled = false;
+		m_digColliderUp.enabled = false;
+		m_digColliderStraight.enabled = false;
+	}
+	public void StartDiggingUp() {
+		m_digColliderDown.enabled = false;
+		m_digColliderStraight.enabled = false;
+		m_digColliderUp.enabled = true;
+	}
+	public void StartDiggingStraight() {
+		m_digColliderDown.enabled = false;
+		m_digColliderStraight.enabled = true;
+		m_digColliderUp.enabled = false;
+	}
+	public void StartDiggingDown() {
+		m_digColliderDown.enabled = true;
+		m_digColliderStraight.enabled = false;
+		m_digColliderUp.enabled = false;
+	}
 
     public void DigCave(Vector2 digTarget)
     {
         EndMovement();
 
-        m_movementTarget = digTarget;
-        ActivateVisibleTarget();
-
-        float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
+		SetMovementTarget(digTarget);
 
         if (m_movementTarget.y >= m_bodyCollider.bounds.max.y)
         {
-            m_digColliderDown.enabled = false;
-            m_digColliderStraight.enabled = false;
-            m_digColliderUp.enabled = true;
+			StartDiggingUp ();
         }
         else if (m_movementTarget.y <= m_bodyCollider.bounds.min.y)
         {
-            m_digColliderDown.enabled = true;
-            m_digColliderStraight.enabled = false;
-            m_digColliderUp.enabled = false;
+			StartDiggingDown ();
         }
         else
         {
-            m_digColliderDown.enabled = false;
-            m_digColliderStraight.enabled = true;
-            m_digColliderUp.enabled = false;
+			StartDiggingStraight ();
         }
 
         bool newDoubleSpeed;
@@ -998,10 +704,11 @@ public class Miner : SelectableObject
         else
             newDoubleSpeed = false;
 
-        if (deltaX < -float.Epsilon || deltaX > float.Epsilon)
+		float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
+		if (deltaX < -float.Epsilon || deltaX > float.Epsilon)
         {
             m_digDoubleSpeed = newDoubleSpeed;
-			TransitionState(CharacterState.DigWalk);
+			FSM.ChangeState(MinerStateDigWalk.Instance);
         }
     }
 };
