@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.Assertions;
 
 public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IEndDragHandler {
 
@@ -17,19 +18,50 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         {
             m_slotItem = value;
 
-            if (m_slotItem != null)
-            {
-                m_slotImage.sprite = value.Avatar;
-                m_slotImage.color = Color.white;
-                m_descriptionPanel.Title = m_slotItem.Name;
-                m_descriptionPanel.Description = m_slotItem.Description;
-            }
-            else
+            if (m_slotItem == null)
             {
                 m_slotImage.color = Color.clear;
                 m_descriptionPanel.Title = "";
                 m_descriptionPanel.Description = "";
+                m_buildableDescriptionPanel.Title = "";
+                return;
             }
+
+            // Set common fields
+            m_slotImage.sprite = m_slotItem.Avatar;
+
+
+            // Non-buildable object
+            if (m_slotItem.ObjectPrefab == null)
+            {
+                m_slotImage.color = Color.white;
+                m_descriptionPanel.Title = m_slotItem.Name;
+                m_descriptionPanel.Description = m_slotItem.Description;
+                return;
+            }
+
+            // Buildable object
+            m_buildableObject = m_slotItem.ObjectPrefab.GetComponent<BuildableObject>();
+            Assert.IsNotNull(m_buildableObject);
+
+            Miner miner = m_characterStatus.GetActiveMiner();
+            Assert.IsNotNull(miner);
+
+            if (miner.CheckRecipeForBuildableObject(m_buildableObject))
+            {
+                m_slotImage.color = Color.white;
+                m_buildableDescriptionPanel.GreenStatus();
+            }
+            else
+            {
+                m_slotImage.color = new Color(1, 1, 1, 0.5f);
+                m_buildableDescriptionPanel.RedStatus();
+            }
+
+            // TODO: Iterate the recipe and show all elements!
+            m_buildableDescriptionPanel.Title = m_slotItem.Name;
+            m_buildableDescriptionPanel.Amount = m_buildableObject.Recipe[0].Amount;
+            m_buildableDescriptionPanel.Material = m_buildableObject.Recipe[0].Ingredient.Avatar;
         }
     }
     private Item m_slotItem;
@@ -41,13 +73,19 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     private InventoryDescriptionPanel m_descriptionPanel;
     private RectTransform m_descriptionInstanceRectTransform;
 
+    private GameObject m_buildableDescriptionPanelPrefab;
+    private GameObject m_buildableDescriptionInstance;
+    private BuildInventoryDialogPanel m_buildableDescriptionPanel;    
+    private RectTransform m_buildableDescriptionInstanceRectTransform;
+
     private GameObject m_dragDropObject;
     private DragDropController m_dragDropObjectController;
 
 	private CharacterStatus m_characterStatus;
+    private BuildableObject m_buildableObject;
 
     // Use this for initialization
-    void Start()
+    void Awake()
     {
         m_slotImage = GetComponent<Image>();
         m_rectTransform = GetComponent<RectTransform>();
@@ -58,6 +96,12 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         m_descriptionInstanceRectTransform = m_descriptionInstance.GetComponent<RectTransform>();
         m_descriptionInstanceRectTransform.anchoredPosition = new Vector2(m_rectTransform.sizeDelta.x / 2.0f, m_rectTransform.sizeDelta.y);
 
+        m_buildableDescriptionPanelPrefab = Resources.Load("BuildInventoryDialogPanel") as GameObject;
+        m_buildableDescriptionInstance = GameObject.Instantiate(m_buildableDescriptionPanelPrefab, transform, false);
+        m_buildableDescriptionPanel = m_buildableDescriptionInstance.GetComponent<BuildInventoryDialogPanel>();
+        m_buildableDescriptionInstanceRectTransform = m_buildableDescriptionPanel.GetComponent<RectTransform>();
+        m_buildableDescriptionInstanceRectTransform.anchoredPosition = new Vector2(m_rectTransform.sizeDelta.x / 2.0f, m_rectTransform.sizeDelta.y);
+
         m_dragDropObject = null;
 		m_characterStatus = GameObject.FindObjectOfType<CharacterStatus>();
     }
@@ -66,15 +110,31 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     {
         if (m_slotItem != null)
         {
-            m_descriptionPanel.Enable();
+            if (m_buildableObject != null)
+            {
+                m_buildableDescriptionPanel.Enable();
+            }
+            else
+            {
+                m_descriptionPanel.Enable();
+            }
         }
             
     }
     private void HideDialog()
     {
         if (m_slotItem != null)
-            m_descriptionPanel.Disable();
-    }
+        {
+            if (m_buildableObject != null)
+            {
+                m_buildableDescriptionPanel.Disable();
+            }
+            else
+            {
+                m_descriptionPanel.Disable();
+            }
+        }
+        }
 
     public void OnPointerEnter(PointerEventData eventData)
     {

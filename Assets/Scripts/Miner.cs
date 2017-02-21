@@ -499,13 +499,14 @@ public class Miner : SelectableObject
         }
     }
 
-    void EndMovement()
+    void EndMovement(bool resetTarget = true)
     {
         /* Round the coordinates so they are perfect pixel aligned */
         m_rigidBody.position = new Vector2(Mathf.Round(m_rigidBody.position.x), Mathf.Round(m_rigidBody.position.y));
         m_rigidBody.velocity = Vector2.zero;
 
-        m_movementTarget = m_rigidBody.position;
+        if (resetTarget)
+            m_movementTarget = m_rigidBody.position;
     }
 
     void MoveUp()
@@ -557,7 +558,8 @@ public class Miner : SelectableObject
                                 m_rigidBody.position = new Vector2(coll.collider.bounds.center.x -
                                 m_faceDirection * (coll.collider.bounds.extents.x + m_bodyCollider.bounds.extents.x),
                                     m_rigidBody.position.y);
-                                EndMovement();
+
+                                EndMovement(m_currentState != CharacterState.DigWalk);
                                 FallDown();
 
                                 // Check which object have we collided with
@@ -624,6 +626,7 @@ public class Miner : SelectableObject
             m_actionProgressDialog.Percentage = (100 * (m_mineableTargetAmount - m_mineableRemainingAmount) / m_mineableTargetAmount);
 
             MaterialInventory.AddItem(materialMined);
+            m_buildInventory.RefreshInventory();
         }
     }
 
@@ -840,7 +843,7 @@ public class Miner : SelectableObject
 			return false;
 
 		foreach (BuildableObject.RecipeItem recipeItem in buildableObject.Recipe) {
-			if (MaterialInventory.GetItemAmount (recipeItem.Name) < recipeItem.Amount)
+			if (MaterialInventory.GetItemAmount (recipeItem.Ingredient.Name) < recipeItem.Amount)
 				return false;
 		}
 		return true;
@@ -856,7 +859,7 @@ public class Miner : SelectableObject
 
 		foreach (BuildableObject.RecipeItem recipeItem in obj.Recipe) {
 			int amount = recipeItem.Amount;
-			if (MaterialInventory.RemoveItemAmount (recipeItem.Name, ref amount) == false) {
+			if (MaterialInventory.RemoveItemAmount (recipeItem.Ingredient.Name, ref amount) == false) {
 				Debug.Log("Something bad happened while building an structure");
 				return;
 			}

@@ -27,7 +27,7 @@ public class BuildInventoryDialogPanel : MonoBehaviour
         }
         set
         {
-            m_amount.text = value.ToString();
+            m_amount.text = "x" + value.ToString();
         }
     }
     public Sprite Material
@@ -41,10 +41,11 @@ public class BuildInventoryDialogPanel : MonoBehaviour
             m_material.sprite = value;
         }
     }
-
+    
     private Text m_title;
     private Text m_amount;
     private Image m_material;
+    private Image m_status;
     private WidgetFader m_widgetFader;
 
     // Use this for initialization
@@ -52,6 +53,7 @@ public class BuildInventoryDialogPanel : MonoBehaviour
     {
         m_title = transform.FindDeepChild("Title").GetComponent<Text>();
         m_amount = transform.FindDeepChild("Amount").GetComponent<Text>();
+        m_status = transform.FindDeepChild("Status").GetComponent<Image>();
         m_material = transform.FindDeepChild("Material").GetComponent<Image>();
 
         Title = "";
@@ -60,6 +62,16 @@ public class BuildInventoryDialogPanel : MonoBehaviour
 
         m_widgetFader = GetComponent<WidgetFader>();
         m_widgetFader.DisableImmediate();
+    }
+
+    public void GreenStatus()
+    {
+        m_status.color = new Color(0.32915f, 1, 0.32915f);
+    }
+
+    public void RedStatus()
+    {
+        m_status.color = new Color(1, 0.34509f, 0.34509f);
     }
 
     public void Enable()
