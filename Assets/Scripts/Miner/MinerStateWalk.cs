@@ -17,7 +17,6 @@ public class MinerStateWalk : FSMState<Miner> {
 
 	public virtual void Enter(Miner miner)
 	{
-		miner.SetMovementTarget (Camera.main.ScreenToWorldPoint (Input.mousePosition));
 		miner.PlayAnimation("minerWalk");
 	}
 

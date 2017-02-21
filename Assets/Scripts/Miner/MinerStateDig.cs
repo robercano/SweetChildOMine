@@ -23,9 +23,14 @@ public sealed class MinerStateDig : FSMState<Miner> {
 
 	public void Execute(Miner miner)
 	{
-		if (miner.HasReachedMovementTarget()) {
-			miner.ChangeState(MinerStateIdle.Instance);
-		}
+        if (miner.HasReachedMovementTarget())
+        {
+            miner.ChangeState(MinerStateIdle.Instance);
+        }
+        else
+        {
+            miner.FallDown();
+        }
 	}
 
 	public void Exit(Miner miner)

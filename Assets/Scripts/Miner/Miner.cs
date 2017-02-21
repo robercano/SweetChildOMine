@@ -54,7 +54,6 @@ public class Miner : SelectableObject
     private HashSet<GameObject> m_nearEnemies;
 
     private GameObject m_target;
-    private bool m_digDoubleSpeed;
     private int m_digSoundCounter;
 
     private int m_layerMask;
@@ -136,7 +135,6 @@ public class Miner : SelectableObject
         m_target = GameObject.Instantiate(Target, new Vector3(m_movementTarget.x, m_movementTarget.y, 0.0f), Quaternion.identity);
         DisableVisibleTarget();
 
-        m_digDoubleSpeed = false;
         m_digSoundCounter = 0;
 
         m_layerMask = (1 << (LayerMask.NameToLayer("Cave Colliders")));
@@ -208,7 +206,8 @@ public class Miner : SelectableObject
         return m_spriteRenderer.sprite;
     }
 
-	public void SetMovementTarget(Vector2 target)
+    #region /* Movement target management */
+    public void SetMovementTarget(Vector2 target)
 	{
 		m_movementTarget = new Vector2(Mathf.Round(target.x), Mathf.Round(target.y));
 		float deltaX = GetDistanceToMovementTarget ();
@@ -234,6 +233,7 @@ public class Miner : SelectableObject
 			return false;
 		}
 	}
+    #endregion /* Movement target management */
 
     void GetMovementTargetFromMouse()
     {
@@ -258,21 +258,6 @@ public class Miner : SelectableObject
 	{
 		m_animator.SetTrigger (animation);
 	}
-	public void Walk()
-	{
-		m_rigidBody.velocity = new Vector2(m_faceDirection * m_walkSpeed, m_rigidBody.velocity.y);
-		FallDown();
-	}
-	public void Run()
-	{
-		m_rigidBody.velocity = new Vector2(m_faceDirection * m_runSpeed, m_rigidBody.velocity.y);
-		FallDown();
-	}
-	public void Stop() {
-		EndMovement();
-		FallDown();
-	}
-
 	public void ChangeState(FSMState<Miner> newState)
 	{
 		FSM.ChangeState (newState);
@@ -287,10 +272,15 @@ public class Miner : SelectableObject
     {
         if (data.button == PointerEventData.InputButton.Left)
         {
+            SetMovementTarget(Camera.main.ScreenToWorldPoint(Input.mousePosition));
             if (Input.GetKey(KeyCode.LeftShift))
-				ChangeState (MinerStateRun.Instance);
+            {
+                ChangeState(MinerStateRun.Instance);
+            }
             else
-				ChangeState (MinerStateWalk.Instance);
+            {
+                ChangeState(MinerStateWalk.Instance);
+            }
         }
         if (Input.GetKey(KeyCode.Space))
         {
@@ -305,12 +295,12 @@ public class Miner : SelectableObject
         m_rigidBody.velocity = Vector2.zero;
     }
 
-    void MoveUp()
+    #region /* Movement methods */
+    public void MoveUp()
     {
         m_rigidBody.position = new Vector2(m_rigidBody.position.x, m_rigidBody.position.y + 1.0f);
     }
-
-    void FallDown()
+    public void FallDown()
     {
         /* Check if we need to fall down */
         Vector2 leftSource = new Vector2(m_feetCollider.bounds.min.x + 0.5f, m_feetCollider.bounds.min.y);
@@ -328,7 +318,35 @@ public class Miner : SelectableObject
             m_rigidBody.position = new Vector2(m_rigidBody.position.x, m_rigidBody.position.y - Mathf.Min(hitLeft.distance, hitRight.distance));
         }
     }
+    public void Walk()
+    {
+        m_rigidBody.velocity = new Vector2(m_faceDirection * m_walkSpeed, m_rigidBody.velocity.y);
+        FallDown();
+    }
+    public void StepForward()
+    {
+        if (transform.localScale.x <= 0.0f)
+        {
+            m_rigidBody.position = new Vector2(m_rigidBody.position.x - 1.0f, m_rigidBody.position.y);
+        }
+        else {
+            m_rigidBody.position = new Vector2(m_rigidBody.position.x + 1.0f, m_rigidBody.position.y);
+        }
+        PlayAudioOneStep();
+    }
+    public void Run()
+    {
+        m_rigidBody.velocity = new Vector2(m_faceDirection * m_runSpeed, m_rigidBody.velocity.y);
+        FallDown();
+    }
+    public void Stop()
+    {
+        EndMovement();
+        FallDown();
+    }
+    #endregion /* Movement methods */
 
+    #region /* Events receivers */
     public void OnCollisionEnter2DChild(Collision2D coll, ColliderType childCollider)
 	{
 		if (FSM.CurrentState == MinerStateWalk.Instance ||
@@ -464,61 +482,13 @@ public class Miner : SelectableObject
 
     public void OnStepForward()
     {
-        if (transform.localScale.x <= 0.0f)
-        {
-            m_rigidBody.position = new Vector2(m_rigidBody.position.x - 1.0f, m_rigidBody.position.y);
-        }
-        else {
-            m_rigidBody.position = new Vector2(m_rigidBody.position.x + 1.0f, m_rigidBody.position.y);
-        }
-        PlayAudioOneStep();
-        FallDown();
+        StepForward();
     }
 
     public void OnStep()
     {
         PlayAudioOneStep();
     }
-
-    private void PlayAudioPickAxe()
-    {
-        int pickSoundIdx = Random.Range(0, m_pickSounds.Length);
-        float pickSoundVolume = Random.Range(0.4f, 0.6f);
-
-        bool playSound = false;
-
-        if (m_digDoubleSpeed)
-        {
-            if (++m_digSoundCounter == 3)
-            {
-                m_digSoundCounter = 0;
-                playSound = true;
-            }
-        }
-        else {
-            playSound = true;
-        }
-
-        if (playSound)
-        {
-            m_audioSource.PlayOneShot(m_pickSounds[pickSoundIdx], pickSoundVolume);
-            PlayAudioGravelFall();
-        }
-    }
-
-    private void PlayAudioOneStep()
-    {
-        int stepSoundIdx = Random.Range(0, m_stepsSounds.Length);
-        float stepSoundVolume = Random.Range(0.4f, 0.6f);
-
-        m_audioSource.PlayOneShot(m_stepsSounds[stepSoundIdx], stepSoundVolume);
-    }
-
-    private void PlayAudioGravelFall()
-    {
-        AudioSource.PlayClipAtPoint(m_gravelSound, Camera.main.transform.position, 0.1f);
-    }
-
     private void OnAttack()
     {
         float pickSoundVolume = Random.Range(0.4f, 0.6f);
@@ -535,7 +505,7 @@ public class Miner : SelectableObject
     private void OnAttackFinished()
     {
         m_attackCollider.enabled = false;
-		FSM.ChangeState (MinerStateIdle.Instance);
+        FSM.ChangeState(MinerStateIdle.Instance);
     }
 
     public void OnEnemyAttack(Collider2D coll, int damage)
@@ -543,8 +513,6 @@ public class Miner : SelectableObject
         if (m_bodyCollider.bounds.Intersects(coll.bounds))
         {
             Life -= damage;
-
-            //m_characterStatus.SetLife(Life / MaxLife);
 
             if (Life <= 0)
             {
@@ -560,6 +528,48 @@ public class Miner : SelectableObject
         }
     }
 
+    public void OnActionStarted()
+    {
+        DisableDialog();
+        m_actionProgressDialog.Enable();
+    }
+
+    public void OnActionTerminated()
+    {
+        m_mineableRemainingAmount = 0;
+        m_mineableTargetAmount = 0;
+        m_mineableTarget = null;
+        m_buildableTarget = null;
+
+        EnableDialog();
+        m_actionProgressDialog.Disable();
+    }
+    #endregion /* Events receivers */
+
+    #region /* Sound methods */
+    private void PlayAudioPickAxe()
+    {
+        int pickSoundIdx = Random.Range(0, m_pickSounds.Length);
+        float pickSoundVolume = Random.Range(0.4f, 0.6f);
+
+        m_audioSource.PlayOneShot(m_pickSounds[pickSoundIdx], pickSoundVolume);
+        PlayAudioGravelFall();
+    }
+
+    private void PlayAudioOneStep()
+    {
+        int stepSoundIdx = Random.Range(0, m_stepsSounds.Length);
+        float stepSoundVolume = Random.Range(0.4f, 0.6f);
+
+        m_audioSource.PlayOneShot(m_stepsSounds[stepSoundIdx], stepSoundVolume);
+    }
+
+    private void PlayAudioGravelFall()
+    {
+        AudioSource.PlayClipAtPoint(m_gravelSound, Camera.main.transform.position, 0.1f);
+    }
+    #endregion /* Sound methods */
+
     private IEnumerator PlayerHitAnimation()
     {
         for (int i = 0; i < 20; ++i)
@@ -570,39 +580,14 @@ public class Miner : SelectableObject
         m_spriteRenderer.color = Color.white;
     }
 
-	public void OnActionStarted()
-	{
-		DisableDialog();
-		m_actionProgressDialog.Enable();
-	}
-	public void OnActionTerminated()
-	{
-		m_mineableRemainingAmount = 0;
-		m_mineableTargetAmount = 0;
-		m_mineableTarget = null;
-		m_buildableTarget = null;
-
-		EnableDialog();
-		m_actionProgressDialog.Disable();
-	}
+	
 	private void StartAction(string action, SelectableObject target, FSMState<Miner> nextState)
     {
         m_actionProgressDialog.Title = action + " " + target.Name;
         m_actionProgressDialog.Percentage = 0;
 
-        m_movementTarget = target.gameObject.transform.position;
-        ActivateVisibleTarget();
-
-        if (target.gameObject.transform.position.x < transform.position.x)
-        {
-            m_faceDirection = -1.0f;
-			FSM.ChangeState(nextState);
-        }
-        else
-        {
-            m_faceDirection = 1.0f;
-			FSM.ChangeState(nextState);
-        }
+        SetMovementTarget(target.gameObject.transform.position);
+        FSM.ChangeState(nextState);
     }
 
     public void MineMaterial(MineableObject obj, int numItems)
@@ -617,7 +602,8 @@ public class Miner : SelectableObject
 		StartAction("Mining", m_mineableTarget, MinerStateWalk.Instance);
     }
 
-	public bool CheckRecipeForBuildableObject(GameObject buildableObject)
+    #region /* Building structures methods */
+    public bool CheckRecipeForBuildableObject(GameObject buildableObject)
 	{
 		return CheckRecipeForBuildableObject(buildableObject.GetComponent<BuildableObject> ());
 	}
@@ -653,10 +639,10 @@ public class Miner : SelectableObject
 		m_buildableTarget = obj;
         StartAction("Building", m_buildableTarget, MinerStateWalk.Instance);
     }
+    #endregion /* Building structures methods */
 
-
-	/*** Digging methods ***/
-	public void StopDigging()
+    #region /* Digging cave methods */
+    public void StopDigging()
 	{
 		m_digColliderDown.enabled = false;
 		m_digColliderUp.enabled = false;
@@ -697,18 +683,7 @@ public class Miner : SelectableObject
 			StartDiggingStraight ();
         }
 
-        bool newDoubleSpeed;
-
-        if (Input.GetKey(KeyCode.LeftControl))
-            newDoubleSpeed = true;
-        else
-            newDoubleSpeed = false;
-
-		float deltaX = m_movementTarget.x - Mathf.Round(m_rigidBody.position.x);
-		if (deltaX < -float.Epsilon || deltaX > float.Epsilon)
-        {
-            m_digDoubleSpeed = newDoubleSpeed;
-			FSM.ChangeState(MinerStateDigWalk.Instance);
-        }
+        FSM.ChangeState(MinerStateDigWalk.Instance);
     }
+    #endregion /* Digging cave methods */
 };
