@@ -54,7 +54,6 @@ public class Miner : SelectableObject
     private HashSet<GameObject> m_nearEnemies;
 
     private GameObject m_target;
-    private int m_digSoundCounter;
 
     private int m_layerMask;
 
@@ -134,8 +133,6 @@ public class Miner : SelectableObject
 
         m_target = GameObject.Instantiate(Target, new Vector3(m_movementTarget.x, m_movementTarget.y, 0.0f), Quaternion.identity);
         DisableVisibleTarget();
-
-        m_digSoundCounter = 0;
 
         m_layerMask = (1 << (LayerMask.NameToLayer("Cave Colliders")));
 
@@ -273,29 +270,24 @@ public class Miner : SelectableObject
 		FSM.ProcessState ();
     }
 
-    public void OnMouseEvent(PointerEventData data)
+    public void OnInputEvent(InputManager.InputEvent ev)
     {
-        if (data.button == PointerEventData.InputButton.Left)
+        switch (ev)
         {
-            SetMovementTarget(Camera.main.ScreenToWorldPoint(Input.mousePosition));
-            if (Input.GetKey(KeyCode.LeftShift))
-            {
-                ChangeState(MinerStateRun.Instance);
-            }
-            else
-            {
+            case InputManager.InputEvent.LeftClick:
+                SetMovementTarget(Camera.main.ScreenToWorldPoint(Input.mousePosition));
                 ChangeState(MinerStateWalk.Instance);
-            }
+                break;
+            case InputManager.InputEvent.DoubleLeftClick:
+                SetMovementTarget(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+                ChangeState(MinerStateRun.Instance);
+                break;
+            case InputManager.InputEvent.Space:
+                ChangeState(MinerStateAttack.Instance);
+                break;
         }
     }
-    public void OnKeyEvent(KeyCode keycode)
-    {
-        if (Input.GetKey(KeyCode.Space))
-        {
-            ChangeState(MinerStateAttack.Instance);
-        }
-    }
-
+   
     void EndMovement(bool resetTarget = true)
     {
         /* Round the coordinates so they are perfect pixel aligned */
@@ -646,7 +638,7 @@ public class Miner : SelectableObject
             }
         }
 
-        MaterialInventory.RefreshInventory();
+        //MaterialInventory.RefreshInventory();
         m_buildInventory.RefreshInventory();
         return true;
     }

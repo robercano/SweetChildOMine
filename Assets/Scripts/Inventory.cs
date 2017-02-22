@@ -76,7 +76,14 @@ public class Inventory {
         CurrentWeight -= amount*item.WeightPerUnit;
         RemainingWeight += amount*item.WeightPerUnit;
 
-        RefreshInventory ();
+        // If amount is zero, remove the item from the inventory
+        if (item.Amount == 0)
+        {
+            m_inventoryMap.Remove(item.Name);
+            m_inventorySlots.Remove(item);
+        }
+
+        RefreshInventory();
 		return true;
 	}
 
@@ -109,6 +116,10 @@ public class Inventory {
     public int GetCount()
     {
         return m_inventorySlots.Count;
+    }
+    public int GetMaxSlots()
+    {
+        return m_inventorySlots.Capacity;
     }
 
 	public void RefreshInventory()

@@ -6,25 +6,43 @@ using UnityEngine.EventSystems;
 
 public class InputManager : MonoBehaviour, IPointerClickHandler {
 
+    public float DoubleClickTime = 0.01f;
     private Miner m_miner;
     private CaveController m_caveController;
+
+    private float m_lastClickTime;
+
+    public enum InputEvent
+    {
+        LeftClick, DoubleLeftClick, Space
+    }
 
     void Start()
     {
         m_miner = null;
         m_caveController = GameObject.FindObjectOfType<CaveController>();
+        m_lastClickTime = Time.time;
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        
-        if (m_miner != null)
+        if (m_miner == null)
+            return;
+
+        if (eventData.button == PointerEventData.InputButton.Left)
         {
             // First check if the cave will handle this click
-            if (m_caveController.HandlePointerClick(eventData.position) == false)
+            if (m_caveController.HandlePointerClick(eventData.position))
+                return;
+
+            if ((Time.time - m_lastClickTime) < DoubleClickTime)
             {
-                // Otherwise redirect to the miner
-                m_miner.OnMouseEvent(eventData);
+                m_miner.OnInputEvent(InputEvent.DoubleLeftClick);
+            }
+            else
+            {
+                m_miner.OnInputEvent(InputEvent.LeftClick);
+                m_lastClickTime = Time.time;
             }
         }
     }
@@ -35,7 +53,7 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
         {
             if (Event.current.type == EventType.KeyDown)
             {
-                m_miner.OnKeyEvent(Event.current.keyCode);
+                m_miner.OnInputEvent(InputEvent.Space);
             }
         }
     }

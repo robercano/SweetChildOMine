@@ -120,6 +120,8 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 	private CharacterStatus m_characterStatus;
     private BuildableObject m_buildableObject;
 
+    private UIContainer m_materialInventory;
+
     // Use this for initialization
     void Awake()
     {
@@ -141,6 +143,8 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         m_dragDropObject = null;
 		m_characterStatus = GameObject.FindObjectOfType<CharacterStatus>();
 
+        m_materialInventory = GameObject.Find("InventoryContainer").GetComponent<UIContainer>();
+
         Transform shortcutGO = transform.FindDeepChild("Shortcut");
         if (shortcutGO != null)
         {
@@ -160,6 +164,8 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         {
             m_slotAmount = null;
         }
+
+        SlotItem = null;
     }
 
     private void ShowDialog()
@@ -210,13 +216,19 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 			if (miner == null)
 				return;
 			
+            // TODO: Allocate resources for buildable here
 			if (miner.CheckRecipeForBuildableObject (m_slotItem.ObjectPrefab)) {
 				Vector2 mousePosition = Camera.main.ScreenToWorldPoint (eventData.position);
 				m_dragDropObject = GameObject.Instantiate (m_slotItem.ObjectPrefab, mousePosition, Quaternion.identity);
 				m_dragDropObjectController = m_dragDropObject.GetComponent<DragDropController> ();
 				m_dragDropObjectController.StartDrag ();
 			} else {
-				// TODO: make inventory go red and play error sound
+                // TODO: optimize this
+                BuildableObject buildable = m_slotItem.ObjectPrefab.GetComponent<BuildableObject>();
+                foreach (BuildableObject.RecipeItem recipeItem in buildable.Recipe)
+                {
+                    m_materialInventory.SignalError(recipeItem.Ingredient);
+                }
 			}		
         }
     }
@@ -238,5 +250,25 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             m_dragDropObject = null;
             m_dragDropObjectController = null;
         }
+    }
+
+    public void SignalEror()
+    {
+        StartCoroutine(CO_SignalError());
+    }
+
+    IEnumerator CO_SignalError()
+    {
+        int errorSteps = 20;
+        int errorRepetition = 2;
+
+        for (int i = 0; i < errorSteps; ++i)
+        {
+            float intensity = Mathf.Abs(Mathf.Cos(i * errorRepetition * Mathf.PI / errorSteps));
+
+            m_slotImage.color = new Color(1, intensity, intensity);
+            yield return new WaitForSeconds(0.05f);
+        }
+        m_slotImage.color = Color.white;
     }
 }

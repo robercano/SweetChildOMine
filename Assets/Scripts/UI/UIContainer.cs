@@ -7,36 +7,46 @@ using UnityEngine.EventSystems;
 
 public class UIContainer : MonoBehaviour {
 
-    public string Name
-    {
-        get
-        {
-            return Name;
-        }
+    public string Title;
+    public bool EnablePeg;
+    
+    private Text m_titleText;
 
-        set
-        {
-            Name = value;
-            m_title.text = Name;
-        }
-    }
-
-    private Text m_title;
     private ContainerSlot[] m_slots;
     private Inventory m_inventory;
+    private AudioClip m_errorSound;
+    private Image m_background;
 
     // Use this for initialization
     void Start()
     {
-        m_title = transform.FindDeepChild("Title").GetComponent<Text>();
+        Transform titleBar = transform.FindDeepChild("TitleBar");
+        if (Title != "")
+        {
+            titleBar.gameObject.SetActive(true);
+            m_titleText = transform.FindDeepChild("Title").GetComponent<Text>();
+            m_titleText.text = Title;
+        }
+        else
+        {
+            titleBar.gameObject.SetActive(false);
+        }
+
+        Transform peg = transform.FindDeepChild("Peg");
+        peg.gameObject.SetActive(EnablePeg);
+
         m_slots = GetComponentsInChildren<ContainerSlot>();
 
         m_inventory = null;
+
+        m_errorSound = Resources.Load("Sounds/InventoryError") as AudioClip;
+
+        m_background = transform.FindDeepChild("Body").GetComponent<Image>();
     }
 
     void InventoryUpdate()
     {
-        for (int i = 0; i < m_inventory.GetCount(); ++i)
+        for (int i = 0; i < m_inventory.GetMaxSlots(); ++i)
         {
             Item item = m_inventory.GetItemAtSlot(i);
             if (SetSlot(i, item) == false)
@@ -80,12 +90,48 @@ public class UIContainer : MonoBehaviour {
     }
       public void ClearTitle()
     {
-        m_title.text = "";
+        m_titleText.text = "";
     }
 
     public void ClearAll()
     {
         ClearAllSlots();
         ClearTitle();
+    }
+
+    public void SignalError(Item item)
+    {
+        bool firstTime = true;
+
+        foreach (ContainerSlot slot in m_slots)
+        {
+            if (slot.SlotItem != null && slot.SlotItem.Name == item.Name)
+            {
+                if (firstTime)
+                {
+                    AudioSource.PlayClipAtPoint(m_errorSound, Camera.main.transform.position);
+                }
+                slot.SignalEror();
+                return;
+            }
+        }
+        StartCoroutine(CO_SignalError());
+    }
+
+    private IEnumerator CO_SignalError()
+    {
+        AudioSource.PlayClipAtPoint(m_errorSound, Camera.main.transform.position);
+
+        int errorSteps = 20;
+        int errorRepetition = 2;
+
+        for (int i = 0; i < errorSteps; ++i)
+        {
+            float intensity = Mathf.Abs(Mathf.Cos(i * errorRepetition * Mathf.PI / errorSteps ));
+
+            m_background.color = new Color(1, intensity, intensity);
+            yield return new WaitForSeconds(0.05f);
+        }
+        m_background.color = Color.white;
     }
 }
