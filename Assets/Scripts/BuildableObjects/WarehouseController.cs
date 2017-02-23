@@ -17,10 +17,13 @@ public class WarehouseController : SelectableObject {
 
         m_containerPrefab = Resources.Load("UI/GenericUIContainer6Slots") as GameObject;
         m_containerInstance = GameObject.Instantiate(m_containerPrefab, transform, false);
-        m_containerInstance.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
-        m_containerInstance.transform.position = new Vector3(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f, 0.0f);
         m_containerFader = m_containerInstance.GetComponent<WidgetFader>();
         m_containerController = m_containerInstance.GetComponent<UIContainer>();
+
+        m_containerController.SetWorldUI(true);
+        m_containerInstance.transform.position = new Vector3(gameObject.transform.position.x, 
+                                                             m_spriteRenderer.bounds.max.y + UIGlobals.PegDistanceToObject , 
+                                                             0.0f);
         m_containerController.Title = "";
 
         m_onSelectedDelegate = ShowContainer;

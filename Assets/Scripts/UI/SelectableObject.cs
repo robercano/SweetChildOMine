@@ -34,7 +34,7 @@ public class SelectableObject : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     public virtual void Awake()
     {
-        m_dialogPanelPrefab = Resources.Load("DialogPanel") as GameObject;
+        m_dialogPanelPrefab = Resources.Load("UI/DialogPanel") as GameObject;
         m_selectorPrefab = Resources.Load("Selector") as GameObject;
 
        // m_boxCollider = GetComponent<BoxCollider2D>();
@@ -46,7 +46,9 @@ public class SelectableObject : MonoBehaviour, IPointerEnterHandler, IPointerExi
         m_selectorInstance = GameObject.Instantiate(m_selectorPrefab, transform, false);
         m_selector = m_selectorInstance.GetComponent<Selector>();
 
-        m_dialogInstance.transform.position = new Vector3(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f, 0.0f);
+        m_dialogInstance.transform.position = new Vector3(gameObject.transform.position.x, 
+                                                          m_spriteRenderer.bounds.max.y + UIGlobals.PegDistanceToObject,
+                                                          0.0f);
 
         m_dialogPanel.DisableImmediate();
         m_dialogPanel.SetText(Name);

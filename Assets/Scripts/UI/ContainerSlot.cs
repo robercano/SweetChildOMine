@@ -128,17 +128,19 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         m_slotImage = GetComponent<Image>();
         m_rectTransform = GetComponent<RectTransform>();
 
-        m_descriptionPanelPrefab = Resources.Load("InventoryDescriptionPanel") as GameObject;
+        m_descriptionPanelPrefab = Resources.Load("UI/InventoryDescriptionPanel") as GameObject;
         m_descriptionInstance = GameObject.Instantiate(m_descriptionPanelPrefab, transform, false);
         m_descriptionPanel = m_descriptionInstance.GetComponent<InventoryDescriptionPanel>();
         m_descriptionInstanceRectTransform = m_descriptionInstance.GetComponent<RectTransform>();
-        m_descriptionInstanceRectTransform.anchoredPosition = new Vector2(m_rectTransform.sizeDelta.x / 2.0f, m_rectTransform.sizeDelta.y);
+        m_descriptionInstanceRectTransform.anchoredPosition = new Vector2(m_rectTransform.sizeDelta.x / 2.0f, 
+                                                                          m_rectTransform.sizeDelta.y + UIGlobals.PegDistanceToObject);
 
-        m_buildableDescriptionPanelPrefab = Resources.Load("BuildInventoryDialogPanel") as GameObject;
+        m_buildableDescriptionPanelPrefab = Resources.Load("UI/BuildInventoryDialogPanel") as GameObject;
         m_buildableDescriptionInstance = GameObject.Instantiate(m_buildableDescriptionPanelPrefab, transform, false);
         m_buildableDescriptionPanel = m_buildableDescriptionInstance.GetComponent<BuildInventoryDialogPanel>();
         m_buildableDescriptionInstanceRectTransform = m_buildableDescriptionPanel.GetComponent<RectTransform>();
-        m_buildableDescriptionInstanceRectTransform.anchoredPosition = new Vector2(m_rectTransform.sizeDelta.x / 2.0f, m_rectTransform.sizeDelta.y);
+        m_buildableDescriptionInstanceRectTransform.anchoredPosition = new Vector2(m_rectTransform.sizeDelta.x / 2.0f, 
+                                                                                   m_rectTransform.sizeDelta.y + UIGlobals.PegDistanceToObject);
 
         m_dragDropObject = null;
 		m_characterStatus = GameObject.FindObjectOfType<CharacterStatus>();

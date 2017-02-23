@@ -32,7 +32,7 @@ public class BuildableObject : SelectableObject
     {
         base.Awake();
 
-        m_buildingContextMenuPrefab = Resources.Load("BuildingContextMenu") as GameObject;
+        m_buildingContextMenuPrefab = Resources.Load("UI/BuildingContextMenu") as GameObject;
 
         m_buildingContextMenuInstance = GameObject.Instantiate(m_buildingContextMenuPrefab, transform, false);
         m_buildingContextMenu = m_buildingContextMenuInstance.GetComponent<BuildingContextMenu>();

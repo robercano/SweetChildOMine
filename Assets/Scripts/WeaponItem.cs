@@ -6,7 +6,7 @@ public class WeaponItem : Item {
 
     public int Damage;
 
-    public WeaponItem()
+    void Awake()
     {
         Description += "\nDamage = " + Damage;
     }

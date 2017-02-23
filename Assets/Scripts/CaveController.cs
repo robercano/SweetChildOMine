@@ -62,7 +62,7 @@ public class CaveController : MonoBehaviour {
         InitColliderPool();
 	    GenerateCaveColliders ();
 
-        m_diggingContextMenuPrefab = Resources.Load("DiggingContextMenu") as GameObject;
+        m_diggingContextMenuPrefab = Resources.Load("UI/DiggingContextMenu") as GameObject;
         m_diggingContextMenuInstance = GameObject.Instantiate(m_diggingContextMenuPrefab, transform, false);
         m_diggingContextMenu = m_diggingContextMenuInstance.GetComponent<DiggingContextMenu>();
         m_diggingContextMenu.ActionName = "Dig here";

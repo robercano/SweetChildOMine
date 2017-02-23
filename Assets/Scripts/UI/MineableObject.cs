@@ -30,14 +30,16 @@ public class MineableObject : SelectableObject
     {
         base.Awake();
 
-        m_actionContextMenuPrefab = Resources.Load("MiningContextMenu") as GameObject;
+        m_actionContextMenuPrefab = Resources.Load("UI/MiningContextMenu") as GameObject;
 
         m_mineralDamagePrefab = Resources.Load("MineralDamagePopup") as GameObject;
 
         m_actionContextMenuInstance = GameObject.Instantiate(m_actionContextMenuPrefab, transform, false);
         m_actionContextMenu = m_actionContextMenuInstance.GetComponent<MiningContextMenu>();
 
-        m_actionContextMenuInstance.transform.position = new Vector3(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f, 0.0f);
+        m_actionContextMenuInstance.transform.position = new Vector3(gameObject.transform.position.x,
+                                                                     m_spriteRenderer.bounds.max.y + UIGlobals.PegDistanceToObject, 
+                                                                     0.0f);
 
         m_currentItems = MaxItems;
 

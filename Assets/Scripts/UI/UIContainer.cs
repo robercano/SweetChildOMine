@@ -9,7 +9,9 @@ public class UIContainer : MonoBehaviour {
 
     public string Title;
     public bool EnablePeg;
-    
+
+    private Canvas m_canvas;
+
     private Text m_titleText;
 
     private ContainerSlot[] m_slots;
@@ -17,7 +19,11 @@ public class UIContainer : MonoBehaviour {
     private AudioClip m_errorSound;
     private Image m_background;
 
-    // Use this for initialization
+    void Awake()
+    {
+        m_canvas = GetComponent<Canvas>();
+    }
+
     void Start()
     {
         Transform titleBar = transform.FindDeepChild("TitleBar");
@@ -51,6 +57,38 @@ public class UIContainer : MonoBehaviour {
             Item item = m_inventory.GetItemAtSlot(i);
             if (SetSlot(i, item) == false)
                 Debug.Log("ERROR setting slot");
+        }
+    }
+
+    IEnumerator CO_SignalError()
+    {
+        AudioSource.PlayClipAtPoint(m_errorSound, Camera.main.transform.position);
+
+        int errorSteps = 20;
+        int errorRepetition = 2;
+
+        for (int i = 0; i < errorSteps; ++i)
+        {
+            float intensity = Mathf.Abs(Mathf.Cos(i * errorRepetition * Mathf.PI / errorSteps));
+
+            m_background.color = new Color(1, intensity, intensity);
+            yield return new WaitForSeconds(0.05f);
+        }
+        m_background.color = Color.white;
+    }
+
+    #region /* Public interface */
+    public void SetWorldUI(bool worldUI)
+    {
+        if (worldUI)
+        {
+            m_canvas.renderMode = RenderMode.WorldSpace;
+            transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+        }
+        else
+        {
+            m_canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            transform.localScale = Vector3.one;
         }
     }
 
@@ -117,21 +155,5 @@ public class UIContainer : MonoBehaviour {
         }
         StartCoroutine(CO_SignalError());
     }
-
-    private IEnumerator CO_SignalError()
-    {
-        AudioSource.PlayClipAtPoint(m_errorSound, Camera.main.transform.position);
-
-        int errorSteps = 20;
-        int errorRepetition = 2;
-
-        for (int i = 0; i < errorSteps; ++i)
-        {
-            float intensity = Mathf.Abs(Mathf.Cos(i * errorRepetition * Mathf.PI / errorSteps ));
-
-            m_background.color = new Color(1, intensity, intensity);
-            yield return new WaitForSeconds(0.05f);
-        }
-        m_background.color = Color.white;
-    }
+    #endregion  /* Public interface */
 }

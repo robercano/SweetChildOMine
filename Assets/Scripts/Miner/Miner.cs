@@ -64,6 +64,7 @@ public class Miner : SelectableObject
     private UIContainer m_weaponSelector;
     private Inventory m_weaponInventory;
     private GameObject m_pickAxePrefab;
+    private GameObject m_pickAxeInstance;
     private WeaponItem m_pickAxe;
 
     // Materials
@@ -155,9 +156,11 @@ public class Miner : SelectableObject
 
         m_onSelectedDelegate = ActivateMiner;
 
-        m_actionProgressDialogPrefab = Resources.Load("ActionProgressDialog") as GameObject;
+        m_actionProgressDialogPrefab = Resources.Load("UI/ActionProgressDialog") as GameObject;
         m_actionProgressDialogInstance = GameObject.Instantiate(m_actionProgressDialogPrefab, transform, false);
-        m_actionProgressDialogInstance.transform.position = new Vector3(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f, 0.0f);
+        m_actionProgressDialogInstance.transform.position = new Vector3(gameObject.transform.position.x,
+                                                                        m_spriteRenderer.bounds.max.y + UIGlobals.PegDistanceToObject,
+                                                                        0.0f);
         m_actionProgressDialog = m_actionProgressDialogInstance.GetComponent<ActionProgressDialog>();
         m_actionProgressDialog.ActionName = "Stop";
         m_actionProgressDialog.OnAction = OnActionTerminated;
@@ -165,7 +168,8 @@ public class Miner : SelectableObject
 
         // Weapons
         m_pickAxePrefab = Resources.Load("PickAxeWeapon") as GameObject;
-        m_pickAxe = m_pickAxePrefab.GetComponent<WeaponItem>();
+        m_pickAxeInstance = GameObject.Instantiate(m_pickAxePrefab, transform, false);
+        m_pickAxe = m_pickAxeInstance.GetComponent<WeaponItem>();
         m_weaponInventory.AddItem(m_pickAxe);
 
         // Build structures
