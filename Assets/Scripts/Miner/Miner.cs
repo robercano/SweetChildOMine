@@ -74,8 +74,6 @@ public class Miner : SelectableObject
     // Build
     private UIContainer m_buildSelector;
     public Inventory m_buildInventory;
-    private GameObject m_warehouseItemPrefab;
-    private Item m_warehouseItem;
 
     // Input manager
     private InputManager m_inputManager;
@@ -173,9 +171,8 @@ public class Miner : SelectableObject
         m_weaponInventory.AddItem(m_pickAxe);
 
         // Build structures
-        m_warehouseItemPrefab = Resources.Load("WarehouseItem") as GameObject;
-        m_warehouseItem = m_warehouseItemPrefab.GetComponent<Item>();
-        m_buildInventory.AddItem(m_warehouseItem);
+		Item warehouse = ItemManager.Instance.CreateItem ("Warehouse");
+		m_buildInventory.AddItem(warehouse);
 	}
 
 	// Update is called once per frame
@@ -187,7 +184,7 @@ public class Miner : SelectableObject
     public void ActivateMiner()
     {
         m_characterStatus.SetActiveMiner(this);
-        m_weaponSelector.SetInventory(m_weaponInventory);
+        //m_weaponSelector.SetInventory(m_weaponInventory);
         m_materialSelector.SetInventory(MaterialInventory);
         m_buildSelector.SetInventory(m_buildInventory);
         m_inputManager.SetActiveMiner(this);
@@ -619,7 +616,7 @@ public class Miner : SelectableObject
 			return false;
 
 		foreach (BuildableObject.RecipeItem recipeItem in buildableObject.Recipe) {
-			if (MaterialInventory.GetItemAmount (recipeItem.Ingredient.Name) < recipeItem.Amount)
+			if (MaterialInventory.GetItemAmount (recipeItem.Ingredient) < recipeItem.Amount)
 				return false;
 		}
 		return true;
@@ -635,7 +632,7 @@ public class Miner : SelectableObject
         foreach (BuildableObject.RecipeItem recipeItem in obj.Recipe)
         {
             int amount = recipeItem.Amount;
-            if (MaterialInventory.RemoveItemAmount(recipeItem.Ingredient.Name, ref amount) == false)
+            if (MaterialInventory.RemoveItemAmount(recipeItem.Ingredient, ref amount) == false)
             {
                 Debug.Log("Something bad happened while building an structure");
                 return false;

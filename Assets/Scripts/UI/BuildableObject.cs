@@ -12,7 +12,7 @@ public class BuildableObject : SelectableObject
 
 	[Serializable]
 	public class RecipeItem {
-		public Item Ingredient;
+		public string Ingredient;
 		public int Amount;
 	}
 	public RecipeItem[] Recipe;

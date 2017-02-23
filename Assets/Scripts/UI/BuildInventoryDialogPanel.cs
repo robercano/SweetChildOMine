@@ -30,21 +30,29 @@ public class BuildInventoryDialogPanel : MonoBehaviour
             m_amount.text = "x" + value.ToString();
         }
     }
-    public Sprite Material
+	public Item Material
     {
         get
         {
-            return m_material.sprite;
+			return m_item;
         }
         set
         {
-            m_material.sprite = value;
+			m_item = value;
+			if (m_item != null) {
+				Debug.Log ("Here 1 pre");
+				m_material.sprite = m_item.Avatar;
+				Debug.Log ("Here 1 post");
+			} else {
+				m_material.sprite = null;
+			}
         }
     }
     
     private Text m_title;
     private Text m_amount;
-    private Image m_material;
+	private Item m_item;
+	private Image m_material;
     private Image m_status;
     private WidgetFader m_widgetFader;
 

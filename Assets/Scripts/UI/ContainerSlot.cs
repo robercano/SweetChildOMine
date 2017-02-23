@@ -37,7 +37,9 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             }
 
             // Set common fields
+			Debug.Log ("Here 2 pre");
             m_slotImage.sprite = m_slotItem.Avatar;
+			Debug.Log ("Here 2 pre");
             if (m_slotAmount != null)
             {
                 m_slotAmount.text = "x" + m_slotItem.Amount.ToString();
@@ -73,7 +75,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             // TODO: Iterate the recipe and show all elements!
             m_buildableDescriptionPanel.Title = m_slotItem.Name;
             m_buildableDescriptionPanel.Amount = m_buildableObject.Recipe[0].Amount;
-            m_buildableDescriptionPanel.Material = m_buildableObject.Recipe[0].Ingredient.Avatar;
+            m_buildableDescriptionPanel.Material = ItemManager.Instance.CreateItem(m_buildableObject.Recipe[0].Ingredient);
         }
     }
     public char Shortcut

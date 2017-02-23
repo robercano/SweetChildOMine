@@ -45,7 +45,7 @@ public class MineableObject : SelectableObject
 
         m_remainingDamage = 0.0f;
 
-        m_mineableItemWeight = MineableItem.GetComponent<Item>().TotalWeight;
+        m_mineableItemWeight = MineableItem.GetComponent<Item>().WeightPerUnit;
 
         m_actionContextMenu.Title = Name;
         m_actionContextMenu.ActionName = ActionName;

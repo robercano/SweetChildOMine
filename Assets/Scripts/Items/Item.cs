@@ -9,6 +9,7 @@ public class Item : MonoBehaviour
     {
         get
         {
+			Debug.Log ("Returning Avatar");
             return m_spriteRenderer.sprite;
         }
     }
@@ -24,12 +25,12 @@ public class Item : MonoBehaviour
     }
 
     public GameObject BuildablePrefab;
-
-    private SpriteRenderer m_spriteRenderer;
+    
+	private SpriteRenderer m_spriteRenderer;
 
     void Awake()
     {
-        m_spriteRenderer = GetComponent<SpriteRenderer>();
+		m_spriteRenderer = GetComponent<SpriteRenderer>();
         Hide();
     }
 
