@@ -34,11 +34,13 @@ public class WarehouseController : SelectableObject {
 
     void ShowContainer()
     {
+        DisableDialog();
         m_containerFader.Enable();
     }
 
     void HideContainer()
     {
+        EnableDialog();
         m_containerFader.Disable();
     }
 }

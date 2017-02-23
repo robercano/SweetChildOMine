@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class Selector : MonoBehaviour {
+public class UISelector : MonoBehaviour {
 
     private Transform[] m_corners;
     private Bounds m_bounds;

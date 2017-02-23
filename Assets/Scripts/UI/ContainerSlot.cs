@@ -44,7 +44,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             }
 
             // Non-buildable object
-            if (m_slotItem.ObjectPrefab == null)
+            if (m_slotItem.BuildablePrefab == null)
             {
                 m_slotImage.color = Color.white;
                 m_descriptionPanel.Title = m_slotItem.Name;
@@ -53,7 +53,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             }
 
             // Buildable object
-            m_buildableObject = m_slotItem.ObjectPrefab.GetComponent<BuildableObject>();
+            m_buildableObject = m_slotItem.BuildablePrefab.GetComponent<BuildableObject>();
             Assert.IsNotNull(m_buildableObject);
 
             Miner miner = m_characterStatus.GetActiveMiner();
@@ -212,26 +212,34 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (m_slotItem != null && m_slotItem.ObjectPrefab != null)
+        if (m_slotItem == null)
+            return;
+            
+        if (m_slotItem.BuildablePrefab != null)
         {
 			Miner miner = m_characterStatus.GetActiveMiner ();
 			if (miner == null)
 				return;
 			
             // TODO: Allocate resources for buildable here
-			if (miner.CheckRecipeForBuildableObject (m_slotItem.ObjectPrefab)) {
+			if (miner.CheckRecipeForBuildableObject (m_slotItem.BuildablePrefab)) {
 				Vector2 mousePosition = Camera.main.ScreenToWorldPoint (eventData.position);
-				m_dragDropObject = GameObject.Instantiate (m_slotItem.ObjectPrefab, mousePosition, Quaternion.identity);
+				m_dragDropObject = GameObject.Instantiate (m_slotItem.BuildablePrefab, mousePosition, Quaternion.identity);
 				m_dragDropObjectController = m_dragDropObject.GetComponent<DragDropController> ();
 				m_dragDropObjectController.StartDrag ();
 			} else {
                 // TODO: optimize this
-                BuildableObject buildable = m_slotItem.ObjectPrefab.GetComponent<BuildableObject>();
+                BuildableObject buildable = m_slotItem.BuildablePrefab.GetComponent<BuildableObject>();
                 foreach (BuildableObject.RecipeItem recipeItem in buildable.Recipe)
                 {
                     m_materialInventory.SignalError(recipeItem.Ingredient);
                 }
 			}		
+        }
+        else
+        {
+            m_dragDropObject = m_slotItem.gameObject;
+            m_slotItem.Show();
         }
     }
 
@@ -248,7 +256,14 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     {
         if (m_dragDropObject)
         {
-            m_dragDropObjectController.FinishDrag();
+            if (m_dragDropObjectController != null)
+            {
+                m_dragDropObjectController.FinishDrag();
+            }
+            if (m_dragDropObject == m_slotItem.gameObject)
+            {
+                m_slotItem.Hide();
+            }
             m_dragDropObject = null;
             m_dragDropObjectController = null;
         }

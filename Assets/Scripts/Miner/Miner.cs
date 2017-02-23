@@ -424,7 +424,7 @@ public class Miner : SelectableObject
         Item materialMined = null;
         m_actionWorked = m_mineableTarget.DoMine(m_pickAxe.Damage, m_mineableRemainingAmount, MaterialInventory.RemainingWeight, out materialMined);
 
-        if (m_actionWorked)
+        if (m_actionWorked || materialMined.Amount != 0)
         {
             PlayAudioPickAxe();
             m_mineableRemainingAmount -= materialMined.Amount;
