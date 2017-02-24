@@ -1,13 +1,16 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-public class WarehouseController : SelectableObject {
+public class WarehouseController : SelectableObject, IDropHandler {
 
     private GameObject m_containerPrefab;
     private GameObject m_containerInstance;
     private WidgetFader m_containerFader;
     private UIContainer m_containerController;
+    private bool m_showContainer;
 
     void Start()
     {
@@ -28,19 +31,33 @@ public class WarehouseController : SelectableObject {
 
         m_onSelectedDelegate = ShowContainer;
         m_onDeselectedDelegate = HideContainer;
+        m_showContainer = false;
 
         m_containerFader.DisableImmediate();
     }
 
     void ShowContainer()
     {
-        DisableDialog();
-        m_containerFader.Enable();
+        m_showContainer = !m_showContainer;
+
+        if (m_showContainer)
+        {
+            DisableDialog();
+            m_containerFader.Enable();
+        }
+        else
+        {
+            EnableDialog();
+            m_containerFader.Disable();
+        }
     }
 
     void HideContainer()
     {
-        EnableDialog();
-        m_containerFader.Disable();
+    }
+
+    public void OnDrop(PointerEventData eventData)
+    {
+        //throw new NotImplementedException();
     }
 }
