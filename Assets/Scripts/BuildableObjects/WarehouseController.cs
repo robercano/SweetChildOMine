@@ -2,12 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 public class WarehouseController : SelectableObject, IDropHandler {
 
 	public int MaxWeight;
 	public int MaxSlots;
+    public bool AlreadyBuilt;
 
 	private Inventory m_warehouseInventory;
     private GameObject m_containerPrefab;
@@ -15,10 +17,20 @@ public class WarehouseController : SelectableObject, IDropHandler {
 	private WidgetFader m_containerFader;
     private UIContainer m_containerController;
     private bool m_showContainer;
+    private Image[] m_slots;
 
     void Start()
     {
-        enabled = false;
+        if (AlreadyBuilt)
+        {
+            GetComponent<SpriteOutline>().enabled = false;
+            GetComponent<WarehouseBuildable>().enabled = false;
+            GetComponent<DragDropController>().enabled = false;
+        }
+        else
+        {
+            this.enabled = false;
+        }
 
         m_spriteRenderer = GetComponent<SpriteRenderer>();
 
@@ -40,7 +52,10 @@ public class WarehouseController : SelectableObject, IDropHandler {
         m_onDeselectedDelegate = HideContainer;
         m_showContainer = false;
 
+        m_slots = transform.GetComponentsInChildren<Image>();
         m_containerFader.DisableImmediate();
+
+        m_warehouseInventory.OnInventoryUpdate += RefreshSlots;
     }
 
     void ShowContainer()
@@ -63,6 +78,22 @@ public class WarehouseController : SelectableObject, IDropHandler {
     {
     }
 
+    public void RefreshSlots()
+    {
+        for (int i=0; i<m_warehouseInventory.GetMaxSlots(); ++i)
+        {
+            Item item = m_warehouseInventory.GetItemAtSlot(i);
+            if (item != null) {
+                m_slots[i].sprite = item.Avatar;
+                m_slots[i].color = Color.white;
+            }
+            else
+            {
+                m_slots[i].sprite = null;
+                m_slots[i].color = Color.clear;
+            }
+        }
+    }
 	public void OnDrop(PointerEventData eventData)
 	{
 		m_containerController.OnDrop (eventData);

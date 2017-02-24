@@ -16,10 +16,10 @@ public class WarehouseBuildable : BuildableObject {
     {
         Assert.IsTrue(NumSteps > 0);
 
-		m_progressPerSprite = (NumSteps * WorkPerStep) / (ProgressSprites.Length - 1);
+        m_progressPerSprite = (NumSteps * WorkPerStep) / (ProgressSprites.Length - 1);
 
-		m_dragDropController = GetComponent<DragDropController> ();
-		m_dragDropController.OnDragDropFinished = OnActionBuild;
+        m_dragDropController = GetComponent<DragDropController>();
+        m_dragDropController.OnDragDropFinished = OnActionBuild;
 
         m_controller = GetComponent<WarehouseController>();
     }

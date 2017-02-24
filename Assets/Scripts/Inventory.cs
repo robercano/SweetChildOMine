@@ -6,7 +6,7 @@ using UnityEngine;
 public class Inventory {
 
     public delegate void InventoryUpdate();
-    public InventoryUpdate m_inventoryUpdateDelegate;
+    public InventoryUpdate OnInventoryUpdate;
 
     private List<Item> m_inventorySlots;
     private Dictionary<string, int> m_inventoryMap;
@@ -18,7 +18,7 @@ public class Inventory {
     {
         m_inventorySlots = new List<Item>(maxSlots);
         m_inventoryMap = new Dictionary<string, int>(maxSlots);
-        m_inventoryUpdateDelegate = null;
+        OnInventoryUpdate = null;
 
         RemainingWeight = maxWeight;
         CurrentWeight = 0;
@@ -142,7 +142,7 @@ public class Inventory {
 
 	public void RefreshInventory()
 	{
-		if (m_inventoryUpdateDelegate != null)
-			m_inventoryUpdateDelegate();
+		if (OnInventoryUpdate != null)
+			OnInventoryUpdate();
 	}
 }

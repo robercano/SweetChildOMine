@@ -49,8 +49,6 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
         m_popSound = Resources.Load("Sounds/InventoryPopOut") as AudioClip;
 
-        transform.localScale = 2.0f * Vector3.one;
-
         Hide();
     }
 

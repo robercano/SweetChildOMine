@@ -33,8 +33,8 @@ public class UIContainer : MonoBehaviour, IDropHandler {
 		m_inventory = null;
 
 		m_errorSound = Resources.Load("Sounds/InventoryError") as AudioClip;
-
-		m_background = transform.FindDeepChild("Body").GetComponent<Image>();
+        m_containerPop = Resources.Load("Sounds/InventoryPopIn") as AudioClip;
+        m_background = transform.FindDeepChild("Body").GetComponent<Image>();
     }
 
 	void Start()
@@ -53,9 +53,6 @@ public class UIContainer : MonoBehaviour, IDropHandler {
 
 		Transform peg = transform.FindDeepChild("Peg");
 		peg.gameObject.SetActive(EnablePeg);
-
-        m_containerPop = Resources.Load("Sounds/InventoryPopIn") as AudioClip;
-
     }
 
     void InventoryUpdate()
@@ -104,7 +101,7 @@ public class UIContainer : MonoBehaviour, IDropHandler {
     public void SetInventory(Inventory inventory)
     {
         m_inventory = inventory;
-        m_inventory.m_inventoryUpdateDelegate = InventoryUpdate;
+        m_inventory.OnInventoryUpdate += InventoryUpdate;
         InventoryUpdate();
     }
 

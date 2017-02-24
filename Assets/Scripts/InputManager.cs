@@ -29,21 +29,24 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
         if (m_miner == null)
             return;
 
-        if (eventData.button == PointerEventData.InputButton.Left)
+        switch (eventData.button)
         {
-            // First check if the cave will handle this click
-            if (m_caveController.HandlePointerClick(eventData.position))
+            case PointerEventData.InputButton.Right:
+                m_caveController.HandlePointerClick(eventData.position);
                 return;
+            case PointerEventData.InputButton.Left:
+                m_caveController.CancelPointerClick();
 
-            if ((Time.time - m_lastClickTime) < DoubleClickTime)
-            {
-                m_miner.OnInputEvent(InputEvent.DoubleLeftClick);
-            }
-            else
-            {
-                m_miner.OnInputEvent(InputEvent.LeftClick);
-                m_lastClickTime = Time.time;
-            }
+                if ((Time.time - m_lastClickTime) < DoubleClickTime)
+                {
+                    m_miner.OnInputEvent(InputEvent.DoubleLeftClick);
+                }
+                else
+                {
+                    m_miner.OnInputEvent(InputEvent.LeftClick);
+                    m_lastClickTime = Time.time;
+                }
+                break;
         }
     }
 
