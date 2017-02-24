@@ -34,6 +34,8 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
 	private CharacterStatus m_characterStatus;
 
+    private AudioClip m_popSound;
+
     protected virtual void Awake()
     {
 		m_spriteRenderer = GetComponent<SpriteRenderer>();
@@ -44,6 +46,10 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
 		m_dragDropObject = null;
 		m_dragDropObjectController = null;
+
+        m_popSound = Resources.Load("Sounds/InventoryPopOut") as AudioClip;
+
+        transform.localScale = 2.0f * Vector3.one;
 
         Hide();
     }
@@ -64,8 +70,11 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 		if (BuildablePrefab != null)
 		{
 			Miner miner = m_characterStatus.GetActiveMiner ();
-			if (miner == null)
-				return;
+            if (miner == null)
+            {
+                eventData.pointerDrag = null;
+                return;
+            }
 
 			// TODO: Allocate resources for buildable here
 			if (miner.CheckRecipeForBuildableObject (BuildablePrefab)) {
@@ -73,6 +82,8 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 				m_dragDropObject = GameObject.Instantiate (BuildablePrefab, mousePosition, Quaternion.identity);
 				m_dragDropObjectController = m_dragDropObject.GetComponent<DragDropController> ();
 				m_dragDropObjectController.StartDrag ();
+
+                AudioSource.PlayClipAtPoint(m_popSound, Camera.main.transform.position);
 			} else {
 				// TODO: optimize this
 				BuildableObject buildable = BuildablePrefab.GetComponent<BuildableObject>();
@@ -80,12 +91,14 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 				{
 					m_materialInventory.SignalError(recipeItem.Ingredient);
 				}
-			}		
+                eventData.pointerDrag = null;
+            }		
 		}
 		else
 		{
 			m_dragDropObject = gameObject;
-			Show();
+            AudioSource.PlayClipAtPoint(m_popSound, Camera.main.transform.position);
+            Show();
 		}
 	}
 

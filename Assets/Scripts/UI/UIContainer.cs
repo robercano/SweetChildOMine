@@ -19,6 +19,8 @@ public class UIContainer : MonoBehaviour, IDropHandler {
     private AudioClip m_errorSound;
     private Image m_background;
 
+    private AudioClip m_containerPop;
+
     void Awake()
     {
         m_canvas = GetComponent<Canvas>();
@@ -51,7 +53,10 @@ public class UIContainer : MonoBehaviour, IDropHandler {
 
 		Transform peg = transform.FindDeepChild("Peg");
 		peg.gameObject.SetActive(EnablePeg);
-	}
+
+        m_containerPop = Resources.Load("Sounds/InventoryPopIn") as AudioClip;
+
+    }
 
     void InventoryUpdate()
     {
@@ -182,6 +187,7 @@ public class UIContainer : MonoBehaviour, IDropHandler {
 		if (slot.ParentContainer.TransferItem (item)) {
 			m_inventory.AddItem (item);
 			item.Hide ();
+            AudioSource.PlayClipAtPoint(m_containerPop, Camera.main.transform.position);
 		}
 	}
 
