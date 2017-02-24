@@ -10,7 +10,7 @@ public class MineableObject : SelectableObject
     public float DamagePerItem;
     public Color DamageColor;
     public string ActionName;
-    public GameObject MineableItem;
+    public string MineableItem;
 
     protected int m_currentItems;
 
@@ -45,7 +45,9 @@ public class MineableObject : SelectableObject
 
         m_remainingDamage = 0.0f;
 
-        m_mineableItemWeight = MineableItem.GetComponent<Item>().WeightPerUnit;
+        Item mineableItem = ItemManager.Instance.CreateItem(MineableItem);
+        m_mineableItemWeight = mineableItem.WeightPerUnit;
+        ItemManager.Instance.DestroyItem(mineableItem);
 
         m_actionContextMenu.Title = Name;
         m_actionContextMenu.ActionName = ActionName;
@@ -144,7 +146,7 @@ public class MineableObject : SelectableObject
         if (amountToExtract == 0)
             return false;
 
-        extracted = GameObject.Instantiate(MineableItem).GetComponent<Item>();
+        extracted = ItemManager.Instance.CreateItem(MineableItem);
         extracted.Amount = amountToExtract;
 
         m_currentItems -= extracted.Amount;

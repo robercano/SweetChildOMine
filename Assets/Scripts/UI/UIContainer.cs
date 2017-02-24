@@ -55,11 +55,9 @@ public class UIContainer : MonoBehaviour {
         for (int i = 0; i < m_inventory.GetMaxSlots(); ++i)
         {
             Item item = m_inventory.GetItemAtSlot(i);
-			Debug.Log ("SetSlot pre: " + m_inventory);
 			if (SetSlot (i, item) == false) {
 				Debug.Log ("ERROR setting slot");
 			}
-			Debug.Log ("SetSlot post");
         }
     }
 

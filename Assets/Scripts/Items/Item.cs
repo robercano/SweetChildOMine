@@ -9,7 +9,6 @@ public class Item : MonoBehaviour
     {
         get
         {
-			Debug.Log ("Returning Avatar");
             return m_spriteRenderer.sprite;
         }
     }
@@ -28,7 +27,7 @@ public class Item : MonoBehaviour
     
 	private SpriteRenderer m_spriteRenderer;
 
-    void Awake()
+    protected virtual void Awake()
     {
 		m_spriteRenderer = GetComponent<SpriteRenderer>();
         Hide();

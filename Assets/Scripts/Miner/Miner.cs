@@ -63,8 +63,6 @@ public class Miner : SelectableObject
     // Weapons
     private UIContainer m_weaponSelector;
     private Inventory m_weaponInventory;
-    private GameObject m_pickAxePrefab;
-    private GameObject m_pickAxeInstance;
     private WeaponItem m_pickAxe;
 
     // Materials
@@ -165,9 +163,7 @@ public class Miner : SelectableObject
         m_actionProgressDialog.Disable();
 
         // Weapons
-        m_pickAxePrefab = Resources.Load("PickAxeWeapon") as GameObject;
-        m_pickAxeInstance = GameObject.Instantiate(m_pickAxePrefab, transform, false);
-        m_pickAxe = m_pickAxeInstance.GetComponent<WeaponItem>();
+        m_pickAxe = ItemManager.Instance.CreateItem("PickAxe") as WeaponItem;
         m_weaponInventory.AddItem(m_pickAxe);
 
         // Build structures
@@ -184,7 +180,7 @@ public class Miner : SelectableObject
     public void ActivateMiner()
     {
         m_characterStatus.SetActiveMiner(this);
-        //m_weaponSelector.SetInventory(m_weaponInventory);
+        m_weaponSelector.SetInventory(m_weaponInventory);
         m_materialSelector.SetInventory(MaterialInventory);
         m_buildSelector.SetInventory(m_buildInventory);
         m_inputManager.SetActiveMiner(this);
@@ -639,7 +635,7 @@ public class Miner : SelectableObject
             }
         }
 
-        //MaterialInventory.RefreshInventory();
+        MaterialInventory.RefreshInventory();
         m_buildInventory.RefreshInventory();
         return true;
     }

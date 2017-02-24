@@ -40,9 +40,7 @@ public class BuildInventoryDialogPanel : MonoBehaviour
         {
 			m_item = value;
 			if (m_item != null) {
-				Debug.Log ("Here 1 pre");
 				m_material.sprite = m_item.Avatar;
-				Debug.Log ("Here 1 post");
 			} else {
 				m_material.sprite = null;
 			}

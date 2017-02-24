@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WeaponItem : Item {
+public sealed class WeaponItem : Item {
 
     public int Damage;
 
-    void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         Description += "\nDamage = " + Damage;
     }
 }

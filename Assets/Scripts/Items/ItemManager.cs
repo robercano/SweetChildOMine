@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 public class ItemManager {
-	public string[] PreloadItems = { "Silver" };
+	public string[] PreloadItems = { "Silver", "Warehouse", "PickAxe" };
 
 	private Dictionary<string, GameObject> m_preloadedPrefabs;
 
@@ -19,17 +19,29 @@ public class ItemManager {
 	static ItemManager() {}
 	private ItemManager()
 	{
-		
-	}
+        m_preloadedPrefabs = new Dictionary<string, GameObject>();
+        PreloadPrefabs();
+
+    }
+
+    GameObject PreloadPrefab(string name)
+    {
+        GameObject item = Resources.Load("Items/" + name) as GameObject;
+        if (item != null)
+        {
+            m_preloadedPrefabs[name] = item;
+        }      
+        return item;
+    }
 
 	void PreloadPrefabs()
 	{
 		foreach (string itemName in PreloadItems) {
-			GameObject item = Resources.Load ("Items/" + itemName) as GameObject;
-			Assert.IsNotNull (item);
-
-			m_preloadedPrefabs [itemName] = item;
-		}
+            if (PreloadPrefab(itemName) == null)
+            {
+                Debug.LogError("ERROR preloading prefab: " + itemName);
+            }
+        }
 	}
 
 	#region /* Public interface */
@@ -37,13 +49,24 @@ public class ItemManager {
 	{
 		GameObject itemPrefab = null;
 		if (m_preloadedPrefabs.TryGetValue (name, out itemPrefab) == false) {
-			return null;
+            /* Try to load it now */
+            Debug.LogWarning("Prefab was not preloaded: " + name);
+            itemPrefab = PreloadPrefab(name);
 		}
+        if (itemPrefab == null)
+        {
+            return null;
+        }
 
 		GameObject itemInstance = GameObject.Instantiate (itemPrefab);
 		Assert.IsNotNull (itemInstance);
 
 		return itemInstance.GetComponent<Item> ();
 	}
+
+    public void DestroyItem(Item item)
+    {
+        GameObject.Destroy(item.gameObject);
+    }
 	#endregion /* Public interface */
 }

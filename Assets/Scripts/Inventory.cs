@@ -81,6 +81,7 @@ public class Inventory {
         {
             m_inventoryMap.Remove(item.Name);
             m_inventorySlots.Remove(item);
+            ItemManager.Instance.DestroyItem(item);
         }
 
         RefreshInventory();
