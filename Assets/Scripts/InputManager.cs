@@ -51,7 +51,8 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
     {
         if (m_miner != null)
         {
-            if (Event.current.type == EventType.KeyDown)
+            if (Event.current.type == EventType.KeyDown &&
+				Event.current.keyCode == KeyCode.Space)
             {
                 m_miner.OnInputEvent(InputEvent.Space);
             }

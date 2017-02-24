@@ -5,9 +5,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class UIContainer : MonoBehaviour {
+public class UIContainer : MonoBehaviour, IDropHandler {
 
-    public string Title;
+	public string Title;
     public bool EnablePeg;
 
     private Canvas m_canvas;
@@ -22,33 +22,36 @@ public class UIContainer : MonoBehaviour {
     void Awake()
     {
         m_canvas = GetComponent<Canvas>();
+
+		m_slots = GetComponentsInChildren<ContainerSlot>();
+		foreach (ContainerSlot slot in m_slots) {
+			slot.ParentContainer = this;
+		}
+
+		m_inventory = null;
+
+		m_errorSound = Resources.Load("Sounds/InventoryError") as AudioClip;
+
+		m_background = transform.FindDeepChild("Body").GetComponent<Image>();
     }
 
-    void Start()
-    {
-        Transform titleBar = transform.FindDeepChild("TitleBar");
-        if (Title != "")
-        {
-            titleBar.gameObject.SetActive(true);
-            m_titleText = transform.FindDeepChild("Title").GetComponent<Text>();
-            m_titleText.text = Title;
-        }
-        else
-        {
-            titleBar.gameObject.SetActive(false);
-        }
+	void Start()
+	{
+		Transform titleBar = transform.FindDeepChild("TitleBar");
+		if (Title != "")
+		{
+			titleBar.gameObject.SetActive(true);
+			m_titleText = transform.FindDeepChild("Title").GetComponent<Text>();
+			m_titleText.text = Title;
+		}
+		else
+		{
+			titleBar.gameObject.SetActive(false);
+		}
 
-        Transform peg = transform.FindDeepChild("Peg");
-        peg.gameObject.SetActive(EnablePeg);
-
-        m_slots = GetComponentsInChildren<ContainerSlot>();
-
-        m_inventory = null;
-
-        m_errorSound = Resources.Load("Sounds/InventoryError") as AudioClip;
-
-        m_background = transform.FindDeepChild("Body").GetComponent<Image>();
-    }
+		Transform peg = transform.FindDeepChild("Peg");
+		peg.gameObject.SetActive(EnablePeg);
+	}
 
     void InventoryUpdate()
     {
@@ -84,7 +87,7 @@ public class UIContainer : MonoBehaviour {
         if (worldUI)
         {
             m_canvas.renderMode = RenderMode.WorldSpace;
-            transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+            //transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
         }
         else
         {
@@ -138,6 +141,16 @@ public class UIContainer : MonoBehaviour {
         ClearTitle();
     }
 
+	public bool TransferItem(Item item)
+	{
+		if (m_inventory == null) {
+			return false;
+		}
+
+		m_inventory.TransferItem (item);
+		return true;
+	}
+
     public void SignalError(string itemName)
     {
         bool firstTime = true;
@@ -156,5 +169,21 @@ public class UIContainer : MonoBehaviour {
         }
         StartCoroutine(CO_SignalError());
     }
+
+	public void OnDrop(PointerEventData eventData)
+	{
+		if (eventData.pointerDrag == null || m_inventory == null) {
+			return;
+		}
+
+		ContainerSlot slot = eventData.pointerDrag.GetComponent<ContainerSlot> ();
+		Item item = slot.SlotItem;
+
+		if (slot.ParentContainer.TransferItem (item)) {
+			m_inventory.AddItem (item);
+			item.Hide ();
+		}
+	}
+
     #endregion  /* Public interface */
 }

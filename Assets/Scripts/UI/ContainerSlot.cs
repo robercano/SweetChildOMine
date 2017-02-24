@@ -8,6 +8,8 @@ using UnityEngine.Assertions;
 
 public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IEndDragHandler {
 
+	public UIContainer ParentContainer;
+
     public Item SlotItem
     {
         get
@@ -117,13 +119,8 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     private BuildInventoryDialogPanel m_buildableDescriptionPanel;    
     private RectTransform m_buildableDescriptionInstanceRectTransform;
 
-    private GameObject m_dragDropObject;
-    private DragDropController m_dragDropObjectController;
-
 	private CharacterStatus m_characterStatus;
     private BuildableObject m_buildableObject;
-
-    private UIContainer m_materialInventory;
 
     // Use this for initialization
     void Awake()
@@ -145,10 +142,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         m_buildableDescriptionInstanceRectTransform.anchoredPosition = new Vector2(m_rectTransform.sizeDelta.x / 2.0f, 
                                                                                    m_rectTransform.sizeDelta.y + UIGlobals.PegDistanceToObject);
 
-        m_dragDropObject = null;
 		m_characterStatus = GameObject.FindObjectOfType<CharacterStatus>();
-
-        m_materialInventory = GameObject.Find("InventoryContainer").GetComponent<UIContainer>();
 
         Transform shortcutGO = transform.FindDeepChild("Shortcut");
         if (shortcutGO != null)
@@ -201,7 +195,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
                 m_descriptionPanel.Disable();
             }
         }
-        }
+    }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
@@ -218,59 +212,24 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         if (m_slotItem == null)
             return;
             
-        if (m_slotItem.BuildablePrefab != null)
-        {
-			Miner miner = m_characterStatus.GetActiveMiner ();
-			if (miner == null)
-				return;
-			
-            // TODO: Allocate resources for buildable here
-			if (miner.CheckRecipeForBuildableObject (m_slotItem.BuildablePrefab)) {
-				Vector2 mousePosition = Camera.main.ScreenToWorldPoint (eventData.position);
-				m_dragDropObject = GameObject.Instantiate (m_slotItem.BuildablePrefab, mousePosition, Quaternion.identity);
-				m_dragDropObjectController = m_dragDropObject.GetComponent<DragDropController> ();
-				m_dragDropObjectController.StartDrag ();
-			} else {
-                // TODO: optimize this
-                BuildableObject buildable = m_slotItem.BuildablePrefab.GetComponent<BuildableObject>();
-                foreach (BuildableObject.RecipeItem recipeItem in buildable.Recipe)
-                {
-                    m_materialInventory.SignalError(recipeItem.Ingredient);
-                }
-			}		
-        }
-        else
-        {
-            m_dragDropObject = m_slotItem.gameObject;
-            m_slotItem.Show();
-        }
+		m_slotItem.OnBeginDrag (eventData);
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (m_dragDropObject)
-        {
-            Vector2 mousePosition = Camera.main.ScreenToWorldPoint(eventData.position);
-            m_dragDropObject.transform.position = mousePosition;
-        }
+		if (m_slotItem == null)
+			return;
+
+		m_slotItem.OnDrag (eventData);
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (m_dragDropObject)
-        {
-            if (m_dragDropObjectController != null)
-            {
-                m_dragDropObjectController.FinishDrag();
-            }
-            if (m_dragDropObject == m_slotItem.gameObject)
-            {
-                m_slotItem.Hide();
-            }
-            m_dragDropObject = null;
-            m_dragDropObjectController = null;
-        }
-    }
+		if (m_slotItem == null)
+			return;
+
+		m_slotItem.OnEndDrag (eventData);
+	}
 
     public void SignalEror()
     {

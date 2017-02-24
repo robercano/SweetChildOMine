@@ -6,9 +6,13 @@ using UnityEngine.EventSystems;
 
 public class WarehouseController : SelectableObject, IDropHandler {
 
+	public int MaxWeight;
+	public int MaxSlots;
+
+	private Inventory m_warehouseInventory;
     private GameObject m_containerPrefab;
     private GameObject m_containerInstance;
-    private WidgetFader m_containerFader;
+	private WidgetFader m_containerFader;
     private UIContainer m_containerController;
     private bool m_showContainer;
 
@@ -18,10 +22,13 @@ public class WarehouseController : SelectableObject, IDropHandler {
 
         m_spriteRenderer = GetComponent<SpriteRenderer>();
 
+		m_warehouseInventory = new Inventory (MaxSlots, MaxWeight);
+
         m_containerPrefab = Resources.Load("UI/GenericUIContainer6Slots") as GameObject;
         m_containerInstance = GameObject.Instantiate(m_containerPrefab, transform, false);
         m_containerFader = m_containerInstance.GetComponent<WidgetFader>();
         m_containerController = m_containerInstance.GetComponent<UIContainer>();
+		m_containerController.SetInventory (m_warehouseInventory);
 
         m_containerController.SetWorldUI(true);
         m_containerInstance.transform.position = new Vector3(gameObject.transform.position.x, 
@@ -56,8 +63,8 @@ public class WarehouseController : SelectableObject, IDropHandler {
     {
     }
 
-    public void OnDrop(PointerEventData eventData)
-    {
-        //throw new NotImplementedException();
-    }
+	public void OnDrop(PointerEventData eventData)
+	{
+		m_containerController.OnDrop (eventData);
+	}
 }

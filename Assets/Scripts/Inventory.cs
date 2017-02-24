@@ -61,6 +61,23 @@ public class Inventory {
         return true;
     }
 
+	public bool TransferItem(Item item)
+	{
+		Item curItem = GetItemByName (item.Name);
+		if (curItem != item) {
+			return false;
+		}
+
+		CurrentWeight -= item.Amount*item.WeightPerUnit;
+		RemainingWeight += item.Amount*item.WeightPerUnit;
+
+		m_inventoryMap.Remove(item.Name);
+		m_inventorySlots.Remove(item);
+
+		RefreshInventory();
+		return true;
+	}
+
 	public bool RemoveItemAmount(string name, ref int amount)
 	{
 		Item item = GetItemByName (name);
