@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using SCOM.Utils;
 
-public sealed class MinerStateDigWalk : MinerStateWalk {
+public sealed class MinerStateDigWalk : MinerStateRun {
 
 	static readonly MinerStateDigWalk instance = new MinerStateDigWalk();
 	new public static MinerStateDigWalk Instance {

@@ -154,7 +154,7 @@ public class MineableObject : SelectableObject
 
         if (extracted.Amount > 0)
         {
-            GameObject mineralDamageInstance = GameObject.Instantiate(m_mineralDamagePrefab, transform, false);
+            GameObject mineralDamageInstance = GameObject.Instantiate(m_mineralDamagePrefab);
             mineralDamageInstance.transform.position = new Vector2(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f);
 
             MineralDamagePopup mineralDamagePopup = mineralDamageInstance.GetComponent<MineralDamagePopup>();

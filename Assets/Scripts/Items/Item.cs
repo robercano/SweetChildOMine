@@ -14,15 +14,32 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         }
     }
     public string Description;
-    public int Amount;
+    public int Amount
+    {
+        get
+        {
+            return m_amount;
+        }
+        set
+        {
+            m_amount = value;
+
+            if (AmountAvatars.Length > 0)
+            {
+                int spriteIndex = Mathf.Min(m_amount / 10, AmountAvatars.Length - 1);
+                m_spriteRenderer.sprite = AmountAvatars[AmountAvatars.Length - 1 - spriteIndex];
+            }
+        }
+    }
     public int WeightPerUnit;
     public int TotalWeight
     {
         get
         {
-            return Amount * WeightPerUnit;
+            return m_amount * WeightPerUnit;
         }
     }
+    public Sprite[] AmountAvatars;
 
     public GameObject BuildablePrefab;
 	private SpriteRenderer m_spriteRenderer;
@@ -33,7 +50,7 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 	private DragDropController m_dragDropObjectController;
 
 	private CharacterStatus m_characterStatus;
-
+    private int m_amount;
     private AudioClip m_popSound;
 
     protected virtual void Awake()

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 public class ItemManager {
-	public string[] PreloadItems = { "Silver", "Warehouse", "PickAxe" };
+	public string[] PreloadItems = { "Silver", "Gold", "Warehouse", "PickAxe" };
 
 	private Dictionary<string, GameObject> m_preloadedPrefabs;
 

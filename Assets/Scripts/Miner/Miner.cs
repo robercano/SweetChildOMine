@@ -597,7 +597,7 @@ public class Miner : SelectableObject
         m_mineableTargetAmount = numItems;
         m_mineableRemainingAmount = numItems;
 
-		StartAction("Mining", m_mineableTarget, MinerStateWalk.Instance);
+		StartAction("Mining", m_mineableTarget, MinerStateRun.Instance);
     }
 
     #region /* Building structures methods */
@@ -643,7 +643,7 @@ public class Miner : SelectableObject
     public void BuildStructure(BuildableObject obj)
     {
         m_buildableTarget = obj;
-        StartAction("Building", m_buildableTarget, MinerStateWalk.Instance);
+        StartAction("Building", m_buildableTarget, MinerStateRun.Instance);
     }
     #endregion /* Building structures methods */
 
