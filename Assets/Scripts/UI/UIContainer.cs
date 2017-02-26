@@ -9,6 +9,7 @@ public class UIContainer : MonoBehaviour, IDropHandler {
 
 	public string Title;
     public bool EnablePeg;
+    public bool EnableAmount;
 
     private Canvas m_canvas;
 
@@ -53,6 +54,14 @@ public class UIContainer : MonoBehaviour, IDropHandler {
 
 		Transform peg = transform.FindDeepChild("Peg");
 		peg.gameObject.SetActive(EnablePeg);
+
+        if (EnableAmount == false)
+        {
+            foreach (ContainerSlot slot in m_slots)
+            {
+                slot.DisableAmount();
+            }
+        }
     }
 
     void InventoryUpdate()
@@ -105,13 +114,22 @@ public class UIContainer : MonoBehaviour, IDropHandler {
         InventoryUpdate();
     }
 
-    public bool SetSlot(int slot, Item item, char shortcut = ' ')
+    public bool SetSlot(int slot, Item item)
     {
         if (slot < 0 || slot >= m_slots.Length)
             return false;
 
         m_slots[slot].SlotItem = item;
-        m_slots[slot].Shortcut = shortcut;
+        return true;
+    }
+
+    public bool SetSlotShortcut(int slot, char shortcut)
+    {
+        if (slot < 0 || slot >= m_slots.Length)
+            return false;
+
+
+        m_slots[slot].Shortcut = shortcut.ToString().ToUpper()[0];
         return true;
     }
 
@@ -121,18 +139,7 @@ public class UIContainer : MonoBehaviour, IDropHandler {
             SetSlot(i, null);
     }
 
-    public bool SetShortcut(int slot, char shortcut)
-    {
-        slot++;
-
-        if (slot < 1 || slot >= m_slots.Length)
-            return false;
-
-        //m_UITexts[slot].text = shortcut.ToString();
-
-        return true;
-    }
-      public void ClearTitle()
+    public void ClearTitle()
     {
         m_titleText.text = "";
     }

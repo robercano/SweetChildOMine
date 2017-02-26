@@ -10,6 +10,9 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
     private Miner m_miner;
     private CaveController m_caveController;
 
+    private UIContainer m_weaponContainer;
+    private UIContainer m_buildContainer;
+
     private float m_lastClickTime;
 
     public enum InputEvent
@@ -22,6 +25,13 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
         m_miner = null;
         m_caveController = GameObject.FindObjectOfType<CaveController>();
         m_lastClickTime = Time.time;
+
+        m_weaponContainer = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
+        m_buildContainer = GameObject.Find("BuildContainer").GetComponent<UIContainer>();
+
+        m_weaponContainer.SetSlotShortcut(0, '1');
+        m_weaponContainer.SetSlotShortcut(1, '2');
+        m_weaponContainer.SetSlotShortcut(2, '3');
     }
 
     public void OnPointerClick(PointerEventData eventData)

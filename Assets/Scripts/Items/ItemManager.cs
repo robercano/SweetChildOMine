@@ -61,7 +61,9 @@ public class ItemManager {
 		GameObject itemInstance = GameObject.Instantiate (itemPrefab);
 		Assert.IsNotNull (itemInstance);
 
-		return itemInstance.GetComponent<Item> ();
+		Item item = itemInstance.GetComponent<Item> ();
+        item.Amount = 1;
+        return item;
 	}
 
     public void DestroyItem(Item item)

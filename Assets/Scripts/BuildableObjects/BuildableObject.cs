@@ -24,6 +24,8 @@ public class BuildableObject : SelectableObject
     private GameObject m_buildingContextMenuInstance;
     private BuildingContextMenu m_buildingContextMenu;
 
+    AudioClip m_finishedSound;
+
     protected CharacterStatus m_characterStatus;
 
     private bool m_hasMaterials;
@@ -46,6 +48,8 @@ public class BuildableObject : SelectableObject
         m_buildingContextMenu.ActionName = ActionName;
         m_buildingContextMenu.OnAction = null;
         m_buildingContextMenu.OnRetrieveWorkLeft = OnRetrieveWorkLeft;
+
+        m_finishedSound = Resources.Load("Sounds/FinishedBuilding") as AudioClip;
 
         m_characterStatus = GameObject.Find("CharacterStatus").GetComponent<CharacterStatus>();
 
@@ -108,7 +112,10 @@ public class BuildableObject : SelectableObject
         progress = 100 * m_currentWork / m_totalWork;
 
         if (m_currentWork >= m_totalWork)
+        {
             m_buildingContextMenu = null;
+            AudioSource.PlayClipAtPoint(m_finishedSound, Camera.main.transform.position);
+        }
 
         return (m_currentWork < m_totalWork);
     }

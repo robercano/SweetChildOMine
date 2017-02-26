@@ -31,10 +31,6 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
                 {
                     m_slotAmount.text = "";
                 }
-                if (m_slotShortcut != null)
-                {
-                    m_slotShortcut.text = "";
-                }
                 return;
             }
 
@@ -249,5 +245,15 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             yield return new WaitForSeconds(0.05f);
         }
         m_slotImage.color = Color.white;
+    }
+
+    public void DisableAmount()
+    {
+        m_slotAmount.enabled = false;
+    }
+
+    public void EnableAmount()
+    {
+        m_slotAmount.enabled = true;
     }
 }
