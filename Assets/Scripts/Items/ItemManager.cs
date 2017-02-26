@@ -2,26 +2,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using com.kleberswf.lib.core;
 
-public class ItemManager {
+public class ItemManager : Singleton<ItemManager> {
 	public string[] PreloadItems = { "Silver", "Gold", "Warehouse", "PickAxe" };
 
 	private Dictionary<string, GameObject> m_preloadedPrefabs;
 
-	/* Singleton */
-	static readonly ItemManager instance = new ItemManager();
-	public static ItemManager Instance {
-		get {
-			return instance;
-		}
-	}
-
-	static ItemManager() {}
-	private ItemManager()
-	{
+    protected override void Awake()
+    {
         m_preloadedPrefabs = new Dictionary<string, GameObject>();
         PreloadPrefabs();
-
     }
 
     GameObject PreloadPrefab(string name)

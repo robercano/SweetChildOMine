@@ -2,18 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using SCOM.Utils;
+using com.kleberswf.lib.core;
 
-public sealed class MinerStateAttack : FSMState<Miner> {
-
-	static readonly MinerStateAttack instance = new MinerStateAttack();
-	public static MinerStateAttack Instance {
-		get {
-			return instance;
-		}
-	}
-
-	static MinerStateAttack() {}
-	private MinerStateAttack() {}
+#pragma warning disable CS0252
+public sealed class MinerStateAttack : Singleton<MinerStateAttack>, FSMState<Miner>  {
 
 	public void Enter(Miner miner)
 	{
@@ -32,3 +24,4 @@ public sealed class MinerStateAttack : FSMState<Miner> {
 	{
 	}
 }
+#pragma warning restore

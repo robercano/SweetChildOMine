@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using SCOM.Utils;
 
+#pragma warning disable CS0252
 public class Miner : SelectableObject
 {
     public int MaxLife;

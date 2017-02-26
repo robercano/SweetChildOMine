@@ -2,19 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using SCOM.Utils;
+using com.kleberswf.lib.core;
 
-public sealed class MinerStateBuild : FSMState<Miner> {
-
-	static readonly MinerStateBuild instance = new MinerStateBuild();
-	public static MinerStateBuild Instance {
-		get {
-			return instance;
-		}
-	}
-
-	static MinerStateBuild() {}
-	private MinerStateBuild() {}
-
+public sealed class MinerStateBuild : Singleton<MinerStateBuild>, FSMState<Miner> {
 	public void Enter(Miner miner)
 	{
 		miner.Stop ();

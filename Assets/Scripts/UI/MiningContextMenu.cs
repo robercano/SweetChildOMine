@@ -106,10 +106,12 @@ public class MiningContextMenu : MonoBehaviour {
             {
                 SelectedNumItems = 1;
                 m_buttonLeft.interactable = false;
+                m_buttonAction.interactable = false;
             }
             else
             {
                 m_buttonLeft.interactable = true;
+                m_buttonAction.interactable = true;
             }
 
             if (SelectedNumItems >= OnRetrieveMaxItems())
