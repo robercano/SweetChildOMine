@@ -10,4 +10,9 @@ public class MinerBodyCollider : MonoBehaviour {
 	{
 		m_minerScript.OnCollisionEnter2DChild (coll, Miner.ColliderType.ColliderBody);
 	}
+
+    public void OnTriggerEnter2D(Collider2D collider)
+    {
+        m_minerScript.OnTriggerEnter2DChild(collider);
+    }
 }

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using SCOM.Utils;
 
-#pragma warning disable CS0252
+#pragma warning disable 0252
 public class Miner : SelectableObject
 {
     public int MaxLife;
@@ -219,13 +219,16 @@ public class Miner : SelectableObject
 	public bool HasReachedMovementTarget()
 	{
 		float deltaX = GetDistanceToMovementTarget();
-		if (deltaX >= -float.Epsilon && deltaX <= float.Epsilon) {
-			return true;
-		} else {
+        if ((m_faceDirection == 1.0f && deltaX <= 0.0f) ||
+            (m_faceDirection == -1.0f && deltaX >= 0.0f))
+        {
+            return true;
+        }
+        else
+        {
 			return false;
 		}
 	}
-    #endregion /* Movement target management */
 
     void GetMovementTargetFromMouse()
     {
@@ -236,6 +239,7 @@ public class Miner : SelectableObject
 	void ResetMovementTarget() {
 		m_movementTarget = m_rigidBody.position;
 	}
+    #endregion /* Movement target management */
 
     public void ActivateVisibleTarget()
     {
@@ -286,11 +290,13 @@ public class Miner : SelectableObject
         }
     }
    
-    void EndMovement(bool resetTarget = true)
+    void EndMovement()
     {
         /* Round the coordinates so they are perfect pixel aligned */
         m_rigidBody.position = new Vector2(Mathf.Round(m_rigidBody.position.x), Mathf.Round(m_rigidBody.position.y));
         m_rigidBody.velocity = Vector2.zero;
+
+        //ResetMovementTarget();
     }
 
     #region /* Movement methods */
@@ -363,11 +369,7 @@ public class Miner : SelectableObject
 							m_rigidBody.position.y);
 						Stop ();
 
-						if (m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject) {
-							FSM.ChangeState (MinerStateMineMaterial.Instance);
-						} else if (m_buildableTarget != null && coll.gameObject == m_buildableTarget.gameObject) {
-							FSM.ChangeState (MinerStateBuild.Instance);
-						} else if (FSM.CurrentState == MinerStateDigWalk.Instance && coll.gameObject.tag == "CaveCollider") {
+                        if (FSM.CurrentState == MinerStateDigWalk.Instance && coll.gameObject.tag == "CaveCollider") {
 							FSM.ChangeState (MinerStateDig.Instance);
 						} else {
 							ResetMovementTarget (); 
@@ -395,6 +397,14 @@ public class Miner : SelectableObject
         else if (coll.tag == "Enemy")
         {
             m_nearEnemies.Add(coll.gameObject);
+        }
+        else if (FSM.CurrentState != MinerStateMineMaterial.Instance && m_mineableTarget != null && coll.gameObject == m_mineableTarget.gameObject)
+        {
+            FSM.ChangeState(MinerStateMineMaterial.Instance);
+        }
+        else if (FSM.CurrentState != MinerStateBuild.Instance && m_buildableTarget != null && coll.gameObject == m_buildableTarget.gameObject)
+        {
+            FSM.ChangeState(MinerStateBuild.Instance);
         }
     }
 

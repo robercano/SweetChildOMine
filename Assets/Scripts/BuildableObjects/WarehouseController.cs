@@ -47,6 +47,7 @@ public class WarehouseController : SelectableObject, IDropHandler {
                                                              m_spriteRenderer.bounds.max.y + UIGlobals.PegDistanceToObject , 
                                                              0.0f);
         m_containerController.Title = "";
+        m_containerController.EnableAmount = true;
 
         m_onSelectedDelegate = ShowContainer;
         m_onDeselectedDelegate = HideContainer;

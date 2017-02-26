@@ -35,6 +35,9 @@ public class MiningContextMenu : MonoBehaviour {
     public OnRetrieveDelegate OnRetrieveMaxItems;
     public OnRetrieveDelegate OnRetrieveCurrentItems;
 
+    public float OnButtonDownStartRepeatInterval = 1.0f;
+    public float OnButtonDownContinueRepeatInterval = 0.2f;
+
     public int SelectedNumItems
     {
         get
@@ -66,7 +69,12 @@ public class MiningContextMenu : MonoBehaviour {
     private Button m_buttonRight;
     private Button m_buttonAction;
     private WidgetFader m_widgetFader;
-    
+
+    private bool m_isLeftButtonPressed;
+    private bool m_isRightButtonPressed;
+    private bool m_isFirstClick;
+    private float m_previousClickTime;
+
     void Awake()
     {
         m_title = transform.FindDeepChild("Title").GetComponent<Text>();
@@ -85,12 +93,40 @@ public class MiningContextMenu : MonoBehaviour {
         m_widgetFader = GetComponent<WidgetFader>();
         m_widgetFader.DisableImmediate();
 
+        m_isLeftButtonPressed = false;
+        m_isRightButtonPressed = false;
+        m_isFirstClick = true;
+        m_previousClickTime = 0.0f;
+
         SelectedNumItems = 1;
     }
 
     void Update()
     {
         Info = "(" + (OnRetrieveCurrentItems() - SelectedNumItems) + " left)";
+
+        if (m_isLeftButtonPressed || m_isRightButtonPressed)
+        {
+            if (((m_isFirstClick == true) && ((Time.time - m_previousClickTime) > OnButtonDownStartRepeatInterval)) ||
+                ((m_isFirstClick == false) && ((Time.time - m_previousClickTime) > OnButtonDownContinueRepeatInterval)))
+            {
+                if (m_isLeftButtonPressed)
+                {
+                    SelectedNumItems--;
+                }
+                else if (m_isRightButtonPressed)
+                {
+                    SelectedNumItems++;
+                }
+                m_isFirstClick = false;
+                m_previousClickTime = Time.time;
+            }
+        }
+        else
+        {
+            m_isFirstClick = true;
+            m_previousClickTime = Time.time;
+        }
 
         if (OnAction == null)
         {
@@ -102,9 +138,9 @@ public class MiningContextMenu : MonoBehaviour {
         {
             m_buttonAction.interactable = true;
 
-            if (SelectedNumItems <= 1)
+            if (SelectedNumItems <= 0)
             {
-                SelectedNumItems = 1;
+                SelectedNumItems = 0;
                 m_buttonLeft.interactable = false;
                 m_buttonAction.interactable = false;
             }
@@ -137,13 +173,23 @@ public class MiningContextMenu : MonoBehaviour {
     }
 
     /* Events */
-    public void OnLeftClick()
+    public void OnLeftClickDown()
     {
         SelectedNumItems--;
+        m_isLeftButtonPressed = true;
     }
-    public void OnRightClick()
+    public void OnLeftClickUp()
+    {
+        m_isLeftButtonPressed = false;
+    }
+    public void OnRightClickDown()
     {
         SelectedNumItems++;
+        m_isRightButtonPressed = true;
+    }
+    public void OnRightClickUp()
+    {
+        m_isRightButtonPressed = false;
     }
     public void OnActionClick()
     {

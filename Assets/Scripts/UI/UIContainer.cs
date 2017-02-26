@@ -64,7 +64,7 @@ public class UIContainer : MonoBehaviour, IDropHandler {
         }
     }
 
-    void InventoryUpdate()
+    public void InventoryUpdate()
     {
         for (int i = 0; i < m_inventory.GetMaxSlots(); ++i)
         {
@@ -156,8 +156,14 @@ public class UIContainer : MonoBehaviour, IDropHandler {
 			return false;
 		}
 
-		m_inventory.TransferItem (item);
-		return true;
+		if (m_inventory.TransferItem (item) == false)
+        {
+            return false;
+        }
+
+        UIController.Instance.Refresh();
+
+        return true;
 	}
 
     public void SignalError(string itemName)
@@ -193,6 +199,8 @@ public class UIContainer : MonoBehaviour, IDropHandler {
 			item.Hide ();
             AudioSource.PlayClipAtPoint(m_containerPop, Camera.main.transform.position);
 		}
+
+        UIController.Instance.Refresh();
 	}
 
     #endregion  /* Public interface */
