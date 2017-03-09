@@ -93,7 +93,7 @@ Shader "Sprites/Outline"
 				if (_Outline > 0 && c.a == 0.0) {
 					float totalAlpha = 0;
 
-					[unroll(16)]
+					//[unroll(16)]
 					for (int i = 1; i < _OutlineSize + 1; i++) {
 						fixed4 pixelUp = tex2D(_MainTex, IN.texcoord + fixed2(0, i * _MainTex_TexelSize.y));
 						fixed4 pixelDown = tex2D(_MainTex, IN.texcoord - fixed2(0,i *  _MainTex_TexelSize.y));

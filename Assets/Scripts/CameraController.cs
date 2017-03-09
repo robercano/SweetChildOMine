@@ -6,6 +6,7 @@ using UnityEngine.Assertions;
 public class CameraController : MonoBehaviour {
 
     public bool m_doubleSize = true;
+    private float m_ratio;
 
 	// Use this for initialization
 	void Start () {
@@ -20,13 +21,18 @@ public class CameraController : MonoBehaviour {
 		 * thus maintaining the pixel perfect feeling */
 		float backgroundHeight = sceneBackground.bounds.extents.y * 2.0f;
 
-		float ratio = Mathf.Floor (Screen.height / backgroundHeight);
-		if (ratio > -float.Epsilon && ratio < float.Epsilon)
-			ratio = 1.0f;
+		m_ratio = Mathf.Round(Screen.height / backgroundHeight);
+		if (m_ratio > -float.Epsilon && m_ratio < float.Epsilon)
+            m_ratio = 1.0f;
 
         if (m_doubleSize)
-		    Camera.main.orthographicSize = Screen.height / ratio / 4.0f;
+            Camera.main.orthographicSize = (float)Screen.height / m_ratio / 4.0f;
         else
-            Camera.main.orthographicSize = Screen.height / ratio / 2.0f;
+            Camera.main.orthographicSize = (float)Screen.height / m_ratio / 2.0f;
+    }
+
+    void Update()
+    {
+
     }
 }
