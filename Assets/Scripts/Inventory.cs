@@ -8,110 +8,145 @@ public class Inventory {
     public delegate void InventoryUpdate();
     public InventoryUpdate OnInventoryUpdate;
 
+    public int RemainingAmount
+    {
+        get
+        {
+            int remainingAmount = m_inventorySlots.Capacity * m_maxAmountPerSlot;
+
+            foreach (Item item in m_inventorySlots)
+            {
+                remainingAmount -= item.Amount;
+            }
+            return remainingAmount;
+        }
+    }
     private List<Item> m_inventorySlots;
-    private Dictionary<string, int> m_inventoryMap;
 
-    public int CurrentWeight;
-    public int RemainingWeight;
+    private int m_maxAmountPerSlot;
 
-    public Inventory(int maxSlots, int maxWeight)
+    public Inventory(int maxSlots, int maxAmountPerSlot)
     {
         m_inventorySlots = new List<Item>(maxSlots);
-        m_inventoryMap = new Dictionary<string, int>(maxSlots);
         OnInventoryUpdate = null;
 
-        RemainingWeight = maxWeight;
-        CurrentWeight = 0;
+        m_maxAmountPerSlot = maxAmountPerSlot;
     }
 
-    public bool AddItem(Item item)
+    /**
+        Adds a new Item to the inventory. If the number of items to add
+        does not fit in a single slot, the Item is distributed among
+        different slots. The remaining number of items, if any, is returned
+        through the only parameter in the function. The return value indicates
+        wheter all items have been added (true) or not (false)
+
+        @param newItem  New item to add to the inventory
+
+        @return true if all items where added to the inventory, false otherwise.
+                When this functions returns false, newItem.Amount contains the
+                remaing items that were not added
+    */
+    public bool AddItem(Item newItem)
     {
-        int slot;
-
-        if (item.TotalWeight > RemainingWeight)
-            return false;
-
-        if (m_inventoryMap.TryGetValue(item.Name, out slot))
+        // Add the item amount to existing slots
+        foreach (Item item in m_inventorySlots)
         {
-            Item curItem = m_inventorySlots[slot];
-            curItem.Amount += item.Amount;
-            m_inventorySlots[slot] = curItem;
-            CurrentWeight += item.TotalWeight;
-            RemainingWeight -= item.TotalWeight;
+            if (item.Name != newItem.Name)
+            {
+                continue;
+            }
 
-			RefreshInventory ();
+            int amountToTransfer = newItem.Amount;
+            if ((item.Amount + amountToTransfer) > m_maxAmountPerSlot)
+            {
+                amountToTransfer = m_maxAmountPerSlot - item.Amount;
+            }
 
-            GameObject.Destroy(item.gameObject);
-            return true;
+            newItem.Amount -= amountToTransfer;
+            item.Amount += amountToTransfer;
+
+            if (newItem.Amount == 0)
+            {
+                break;
+            }
         }
 
-        if (m_inventorySlots.Count == m_inventorySlots.Capacity)
+        // Add the rest to new slots
+        while (newItem.Amount != 0 && (m_inventorySlots.Count != m_inventorySlots.Capacity))
         {
-            GameObject.Destroy(item.gameObject);
-            return false;
-        }
+            Item itemToAdd = ItemManager.Instance.CreateItem(newItem.Name);
+            if (newItem.Amount > m_maxAmountPerSlot)
+            {
+                itemToAdd.Amount = m_maxAmountPerSlot;
+            }
+            else
+            {
+                itemToAdd.Amount = newItem.Amount;
+            }
+            m_inventorySlots.Add(itemToAdd);
 
-        m_inventorySlots.Add(item);
-        m_inventoryMap[item.Name] = m_inventorySlots.Count - 1;
-        CurrentWeight += item.TotalWeight;
-        RemainingWeight -= item.TotalWeight;
+            newItem.Amount -= itemToAdd.Amount;
+        }
 
 		RefreshInventory ();
 
+        // If not all amount was transferred, signal to caller
+        if (newItem.Amount != 0)
+        {
+            return false;
+        }
+
+       ItemManager.Instance.DestroyItem(newItem);
         return true;
     }
 
 	public bool TransferItem(Item item)
 	{
-		Item curItem = GetItemByName (item.Name);
-		if (curItem != item) {
-			return false;
-		}
+		if (m_inventorySlots.Remove(item) == false)
+        {
+            return false;
+        }
 
-		CurrentWeight -= item.Amount*item.WeightPerUnit;
-		RemainingWeight += item.Amount*item.WeightPerUnit;
-
-		m_inventoryMap.Remove(item.Name);
-		m_inventorySlots.Remove(item);
-
-		RefreshInventory();
-		return true;
+        RefreshInventory();
+        return true;
 	}
 
 	public bool RemoveItemAmount(string name, ref int amount)
 	{
-		Item item = GetItemByName (name);
-		if (item == null)
-			return false;
-		if (item.Amount >= amount) {
-			item.Amount -= amount;
-		} else {
-			amount = item.Amount;
-			item.Amount = 0;
-		}
+        bool itemFound = false;
 
-        CurrentWeight -= amount*item.WeightPerUnit;
-        RemainingWeight += amount*item.WeightPerUnit;
-
-        // If amount is zero, remove the item from the inventory
-        if (item.Amount == 0)
+        for (int i = m_inventorySlots.Count-1; amount > 0 && i >= 0; --i)
         {
-            m_inventoryMap.Remove(item.Name);
-            m_inventorySlots.Remove(item);
-            ItemManager.Instance.DestroyItem(item);
+            Item item = m_inventorySlots[i];
+            if (item.Name == name)
+            {
+                itemFound = true;
+
+                if (amount >= item.Amount)
+                {
+                    amount -= item.Amount;
+                    m_inventorySlots.RemoveAt(i);
+                    ItemManager.Instance.DestroyItem(item);
+                }
+                else
+                {
+                    item.Amount -= amount;
+                    amount = 0;
+                }
+            }
         }
 
-        RefreshInventory();
-		return true;
+        if (itemFound)
+        {
+            RefreshInventory();
+        }
+		return itemFound;
 	}
 
-	public Item GetItemByName(string name)
-	{
-		int slotIndex;
-		if (m_inventoryMap.TryGetValue (name, out slotIndex) == false)
-			return null;
-		return m_inventorySlots [slotIndex];
-	}
+    bool IsItemInInventory(Item item)
+    {
+        return m_inventorySlots.Contains(item);
+    }
 
     public Item GetItemAtSlot(int slot)
     {
@@ -125,16 +160,21 @@ public class Inventory {
 
 	public int GetItemAmount(string name)
 	{
-		Item item = GetItemByName (name);
-		if (item == null)
-			return 0;
-		return item.Amount;
+        List<Item> foundItems = m_inventorySlots.FindAll(item => item.Name == name);
+
+        int amount = 0;
+        foreach (Item item in foundItems)
+        {
+            amount += item.Amount;
+        }
+        return amount;
 	}
 
     public int GetCount()
     {
         return m_inventorySlots.Count;
     }
+
     public int GetMaxSlots()
     {
         return m_inventorySlots.Capacity;

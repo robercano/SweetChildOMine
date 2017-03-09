@@ -48,7 +48,8 @@ public class ActionProgressDialog : MonoBehaviour {
     private Text m_percentage;
     private Text m_action;
 
-    private Image m_progressBar;
+    private Image m_progressBarForeground;
+    private Image m_progressBarBackground;
     private RectTransform m_progressBarRect;
     private float m_progressBarRatio;
 
@@ -59,9 +60,10 @@ public class ActionProgressDialog : MonoBehaviour {
         m_title = transform.FindDeepChild("Title").GetComponent<Text>();
         m_percentage = transform.FindDeepChild("Percentage").GetComponent<Text>();
         m_action = transform.FindDeepChild("ActionText").GetComponent<Text>();
-        m_progressBar = transform.FindDeepChild("ProgressForeground").GetComponent<Image>();
-        m_progressBarRect = m_progressBar.rectTransform;
-        m_progressBarRatio = m_progressBarRect.sizeDelta.x;
+        m_progressBarForeground = transform.FindDeepChild("ProgressForeground").GetComponent<Image>();
+        m_progressBarBackground = transform.FindDeepChild("ProgressBackground").GetComponent<Image>();
+
+        m_progressBarRect = m_progressBarForeground.rectTransform;
 
         m_widgetFader = GetComponent<WidgetFader>();
         m_widgetFader.DisableImmediate();
@@ -95,7 +97,7 @@ public class ActionProgressDialog : MonoBehaviour {
     {
         percentage = Mathf.Clamp(percentage, 0, 100);
 
-        m_progressBarRect.sizeDelta = new Vector2(percentage * m_progressBarRatio / 100.0f, m_progressBarRect.sizeDelta.y);
+        m_progressBarRect.sizeDelta = new Vector2(percentage * m_progressBarBackground.rectTransform.sizeDelta.x / 100.0f, m_progressBarRect.sizeDelta.y);
     }
     void ClearProgressBar()
     {

@@ -35,7 +35,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             }
 
             // Set common fields
-            m_slotImage.sprite = m_slotItem.Avatar;
+            m_slotImage.sprite = m_slotItem.InventoryAvatar;
             if (m_slotAmount != null)
             {
                 m_slotAmount.text = "x" + m_slotItem.Amount.ToString();
@@ -54,7 +54,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             m_buildableObject = m_slotItem.BuildablePrefab.GetComponent<BuildableObject>();
             Assert.IsNotNull(m_buildableObject);
 
-            Miner miner = m_characterStatus.GetActiveMiner();
+            Miner miner = m_UIController.GetActiveMiner();
             Assert.IsNotNull(miner);
 
             if (miner.CheckRecipeForBuildableObject(m_buildableObject))
@@ -115,7 +115,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     private BuildInventoryDialogPanel m_buildableDescriptionPanel;    
     private RectTransform m_buildableDescriptionInstanceRectTransform;
 
-	private CharacterStatus m_characterStatus;
+	private UIController m_UIController;
     private BuildableObject m_buildableObject;
 
     // Use this for initialization
@@ -138,7 +138,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         m_buildableDescriptionInstanceRectTransform.anchoredPosition = new Vector2(m_rectTransform.sizeDelta.x / 2.0f, 
                                                                                    m_rectTransform.sizeDelta.y + UIGlobals.PegDistanceToObject);
 
-		m_characterStatus = GameObject.FindObjectOfType<CharacterStatus>();
+        m_UIController = GameObject.Find("MainUI").GetComponent<UIController>();
 
         Transform shortcutGO = transform.FindDeepChild("Shortcut");
         if (shortcutGO != null)

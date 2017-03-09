@@ -4,7 +4,7 @@ using UnityEngine;
 using SCOM.Utils;
 using com.kleberswf.lib.core;
 
-#pragma warning disable CS0252
+#pragma warning disable 0252
 public sealed class MinerStateAttack : Singleton<MinerStateAttack>, FSMState<Miner>  {
 
 	public void Enter(Miner miner)
@@ -24,4 +24,4 @@ public sealed class MinerStateAttack : Singleton<MinerStateAttack>, FSMState<Min
 	{
 	}
 }
-#pragma warning restore
+#pragma warning restore all

@@ -15,7 +15,7 @@ public class CharacterStatus : MonoBehaviour {
     private Miner m_activeMiner;
 
     // Use this for initialization
-    void Start()
+    void Awake()
     {
         m_lifeBar = transform.Find("LifeBar").gameObject.GetComponent<Image>();
         m_lifeBarRect = m_lifeBar.rectTransform;

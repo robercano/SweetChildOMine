@@ -26,7 +26,7 @@ public class BuildableObject : SelectableObject
 
     AudioClip m_finishedSound;
 
-    protected CharacterStatus m_characterStatus;
+    protected UIController m_UIController;
 
     private bool m_hasMaterials;
 
@@ -51,7 +51,7 @@ public class BuildableObject : SelectableObject
 
         m_finishedSound = Resources.Load("Sounds/FinishedBuilding") as AudioClip;
 
-        m_characterStatus = GameObject.Find("CharacterStatus").GetComponent<CharacterStatus>();
+        m_UIController = GameObject.Find("MainUI").GetComponent<UIController>();
 
         m_onSelectedDelegate = ShowMenu;
         m_onDeselectedDelegate = HideMenu;
@@ -61,7 +61,7 @@ public class BuildableObject : SelectableObject
 
     public void ShowMenu()
     {
-        Miner miner = m_characterStatus.GetActiveMiner();
+        Miner miner = m_UIController.GetActiveMiner();
         if (miner != null && 
             miner.BuildableTarget != this &&
             (m_currentWork < m_totalWork))
@@ -87,7 +87,7 @@ public class BuildableObject : SelectableObject
     {
         HideMenu();
 
-        Miner miner = m_characterStatus.GetActiveMiner();
+        Miner miner = m_UIController.GetActiveMiner();
         if (miner == null)
             return;
 

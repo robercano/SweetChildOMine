@@ -7,8 +7,8 @@ using UnityEngine.EventSystems;
 
 public class WarehouseController : SelectableObject, IDropHandler {
 
-	public int MaxWeight;
-	public int MaxSlots;
+	public int ItemsPerSlot;
+	public int NumSlots;
     public bool AlreadyBuilt;
 
 	private Inventory m_warehouseInventory;
@@ -34,7 +34,7 @@ public class WarehouseController : SelectableObject, IDropHandler {
 
         m_spriteRenderer = GetComponent<SpriteRenderer>();
 
-		m_warehouseInventory = new Inventory (MaxSlots, MaxWeight);
+		m_warehouseInventory = new Inventory (NumSlots, ItemsPerSlot);
 
         m_containerPrefab = Resources.Load("UI/GenericUIContainer6Slots") as GameObject;
         m_containerInstance = GameObject.Instantiate(m_containerPrefab, transform, false);

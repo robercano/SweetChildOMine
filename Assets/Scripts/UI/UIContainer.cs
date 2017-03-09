@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.Assertions;
 
 public class UIContainer : MonoBehaviour, IDropHandler {
 
@@ -166,6 +167,23 @@ public class UIContainer : MonoBehaviour, IDropHandler {
         return true;
 	}
 
+    public bool AddItem(Item item)
+    {
+        if (m_inventory == null)
+        {
+            return false;
+        }
+
+        if (m_inventory.AddItem(item) == false)
+        {
+            return false;
+        }
+
+        UIController.Instance.Refresh();
+
+        return true;
+    }
+
     public void SignalError(string itemName)
     {
         bool firstTime = true;
@@ -195,7 +213,11 @@ public class UIContainer : MonoBehaviour, IDropHandler {
 		Item item = slot.SlotItem;
 
 		if (slot.ParentContainer.TransferItem (item)) {
-			m_inventory.AddItem (item);
+			if (m_inventory.AddItem (item) == false)
+            {
+                // Not all the items were added, add the rest back
+                Assert.IsTrue(slot.ParentContainer.AddItem(item));
+            }
 			item.Hide ();
             AudioSource.PlayClipAtPoint(m_containerPop, Camera.main.transform.position);
 		}

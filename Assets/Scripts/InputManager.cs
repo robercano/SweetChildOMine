@@ -10,6 +10,7 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
     private Miner m_miner;
     private CaveController m_caveController;
 
+    private UIController m_UIController;
     private UIContainer m_weaponContainer;
     private UIContainer m_buildContainer;
 
@@ -20,15 +21,20 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
         LeftClick, DoubleLeftClick, Space
     }
 
-    void Start()
+    void Awake()
     {
         m_miner = null;
         m_caveController = GameObject.FindObjectOfType<CaveController>();
         m_lastClickTime = Time.time;
 
+        m_UIController = GameObject.Find("MainUI").GetComponent<UIController>();
+
         m_weaponContainer = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
         m_buildContainer = GameObject.Find("BuildContainer").GetComponent<UIContainer>();
+    }
 
+    void Start()
+    {
         m_weaponContainer.SetSlotShortcut(0, '1');
         m_weaponContainer.SetSlotShortcut(1, '2');
         m_weaponContainer.SetSlotShortcut(2, '3');
@@ -75,6 +81,8 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
     public void SetActiveMiner(Miner miner)
     {
         m_miner = miner;
+
+        m_UIController.SetActiveMiner(miner);
     }
 
     void Update()

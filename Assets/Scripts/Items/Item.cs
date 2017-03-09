@@ -13,6 +13,25 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
             return m_spriteRenderer.sprite;
         }
     }
+    public Sprite InventoryAvatar
+    {
+        get
+        {
+            if (m_inventoryAvatar == null)
+            {
+                return Avatar;
+            }
+            else
+            {
+                return m_inventoryAvatar;
+            }
+        }
+        set
+        {
+            m_inventoryAvatar = value;
+        }
+    }
+    public Sprite m_inventoryAvatar;
     public string Description;
     public int Amount
     {
@@ -31,14 +50,6 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
             }
         }
     }
-    public int WeightPerUnit;
-    public int TotalWeight
-    {
-        get
-        {
-            return m_amount * WeightPerUnit;
-        }
-    }
     public Sprite[] AmountAvatars;
 
     public GameObject BuildablePrefab;
@@ -49,7 +60,7 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 	private GameObject m_dragDropObject;
 	private DragDropController m_dragDropObjectController;
 
-	private CharacterStatus m_characterStatus;
+	private UIController m_UIController;
     private int m_amount;
     private AudioClip m_popSound;
 
@@ -59,7 +70,7 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
 		m_materialInventory = GameObject.Find("InventoryContainer").GetComponent<UIContainer>();
 
-		m_characterStatus = GameObject.FindObjectOfType<CharacterStatus>();
+		m_UIController = GameObject.Find("MainUI").GetComponent<UIController>();
 
 		m_dragDropObject = null;
 		m_dragDropObjectController = null;
@@ -84,7 +95,7 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 	{
 		if (BuildablePrefab != null)
 		{
-			Miner miner = m_characterStatus.GetActiveMiner ();
+			Miner miner = m_UIController.GetActiveMiner ();
             if (miner == null)
             {
                 eventData.pointerDrag = null;

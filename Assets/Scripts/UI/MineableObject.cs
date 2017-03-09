@@ -16,15 +16,13 @@ public class MineableObject : SelectableObject
 
     private float m_remainingDamage;
 
-    private int m_mineableItemWeight;
-
     private GameObject m_actionContextMenuPrefab;
     private GameObject m_actionContextMenuInstance;
     private MiningContextMenu m_actionContextMenu;
 
     private GameObject m_mineralDamagePrefab;
 
-    private CharacterStatus m_characterStatus;
+    private UIController m_UIController;
 
     public override void Awake()
     {
@@ -46,7 +44,6 @@ public class MineableObject : SelectableObject
         m_remainingDamage = 0.0f;
 
         Item mineableItem = ItemManager.Instance.CreateItem(MineableItem);
-        m_mineableItemWeight = mineableItem.WeightPerUnit;
         ItemManager.Instance.DestroyItem(mineableItem);
 
         m_actionContextMenu.Title = Name;
@@ -55,7 +52,7 @@ public class MineableObject : SelectableObject
         m_actionContextMenu.OnRetrieveMaxItems = OnRetrieveMaxItems;
         m_actionContextMenu.OnRetrieveCurrentItems = OnRetrieveCurrentItems;
 
-        m_characterStatus = GameObject.Find("CharacterStatus").GetComponent<CharacterStatus>();
+        m_UIController = GameObject.Find("MainUI").GetComponent<UIController>();
 
         m_onSelectedDelegate = ShowMenu;
         m_onDeselectedDelegate = HideMenu;
@@ -63,12 +60,12 @@ public class MineableObject : SelectableObject
 
     public void ShowMenu()
     {
-        Miner miner = m_characterStatus.GetActiveMiner();
+        Miner miner = m_UIController.GetActiveMiner();
         if (miner != null)
         {
             m_actionContextMenu.OnAction = OnActionMine;
 
-            int minerMaxItems = miner.MaterialInventory.RemainingWeight / m_mineableItemWeight;
+            int minerMaxItems = miner.MaterialInventory.RemainingAmount;
             m_actionContextMenu.SelectedNumItems = minerMaxItems;
         }
         else
@@ -89,9 +86,9 @@ public class MineableObject : SelectableObject
     {
         int minerMaxItems = 0;
 
-        Miner miner = m_characterStatus.GetActiveMiner();
+        Miner miner = m_UIController.GetActiveMiner();
         if (miner != null)
-            minerMaxItems = miner.MaterialInventory.RemainingWeight / m_mineableItemWeight;
+            minerMaxItems = miner.MaterialInventory.RemainingAmount;
 
         return Mathf.Min(minerMaxItems, m_currentItems);
     }
@@ -104,7 +101,7 @@ public class MineableObject : SelectableObject
     {
         HideMenu();
 
-        Miner miner = m_characterStatus.GetActiveMiner();
+        Miner miner = m_UIController.GetActiveMiner();
         if (miner != null)
         {
             miner.MineMaterial(this, numItems);
@@ -112,7 +109,7 @@ public class MineableObject : SelectableObject
     }
 
     /* Public interface */
-    public bool DoMine(float damage, int maxItems, int maxWeight, out Item extracted)
+    public bool DoMine(float damage, int maxItems, int maxAmount, out Item extracted)
     {
         bool continueMining = true;
         extracted = null;
@@ -132,9 +129,9 @@ public class MineableObject : SelectableObject
             amountToExtract = maxItems;
             continueMining = false;
         }
-        if ((amountToExtract * m_mineableItemWeight) > maxWeight)
+        if (amountToExtract > maxAmount)
         {
-            amountToExtract = maxWeight / m_mineableItemWeight;
+            amountToExtract = maxAmount;
             continueMining = false;
         }
         if (amountToExtract > m_currentItems)

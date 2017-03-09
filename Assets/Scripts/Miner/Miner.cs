@@ -58,21 +58,15 @@ public class Miner : SelectableObject
 
     private int m_layerMask;
 
-    // Character status
-    private CharacterStatus m_characterStatus;
-
     // Weapons
-    private UIContainer m_weaponSelector;
-    private Inventory m_weaponInventory;
+    public Inventory WeaponInventory;
     private WeaponItem m_pickAxe;
 
     // Materials
-    private UIContainer m_materialSelector;
     public Inventory MaterialInventory;
 
     // Build
-    private UIContainer m_buildSelector;
-    public Inventory m_buildInventory;
+    public Inventory BuildInventory;
 
     // Input manager
     private InputManager m_inputManager;
@@ -134,15 +128,9 @@ public class Miner : SelectableObject
 
         m_layerMask = (1 << (LayerMask.NameToLayer("Cave Colliders")));
 
-        // UI
-        m_characterStatus = GameObject.FindObjectOfType<CharacterStatus>();
-        m_weaponSelector = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
-        m_materialSelector = GameObject.Find("InventoryContainer").GetComponent<UIContainer>();
-        m_buildSelector = GameObject.Find("BuildContainer").GetComponent<UIContainer>();
-
-        MaterialInventory = new Inventory(6, 100);
-        m_weaponInventory = new Inventory(3, 100);
-        m_buildInventory = new Inventory(3, 100);
+        MaterialInventory = new Inventory(6, 20);
+        WeaponInventory = new Inventory(3, 1);
+        BuildInventory = new Inventory(3, 1);
 
         m_inputManager = GameObject.FindObjectOfType<InputManager>();
 
@@ -152,6 +140,7 @@ public class Miner : SelectableObject
         m_actionWorked = false;
 
         m_onSelectedDelegate = ActivateMiner;
+        ActivateMiner();
 
         m_actionProgressDialogPrefab = Resources.Load("UI/ActionProgressDialog") as GameObject;
         m_actionProgressDialogInstance = GameObject.Instantiate(m_actionProgressDialogPrefab, transform, false);
@@ -165,11 +154,11 @@ public class Miner : SelectableObject
 
         // Weapons
         m_pickAxe = ItemManager.Instance.CreateItem("PickAxe") as WeaponItem;
-        m_weaponInventory.AddItem(m_pickAxe);
+        WeaponInventory.AddItem(m_pickAxe);
 
         // Build structures
 		Item warehouse = ItemManager.Instance.CreateItem ("Warehouse");
-		m_buildInventory.AddItem(warehouse);
+		BuildInventory.AddItem(warehouse);
 	}
 
 	// Update is called once per frame
@@ -180,18 +169,11 @@ public class Miner : SelectableObject
 
     public void ActivateMiner()
     {
-        m_characterStatus.SetActiveMiner(this);
-        m_weaponSelector.SetInventory(m_weaponInventory);
-        m_materialSelector.SetInventory(MaterialInventory);
-        m_buildSelector.SetInventory(m_buildInventory);
         m_inputManager.SetActiveMiner(this);
     }
     public void DeactivateMiner()
     {
-        m_characterStatus.SetActiveMiner(null);
-        m_weaponSelector.ClearAll();
-        m_materialSelector.ClearAll();
-        m_buildSelector.ClearAll();
+        m_inputManager.SetActiveMiner(null);
     }
     public Sprite GetCurrentAvatar()
     {
@@ -199,7 +181,7 @@ public class Miner : SelectableObject
     }
 
     #region /* Movement target management */
-    public void SetMovementTarget(Vector2 target)
+    public void SetMovementTarget(Vector2 target, bool showCross = true)
 	{
 		m_movementTarget = new Vector2(Mathf.Round(target.x), Mathf.Round(target.y));
 		float deltaX = GetDistanceToMovementTarget ();
@@ -210,7 +192,10 @@ public class Miner : SelectableObject
 
 		}
 		transform.localScale = new Vector2(m_faceDirection * Mathf.Abs(transform.localScale.x), transform.localScale.y);
-		ActivateVisibleTarget();
+        if (showCross)
+        {
+            ActivateVisibleTarget();
+        }
 	}
 	float GetDistanceToMovementTarget()
 	{
@@ -426,7 +411,7 @@ public class Miner : SelectableObject
             return;
 
         Item materialMined = null;
-        m_actionWorked = m_mineableTarget.DoMine(m_pickAxe.Damage, m_mineableRemainingAmount, MaterialInventory.RemainingWeight, out materialMined);
+        m_actionWorked = m_mineableTarget.DoMine(m_pickAxe.Damage, m_mineableRemainingAmount, MaterialInventory.RemainingAmount, out materialMined);
 
         if (m_actionWorked || materialMined.Amount != 0)
         {
@@ -435,7 +420,7 @@ public class Miner : SelectableObject
             m_actionProgressDialog.Percentage = (100 * (m_mineableTargetAmount - m_mineableRemainingAmount) / m_mineableTargetAmount);
 
             MaterialInventory.AddItem(materialMined);
-            m_buildInventory.RefreshInventory();
+            BuildInventory.RefreshInventory();
         }
     }
 
@@ -592,10 +577,10 @@ public class Miner : SelectableObject
 	
 	private void StartAction(string action, SelectableObject target, FSMState<Miner> nextState)
     {
+        // TODO move this to the entry point of the action state
         m_actionProgressDialog.Title = action + " " + target.Name;
         m_actionProgressDialog.Percentage = 0;
 
-        SetMovementTarget(target.gameObject.transform.position);
         FSM.ChangeState(nextState);
     }
 
@@ -647,7 +632,7 @@ public class Miner : SelectableObject
         }
 
         MaterialInventory.RefreshInventory();
-        m_buildInventory.RefreshInventory();
+        BuildInventory.RefreshInventory();
         return true;
     }
 

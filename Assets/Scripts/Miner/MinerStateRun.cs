@@ -8,7 +8,9 @@ public class MinerStateRun : Singleton<MinerStateRun>, FSMState<Miner> {
 
 	public virtual void Enter(Miner miner)
 	{
-		miner.SetMovementTarget (Camera.main.ScreenToWorldPoint (Input.mousePosition));
+        bool showTarget = miner.MineableTarget == null &&
+                          miner.BuildableTarget == null;
+		miner.SetMovementTarget (Camera.main.ScreenToWorldPoint (Input.mousePosition), showTarget);
 		miner.PlayAnimation("minerRun");
 	}
 
