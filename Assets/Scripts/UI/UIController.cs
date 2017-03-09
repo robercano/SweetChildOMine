@@ -37,12 +37,11 @@ public class UIController : Singleton<UIController> {
 
     private CharacterStatus AddMiner(Miner miner)
     {
-        GameObject statusInstance = GameObject.Instantiate(m_characterStatusPrefab,
-                                                           new Vector2(10.0f + m_characterStatusDict.Count * (m_characterStatusRectTransform.sizeDelta.x + 10.0f),
-                                                                       m_rectTransform.sizeDelta.y * 2.0f - m_characterStatusRectTransform.sizeDelta.y * 2.0f - 10.0f),
-                                                           Quaternion.identity, transform);
+        GameObject statusInstance = GameObject.Instantiate(m_characterStatusPrefab, transform);
+        statusInstance.GetComponent<RectTransform>().anchoredPosition = new Vector2(18.0f + m_characterStatusDict.Count * (m_characterStatusRectTransform.sizeDelta.x + 10.0f), -60.0f);
+        statusInstance.GetComponent<RectTransform>().localScale = Vector3.one;
+
         statusInstance.name = "CharacterStatus" + miner.Name.Replace(" " , "");
-        //statusInstance.transform.position = new Vector2(5.0f + m_characterStatusDict.Count * (m_characterStatusRectTransform.sizeDelta.x + 10.0f), -50.0f);
 
         CharacterStatus characterStatus = statusInstance.GetComponent<CharacterStatus>();
 

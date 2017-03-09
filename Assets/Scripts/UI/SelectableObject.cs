@@ -27,7 +27,6 @@ public class SelectableObject : MonoBehaviour, IPointerEnterHandler, IPointerExi
     private GameObject m_selectorInstance;
     private UISelector m_selector;
 
-    //protected BoxCollider2D m_boxCollider;
     protected SpriteRenderer m_spriteRenderer;
 
     private bool m_dialogEnabled;
@@ -37,18 +36,14 @@ public class SelectableObject : MonoBehaviour, IPointerEnterHandler, IPointerExi
         m_dialogPanelPrefab = Resources.Load("UI/DialogPanel") as GameObject;
         m_selectorPrefab = Resources.Load("Selector") as GameObject;
 
-       // m_boxCollider = GetComponent<BoxCollider2D>();
         m_spriteRenderer = GetComponent<SpriteRenderer>();
 
-        m_dialogInstance = GameObject.Instantiate(m_dialogPanelPrefab, transform, false);
+        m_dialogInstance = GameObject.Instantiate(m_dialogPanelPrefab);
         m_dialogPanel = m_dialogInstance.GetComponent<DialogPanel>();
+        m_dialogPanel.FollowGameObject(this.gameObject, m_spriteRenderer.bounds);
 
         m_selectorInstance = GameObject.Instantiate(m_selectorPrefab, transform, false);
         m_selector = m_selectorInstance.GetComponent<UISelector>();
-
-        m_dialogInstance.transform.position = new Vector3(gameObject.transform.position.x, 
-                                                          m_spriteRenderer.bounds.max.y + UIGlobals.PegDistanceToObject,
-                                                          0.0f);
 
         m_dialogPanel.DisableImmediate();
         m_dialogPanel.SetText(Name);

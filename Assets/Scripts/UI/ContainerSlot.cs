@@ -6,7 +6,8 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Assertions;
 
-public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IEndDragHandler {
+public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerUpHandler,
+                                            IBeginDragHandler, IDragHandler, IEndDragHandler {
 
 	public UIContainer ParentContainer;
 
@@ -98,6 +99,8 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             }
         }
     }
+    public bool EnableDragDrop;
+
     private Item m_slotItem;
     private Image m_slotImage;
     private Text m_slotShortcut;
@@ -205,7 +208,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (m_slotItem == null)
+        if (m_slotItem == null || EnableDragDrop == false)
             return;
             
 		m_slotItem.OnBeginDrag (eventData);
@@ -213,7 +216,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public void OnDrag(PointerEventData eventData)
     {
-		if (m_slotItem == null)
+		if (m_slotItem == null || EnableDragDrop == false)
 			return;
 
 		m_slotItem.OnDrag (eventData);
@@ -221,7 +224,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public void OnEndDrag(PointerEventData eventData)
     {
-		if (m_slotItem == null)
+		if (m_slotItem == null || EnableDragDrop == false)
 			return;
 
 		m_slotItem.OnEndDrag (eventData);
@@ -255,5 +258,10 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     public void EnableAmount()
     {
         m_slotAmount.enabled = true;
+    }
+
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        throw new NotImplementedException();
     }
 }
