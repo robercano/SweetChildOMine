@@ -74,7 +74,8 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
                 ItemManager.Instance.DestroyItem(m_buildableDescriptionPanel.Material);
 
             m_buildableDescriptionPanel.Title = m_slotItem.Name;
-            m_buildableDescriptionPanel.Amount = m_buildableObject.Recipe[0].Amount;
+            m_buildableDescriptionPanel.RequiredAmount = m_buildableObject.Recipe[0].Amount;
+            m_buildableDescriptionPanel.CurrentAmount = m_slotItem.Amount;
             m_buildableDescriptionPanel.Material = ItemManager.Instance.CreateItem(m_buildableObject.Recipe[0].Ingredient);
         }
     }
