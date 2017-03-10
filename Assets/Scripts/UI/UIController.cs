@@ -1,9 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using com.kleberswf.lib.core;
 
 public class UIController : Singleton<UIController> {
+
+    public int ReferenceWidth;
+    public int ReferenceHeight;
+
+    private CanvasScaler m_canvasScaler;
 
     private UIContainer m_weaponContainer;
     private UIContainer m_inventoryContainer;
@@ -15,10 +21,15 @@ public class UIController : Singleton<UIController> {
 
     private Miner m_activeMiner;
 
+    private int m_screenWidth;
+    private int m_screenHeight;
+
     // Use this for initialization
     protected override void Awake()
     {
         base.Awake();
+
+        m_canvasScaler = GetComponent<CanvasScaler>();
 
         m_weaponContainer = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
         m_inventoryContainer = GameObject.Find("InventoryContainer").GetComponent<UIContainer>();
@@ -29,6 +40,16 @@ public class UIController : Singleton<UIController> {
 
         m_characterStatusDict = new Dictionary<Miner, CharacterStatus>(5);
         m_activeMiner = null;
+
+        updateUISize();
+    }
+
+    void Update()
+    {
+        if (m_screenWidth != Screen.width || m_screenHeight != Screen.height)
+        {
+            updateUISize();
+        }
     }
 
     private CharacterStatus AddMiner(Miner miner)
@@ -46,6 +67,16 @@ public class UIController : Singleton<UIController> {
         m_characterStatusDict.Add(miner, characterStatus);
 
         return characterStatus;
+    }
+
+    private void updateUISize()
+    {
+        m_screenWidth = Screen.width;
+        m_screenHeight = Screen.height;
+
+        int scale = (int)Mathf.Round(m_screenHeight / ReferenceHeight);
+
+        m_canvasScaler.scaleFactor = scale;
     }
 
     public void Refresh()

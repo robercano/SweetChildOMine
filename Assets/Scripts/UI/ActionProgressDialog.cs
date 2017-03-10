@@ -14,7 +14,7 @@ public class ActionProgressDialog : UIWorldPanel {
         }
         set
         {
-            m_title.text = value;
+            m_title.text = " " + value;
         }
     }
     public string ActionName

@@ -93,15 +93,12 @@ Shader "Sprites/Outline"
 				if (_Outline > 0 && c.a == 0.0) {
 					float totalAlpha = 0;
 
-					[unroll(16)]
-					for (int i = 1; i < _OutlineSize + 1; i++) {
-						fixed4 pixelUp = tex2D(_MainTex, IN.texcoord + fixed2(0, i * _MainTex_TexelSize.y));
-						fixed4 pixelDown = tex2D(_MainTex, IN.texcoord - fixed2(0,i *  _MainTex_TexelSize.y));
-						fixed4 pixelRight = tex2D(_MainTex, IN.texcoord + fixed2(i * _MainTex_TexelSize.x, 0));
-						fixed4 pixelLeft = tex2D(_MainTex, IN.texcoord - fixed2(i * _MainTex_TexelSize.x, 0));
+					fixed4 pixelUp = tex2D(_MainTex, IN.texcoord + fixed2(0, _MainTex_TexelSize.y));
+					fixed4 pixelDown = tex2D(_MainTex, IN.texcoord - fixed2(0, _MainTex_TexelSize.y));
+					fixed4 pixelRight = tex2D(_MainTex, IN.texcoord + fixed2(_MainTex_TexelSize.x, 0));
+					fixed4 pixelLeft = tex2D(_MainTex, IN.texcoord - fixed2(_MainTex_TexelSize.x, 0));
 
-						totalAlpha += pixelUp.a + pixelDown.a + pixelLeft.a + pixelRight.a;
-					}
+					totalAlpha += pixelUp.a + pixelDown.a + pixelLeft.a + pixelRight.a;
 
 					if (totalAlpha != 0) {
 						c.rgba = fixed4(1, 1, 1, 1) * _OutlineColor;

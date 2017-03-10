@@ -12,7 +12,7 @@ public class UIWorldPanel : MonoBehaviour {
 		m_yCoord = 0.0f;
 
 		GameObject mainUI = GameObject.Find("MainUI");
-		transform.SetParent(mainUI.transform);
+		transform.SetParent(mainUI.transform, false);
 
 		RectTransform rectTransform = GetComponent<RectTransform>();
 		rectTransform.pivot = new Vector2(0.5f, 0.0f);

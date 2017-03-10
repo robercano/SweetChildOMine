@@ -32,8 +32,6 @@ public class WarehouseController : SelectableObject, IDropHandler {
             this.enabled = false;
         }
 
-        m_spriteRenderer = GetComponent<SpriteRenderer>();
-
 		m_warehouseInventory = new Inventory (NumSlots, ItemsPerSlot);
 
         m_containerPrefab = Resources.Load("UI/GenericUIContainer6Slots") as GameObject;
