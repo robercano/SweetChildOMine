@@ -5,8 +5,6 @@ using com.kleberswf.lib.core;
 
 public class UIController : Singleton<UIController> {
 
-    private RectTransform m_rectTransform;
-
     private UIContainer m_weaponContainer;
     private UIContainer m_inventoryContainer;
     private UIContainer m_buildContainer;
@@ -21,8 +19,6 @@ public class UIController : Singleton<UIController> {
     protected override void Awake()
     {
         base.Awake();
-
-        m_rectTransform = GetComponent<RectTransform>();
 
         m_weaponContainer = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
         m_inventoryContainer = GameObject.Find("InventoryContainer").GetComponent<UIContainer>();

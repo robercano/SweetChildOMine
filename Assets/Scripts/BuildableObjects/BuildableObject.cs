@@ -36,10 +36,9 @@ public class BuildableObject : SelectableObject
 
         m_buildingContextMenuPrefab = Resources.Load("UI/BuildingContextMenu") as GameObject;
 
-        m_buildingContextMenuInstance = GameObject.Instantiate(m_buildingContextMenuPrefab, transform, false);
+        m_buildingContextMenuInstance = GameObject.Instantiate(m_buildingContextMenuPrefab);
         m_buildingContextMenu = m_buildingContextMenuInstance.GetComponent<BuildingContextMenu>();
-
-        m_buildingContextMenuInstance.transform.position = new Vector3(gameObject.transform.position.x, m_spriteRenderer.bounds.max.y + 5.0f, 0.0f);
+		m_buildingContextMenu.FollowGameObject (this.gameObject);
 
         m_totalWork = NumSteps * WorkPerStep;
         m_currentWork = 0;

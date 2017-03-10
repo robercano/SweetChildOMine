@@ -6,7 +6,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Assertions;
 
-public class UIContainer : MonoBehaviour, IDropHandler {
+public class UIContainer : UIWorldPanel, IDropHandler {
 
 	public string Title;
     public bool EnablePeg;
@@ -23,8 +23,10 @@ public class UIContainer : MonoBehaviour, IDropHandler {
 
     private AudioClip m_containerPop;
 
-    void Awake()
+    override protected void Awake()
     {
+		base.Awake ();
+
         m_canvas = GetComponent<Canvas>();
 
 		m_slots = GetComponentsInChildren<ContainerSlot>();
@@ -94,20 +96,6 @@ public class UIContainer : MonoBehaviour, IDropHandler {
     }
 
     #region /* Public interface */
-    public void SetWorldUI(bool worldUI)
-    {
-        if (worldUI)
-        {
-            m_canvas.renderMode = RenderMode.WorldSpace;
-            //transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
-        }
-        else
-        {
-            m_canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            transform.localScale = Vector3.one;
-        }
-    }
-
     public void SetInventory(Inventory inventory)
     {
         m_inventory = inventory;

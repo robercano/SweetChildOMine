@@ -143,11 +143,10 @@ public class Miner : SelectableObject
         ActivateMiner();
 
         m_actionProgressDialogPrefab = Resources.Load("UI/ActionProgressDialog") as GameObject;
-        m_actionProgressDialogInstance = GameObject.Instantiate(m_actionProgressDialogPrefab, transform, false);
-        m_actionProgressDialogInstance.transform.position = new Vector3(gameObject.transform.position.x,
-                                                                        m_spriteRenderer.bounds.max.y + UIGlobals.PegDistanceToObject,
-                                                                        0.0f);
-        m_actionProgressDialog = m_actionProgressDialogInstance.GetComponent<ActionProgressDialog>();
+        m_actionProgressDialogInstance = GameObject.Instantiate(m_actionProgressDialogPrefab);
+        
+		m_actionProgressDialog = m_actionProgressDialogInstance.GetComponent<ActionProgressDialog>();
+		m_actionProgressDialog.FollowGameObject (this.gameObject);
         m_actionProgressDialog.ActionName = "Stop";
         m_actionProgressDialog.OnAction = OnActionTerminated;
         m_actionProgressDialog.Disable();

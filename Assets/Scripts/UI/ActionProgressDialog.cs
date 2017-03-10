@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
-public class ActionProgressDialog : MonoBehaviour {
+public class ActionProgressDialog : UIWorldPanel {
 
     public string Title
     {
@@ -55,8 +55,10 @@ public class ActionProgressDialog : MonoBehaviour {
 
     private WidgetFader m_widgetFader;
     
-    void Awake()
+	override protected void Awake()
     {
+		base.Awake ();
+
         m_title = transform.FindDeepChild("Title").GetComponent<Text>();
         m_percentage = transform.FindDeepChild("Percentage").GetComponent<Text>();
         m_action = transform.FindDeepChild("ActionText").GetComponent<Text>();
@@ -67,12 +69,6 @@ public class ActionProgressDialog : MonoBehaviour {
 
         m_widgetFader = GetComponent<WidgetFader>();
         m_widgetFader.DisableImmediate();
-    }
-
-    void Update()
-    {
-        // Compensate mirroring when character is facing left
-        transform.localScale = transform.parent.localScale;
     }
 
     /* Public interface */

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
-public class MiningContextMenu : MonoBehaviour {
+public class MiningContextMenu : UIWorldPanel {
 
     public string Title
     {
@@ -75,8 +75,10 @@ public class MiningContextMenu : MonoBehaviour {
     private bool m_isFirstClick;
     private float m_previousClickTime;
 
-    void Awake()
+    override protected void Awake()
     {
+		base.Awake ();
+
         m_title = transform.FindDeepChild("Title").GetComponent<Text>();
         m_numItems = transform.FindDeepChild("NumItems").GetComponent<Text>();
         m_info = transform.FindDeepChild("Info").GetComponent<Text>();
@@ -101,8 +103,10 @@ public class MiningContextMenu : MonoBehaviour {
         SelectedNumItems = 1;
     }
 
-    void Update()
+    override protected void Update()
     {
+		base.Update ();
+
         Info = "(" + (OnRetrieveCurrentItems() - SelectedNumItems) + " left)";
 
         if (m_isLeftButtonPressed || m_isRightButtonPressed)

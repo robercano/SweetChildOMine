@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
-public class BuildingContextMenu : MonoBehaviour {
+public class BuildingContextMenu : UIWorldPanel {
 
     public string Title
     {
@@ -52,8 +52,10 @@ public class BuildingContextMenu : MonoBehaviour {
     private Button m_buttonAction;
     private WidgetFader m_widgetFader;
     
-    void Awake()
+    override protected void Awake()
     {
+		base.Awake ();
+
         m_title = transform.FindDeepChild("Title").GetComponent<Text>();
         m_info = transform.FindDeepChild("Info").GetComponent<Text>();
         m_action = transform.FindDeepChild("ActionText").GetComponent<Text>();
@@ -65,8 +67,10 @@ public class BuildingContextMenu : MonoBehaviour {
         m_widgetFader.DisableImmediate();
     }
 
-    void Update()
+    override protected void Update()
     {
+		base.Update ();
+
         Info = "(" + OnRetrieveWorkLeft() + " left)";
 
         m_buttonAction.interactable = (OnAction != null);

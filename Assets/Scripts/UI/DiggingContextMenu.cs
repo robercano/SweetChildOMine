@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
-public class DiggingContextMenu : MonoBehaviour {
+public class DiggingContextMenu : UIWorldPanel {
 
     public string Title
     {
@@ -36,8 +36,10 @@ public class DiggingContextMenu : MonoBehaviour {
     private Button m_buttonAction;
     private WidgetFader m_widgetFader;
     
-    void Awake()
+    override protected void Awake()
     {
+		base.Awake ();
+
         m_title = transform.FindDeepChild("Title").GetComponent<Text>();
         m_action = transform.FindDeepChild("ActionText").GetComponent<Text>();
 
@@ -48,7 +50,7 @@ public class DiggingContextMenu : MonoBehaviour {
         m_widgetFader.DisableImmediate();
     }
 
-    void Update()
+    override protected void Update()
     {
         m_buttonAction.interactable = (OnAction != null);
     }

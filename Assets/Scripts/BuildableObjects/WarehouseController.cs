@@ -42,10 +42,7 @@ public class WarehouseController : SelectableObject, IDropHandler {
         m_containerController = m_containerInstance.GetComponent<UIContainer>();
 		m_containerController.SetInventory (m_warehouseInventory);
 
-        m_containerController.SetWorldUI(true);
-        m_containerInstance.transform.position = new Vector3(gameObject.transform.position.x, 
-                                                             m_spriteRenderer.bounds.max.y + UIGlobals.PegDistanceToObject , 
-                                                             0.0f);
+		m_containerController.FollowGameObject (this.gameObject);
         m_containerController.Title = "";
         m_containerController.EnableAmount = true;
 

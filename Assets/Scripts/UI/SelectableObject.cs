@@ -40,7 +40,7 @@ public class SelectableObject : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
         m_dialogInstance = GameObject.Instantiate(m_dialogPanelPrefab);
         m_dialogPanel = m_dialogInstance.GetComponent<DialogPanel>();
-        m_dialogPanel.FollowGameObject(this.gameObject, m_spriteRenderer.bounds);
+        m_dialogPanel.FollowGameObject(this.gameObject);
 
         m_selectorInstance = GameObject.Instantiate(m_selectorPrefab, transform, false);
         m_selector = m_selectorInstance.GetComponent<UISelector>();
