@@ -68,9 +68,6 @@ public class Miner : SelectableObject
     // Build
     public Inventory BuildInventory;
 
-    // Input manager
-    private InputManager m_inputManager;
-
     // Mining target
 	public MineableObject MineableTarget {
 		get {
@@ -130,8 +127,6 @@ public class Miner : SelectableObject
         WeaponInventory = new Inventory(3, 1);
         BuildInventory = new Inventory(3, 1);
 
-        m_inputManager = GameObject.FindObjectOfType<InputManager>();
-
         m_mineableTarget = null;
         m_mineableTargetAmount = 0;
         m_mineableRemainingAmount = 0;
@@ -164,11 +159,11 @@ public class Miner : SelectableObject
 
     public void ActivateMiner()
     {
-        m_inputManager.SetActiveMiner(this);
+        InputManager.Instance.SetActiveMiner(this);
     }
     public void DeactivateMiner()
     {
-        m_inputManager.SetActiveMiner(null);
+        InputManager.Instance.SetActiveMiner(null);
     }
     public Sprite GetCurrentAvatar()
     {

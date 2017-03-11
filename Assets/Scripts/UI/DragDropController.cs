@@ -101,12 +101,12 @@ public class DragDropController : MonoBehaviour {
         m_spriteRenderer.sortingLayerName = "UI";
     }
 
-    public void FinishDrag()
+    public void FinishDrag(bool destroyAnyways = false)
     {
         m_spriteRenderer.sortingLayerName = "Items";
 
         // TODO: If position is suitable let the object live, otherwise destroy the object
-        if (!CheckValidPosition())
+        if (destroyAnyways || !CheckValidPosition())
         {
             Destroy(gameObject);
         }

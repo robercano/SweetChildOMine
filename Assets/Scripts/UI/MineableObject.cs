@@ -47,7 +47,15 @@ public class MineableObject : SelectableObject
         m_UIController = GameObject.Find("MainUI").GetComponent<UIManager>();
 
         m_onSelectedDelegate = ShowMenu;
-        m_onDeselectedDelegate = HideMenu;
+        m_onDeselectedDelegate = CheckHideMenu;
+    }
+
+    void CheckHideMenu()
+    {
+        if (m_actionContextMenu.IsMouseOnObject() == false)
+        {
+            HideMenu();
+        }
     }
 
     public void ShowMenu()

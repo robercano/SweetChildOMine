@@ -12,8 +12,6 @@ public class UIContainer : UIElement, IDropHandler {
     public bool EnablePeg;
     public bool EnableAmount;
 
-    private Canvas m_canvas;
-
     private Text m_titleText;
 
     private ContainerSlot[] m_slots;
@@ -26,8 +24,6 @@ public class UIContainer : UIElement, IDropHandler {
     override protected void Awake()
     {
 		base.Awake ();
-
-        m_canvas = GetComponent<Canvas>();
 
 		m_slots = GetComponentsInChildren<ContainerSlot>();
 		foreach (ContainerSlot slot in m_slots) {
@@ -198,6 +194,11 @@ public class UIContainer : UIElement, IDropHandler {
 		}
 
 		ContainerSlot slot = eventData.pointerDrag.GetComponent<ContainerSlot> ();
+        if (slot.ParentContainer == this)
+        {
+            return;
+        }
+
 		Item item = slot.SlotItem;
 
 		if (slot.ParentContainer.TransferItem (item)) {

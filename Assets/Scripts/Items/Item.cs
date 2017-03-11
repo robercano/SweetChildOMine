@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class Item : DragDropInterface
 {
     public string Name;
     public Sprite AmountAvatar
@@ -73,7 +73,7 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         m_spriteRenderer.enabled = false;
     }
 
-	public void OnBeginDrag(PointerEventData eventData)
+	public override void OnBeginDrag(PointerEventData eventData)
 	{
 		if (BuildablePrefab != null)
 		{
@@ -110,7 +110,7 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 		}
 	}
 
-	public void OnDrag(PointerEventData eventData)
+	public override void OnDrag(PointerEventData eventData)
 	{
 		if (m_dragDropObject == null) {
 			return;
@@ -120,13 +120,13 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 		m_dragDropObject.transform.position = mousePosition;
 	}
 
-	public void OnEndDrag(PointerEventData eventData)
+	public override void OnEndDrag(PointerEventData eventData)
 	{
 		if (m_dragDropObject == null) {
 			return;
 		}
 		if (m_dragDropObjectController != null) {
-			m_dragDropObjectController.FinishDrag ();
+			m_dragDropObjectController.FinishDrag (eventData.pointerDrag == null);
 		}
 		if (m_dragDropObject == gameObject) {
 			Hide ();

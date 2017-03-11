@@ -1,13 +1,16 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-public class UIElement : MonoBehaviour {
+public class UIElement : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
-	private GameObject m_followGameObject;
+    private GameObject m_followGameObject;
 	private float m_yCoord;
     private RectTransform m_rectTransform;
     private GameObject m_mainUI;
+    private bool m_mouseOnObject;
 
     virtual protected void Awake () {
 		m_followGameObject = null;
@@ -57,4 +60,19 @@ public class UIElement : MonoBehaviour {
 
 		m_yCoord = obj.GetComponent<SpriteRenderer>().bounds.size.y + UIGlobals.PegDistanceToObject;
 	}
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        m_mouseOnObject = true;
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        m_mouseOnObject = false;
+    }
+
+    public bool IsMouseOnObject()
+    {
+        return m_mouseOnObject;
+    }
 }

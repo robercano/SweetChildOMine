@@ -51,7 +51,6 @@ public sealed class ActionProgressBalloon : UIElement {
     private Image m_progressBarForeground;
     private Image m_progressBarBackground;
     private RectTransform m_progressBarRect;
-    private float m_progressBarRatio;
 
     private WidgetFader m_widgetFader;
     

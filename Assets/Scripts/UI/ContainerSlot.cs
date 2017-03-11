@@ -6,8 +6,8 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Assertions;
 
-public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerUpHandler,
-                                            IBeginDragHandler, IDragHandler, IEndDragHandler {
+public class ContainerSlot : DragDropInterface, IPointerEnterHandler, IPointerExitHandler,
+                                            IPointerDownHandler, IPointerUpHandler {
 
 	public UIContainer ParentContainer;
 
@@ -119,7 +119,6 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     private ItemDescriptionBalloon m_descriptionPanel;
 
     private BuildableDescriptionBalloon m_buildableDescriptionPanel;    
-    private RectTransform m_buildableDescriptionInstanceRectTransform;
 
 	private UIManager m_UIController;
     private BuildableObject m_buildableObject;
@@ -201,7 +200,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         HideDialog();
     }
 
-    public void OnBeginDrag(PointerEventData eventData)
+    public override void OnBeginDrag(PointerEventData eventData)
     {
         if (m_slotItem == null || EnableDragDrop == false)
             return;
@@ -209,7 +208,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 		m_slotItem.OnBeginDrag (eventData);
     }
 
-    public void OnDrag(PointerEventData eventData)
+    public override void OnDrag(PointerEventData eventData)
     {
 		if (m_slotItem == null || EnableDragDrop == false)
 			return;
@@ -217,7 +216,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 		m_slotItem.OnDrag (eventData);
     }
 
-    public void OnEndDrag(PointerEventData eventData)
+    public override void OnEndDrag(PointerEventData eventData)
     {
 		if (m_slotItem == null || EnableDragDrop == false)
 			return;
@@ -265,6 +264,15 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        throw new NotImplementedException();
+        if (m_slotItem == null || EnableDragDrop == true)
+            return;
+
+        InputManager.Instance.AttachObjectToMouse(m_slotItem);
+    }
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        /* Empty on purpose: Unity mandates to implement
+           pointer down AND up in order for one of them to work */
     }
 }

@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using com.kleberswf.lib.core;
 
-public class InputManager : MonoBehaviour, IPointerClickHandler {
+public class InputManager : Singleton<InputManager>, IPointerClickHandler {
 
     public float DoubleClickTime = 0.01f;
     private Miner m_miner;
@@ -16,13 +17,19 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
 
     private float m_lastClickTime;
 
+    private DragDropInterface m_attachedObject;
+    private bool m_attachedObjectFirstTime = true;
+    private SpriteRenderer m_attachedObjectSpriteRenderer;
+
     public enum InputEvent
     {
         LeftClick, DoubleLeftClick, Space
     }
 
-    void Awake()
+    protected override void Awake()
     {
+        base.Awake();
+
         m_miner = null;
         m_caveController = GameObject.FindObjectOfType<CaveController>();
         m_lastClickTime = Time.time;
@@ -51,16 +58,25 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
                 m_caveController.HandlePointerClick(eventData.position);
                 return;
             case PointerEventData.InputButton.Left:
-                m_caveController.CancelPointerClick();
-
-                if ((Time.time - m_lastClickTime) < DoubleClickTime)
+                if (m_attachedObject != null)
                 {
-                    m_miner.OnInputEvent(InputEvent.DoubleLeftClick);
+                    eventData.pointerDrag = m_attachedObject.gameObject;
+                    m_attachedObject.OnEndDrag(eventData);
+                    m_attachedObject = null;
                 }
                 else
                 {
-                    m_miner.OnInputEvent(InputEvent.LeftClick);
-                    m_lastClickTime = Time.time;
+                    m_caveController.CancelPointerClick();
+
+                    if ((Time.time - m_lastClickTime) < DoubleClickTime)
+                    {
+                        m_miner.OnInputEvent(InputEvent.DoubleLeftClick);
+                    }
+                    else
+                    {
+                        m_miner.OnInputEvent(InputEvent.LeftClick);
+                        m_lastClickTime = Time.time;
+                    }
                 }
                 break;
         }
@@ -76,6 +92,21 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
                 m_miner.OnInputEvent(InputEvent.Space);
             }
         }
+        if (m_attachedObject != null)
+        {
+            PointerEventData eventData = new PointerEventData(EventSystem.current);
+
+            eventData.position = Input.mousePosition;
+
+            eventData.pointerDrag = m_attachedObject.gameObject;
+
+            if (m_attachedObjectFirstTime)
+            {
+                m_attachedObjectFirstTime = false;
+                m_attachedObject.OnBeginDrag(eventData);
+            }
+            m_attachedObject.OnDrag(eventData);
+        }
     }
 
     public void SetActiveMiner(Miner miner)
@@ -83,6 +114,14 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
         m_miner = miner;
 
         m_UIController.SetActiveMiner(miner);
+    }
+
+    public void AttachObjectToMouse(DragDropInterface obj)
+    {
+        m_attachedObject = obj;
+        m_attachedObjectFirstTime = true;
+
+        m_attachedObjectSpriteRenderer = obj.GetComponent<SpriteRenderer>();
     }
 
     void Update()
@@ -97,7 +136,16 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
         }
         if (Input.GetKey(KeyCode.Escape))
         {
-            Application.Quit();
+            if (m_attachedObject != null)
+            {
+                PointerEventData eventData = new PointerEventData(EventSystem.current);
+
+                eventData.pointerDrag = null;
+                eventData.position = Input.mousePosition;
+
+                m_attachedObject.OnEndDrag(eventData);
+                m_attachedObject = null;
+            }
         }
     }
 }
