@@ -6,32 +6,14 @@ using UnityEngine.EventSystems;
 public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     public string Name;
-    public Sprite Avatar
+    public Sprite AmountAvatar
     {
         get
         {
             return m_spriteRenderer.sprite;
         }
     }
-    public Sprite InventoryAvatar
-    {
-        get
-        {
-            if (m_inventoryAvatar == null)
-            {
-                return Avatar;
-            }
-            else
-            {
-                return m_inventoryAvatar;
-            }
-        }
-        set
-        {
-            m_inventoryAvatar = value;
-        }
-    }
-    public Sprite m_inventoryAvatar;
+    public Sprite StaticAvatar;
     public string Description;
     public int Amount
     {
@@ -60,7 +42,7 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 	private GameObject m_dragDropObject;
 	private DragDropController m_dragDropObjectController;
 
-	private UIController m_UIController;
+	private UIManager m_UIController;
     private int m_amount;
     private AudioClip m_popSound;
 
@@ -70,7 +52,7 @@ public class Item : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
 		m_materialInventory = GameObject.Find("InventoryContainer").GetComponent<UIContainer>();
 
-		m_UIController = GameObject.Find("MainUI").GetComponent<UIController>();
+		m_UIController = GameObject.Find("MainUI").GetComponent<UIManager>();
 
 		m_dragDropObject = null;
 		m_dragDropObjectController = null;

@@ -81,9 +81,7 @@ public class Miner : SelectableObject
     private int m_mineableTargetAmount;
     private int m_mineableRemainingAmount;
     private bool m_actionWorked;
-    private GameObject m_actionProgressDialogPrefab;
-    private GameObject m_actionProgressDialogInstance;
-    private ActionProgressDialog m_actionProgressDialog;
+    private ActionProgressBalloon m_actionProgressDialog;
 
     // Building target
 	public BuildableObject BuildableTarget {
@@ -142,10 +140,8 @@ public class Miner : SelectableObject
         m_onSelectedDelegate = ActivateMiner;
         ActivateMiner();
 
-        m_actionProgressDialogPrefab = Resources.Load("UI/ActionProgressDialog") as GameObject;
-        m_actionProgressDialogInstance = GameObject.Instantiate(m_actionProgressDialogPrefab);
-        
-		m_actionProgressDialog = m_actionProgressDialogInstance.GetComponent<ActionProgressDialog>();
+        m_actionProgressDialog = UIManager.Instance.CreateUIElement<ActionProgressBalloon>();
+
 		m_actionProgressDialog.FollowGameObject (this.gameObject);
         m_actionProgressDialog.ActionName = "Stop";
         m_actionProgressDialog.OnAction = OnActionTerminated;

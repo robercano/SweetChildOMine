@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class BuildInventoryDialogPanel : MonoBehaviour
+public sealed class BuildableDescriptionBalloon : UIElement
 {
+    public Sprite Valid;
+    public Sprite Invalid;
+
     public string Title
     {
         get
@@ -43,11 +46,11 @@ public class BuildInventoryDialogPanel : MonoBehaviour
     {
         get
         {
-            return m_maxAmount;
+            return m_requiredAmount;
         }
         set
         {
-            m_maxAmount = value;
+            m_requiredAmount = value;
             updateAmount();
         }
     }
@@ -61,7 +64,7 @@ public class BuildInventoryDialogPanel : MonoBehaviour
         {
 			m_item = value;
 			if (m_item != null) {
-				m_material.sprite = m_item.Avatar;
+				m_material.sprite = m_item.StaticAvatar;
 			} else {
 				m_material.sprite = null;
 			}
@@ -70,29 +73,33 @@ public class BuildInventoryDialogPanel : MonoBehaviour
     
     private Text m_title;
     private Text m_description;
-    private Text m_amount;
-	private Item m_item;
+    private Text m_currentAmountText;
+    private Text m_requiredAmountText;
+    private Item m_item;
 	private Image m_material;
     private Image m_status;
     private WidgetFader m_widgetFader;
 
     private int m_currentAmount;
-    private int m_maxAmount;
+    private int m_requiredAmount;
 
     // Use this for initialization
-    void Awake()
+    override protected void Awake()
     {
+        base.Awake();
+
         m_title = transform.FindDeepChild("Title").GetComponent<Text>();
         m_description = transform.FindDeepChild("Description").GetComponent<Text>();
         m_material = transform.FindDeepChild("Material").GetComponent<Image>();
-        m_amount = transform.FindDeepChild("Amount").GetComponent<Text>();
+        m_currentAmountText = transform.FindDeepChild("CurrentAmount").GetComponent<Text>();
+        m_requiredAmountText = transform.FindDeepChild("RequiredAmount").GetComponent<Text>();
         m_status = transform.FindDeepChild("Status").GetComponent<Image>();
 
         Title = "";
         CurrentAmount = 0;
         RequiredAmount = 0;
         Material = null;
-        m_status.sprite = null;
+        m_status.sprite = Invalid;
 
         m_widgetFader = GetComponent<WidgetFader>();
         m_widgetFader.DisableImmediate();
@@ -100,17 +107,20 @@ public class BuildInventoryDialogPanel : MonoBehaviour
 
     void updateAmount()
     {
-        m_amount.text = m_currentAmount.ToString() + "/" + m_maxAmount.ToString(); ;
+        m_currentAmountText.text = m_currentAmount.ToString();
+        m_requiredAmountText.text = "/" + m_requiredAmount.ToString(); ;
     }
 
     public void GreenStatus()
     {
-        m_status.color = new Color(0.32915f, 1, 0.32915f);
+        m_status.sprite = Valid;
+        m_currentAmountText.color = new Color(0.0f, 0.5960784f, 0.13725490f);
     }
 
     public void RedStatus()
     {
-        m_status.color = new Color(1, 0.34509f, 0.34509f);
+        m_status.sprite = Invalid;
+        m_currentAmountText.color = new Color(0.7568627f, 0.13725490f, 0.1529411f);
     }
 
     public void Enable()

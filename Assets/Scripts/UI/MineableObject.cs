@@ -16,24 +16,19 @@ public class MineableObject : SelectableObject
 
     private float m_remainingDamage;
 
-    private GameObject m_actionContextMenuPrefab;
-    private GameObject m_actionContextMenuInstance;
-    private MiningContextMenu m_actionContextMenu;
+    private MiningActionMenu m_actionContextMenu;
 
     private GameObject m_mineralDamagePrefab;
 
-    private UIController m_UIController;
+    private UIManager m_UIController;
 
     public override void Awake()
     {
         base.Awake();
 
-        m_actionContextMenuPrefab = Resources.Load("UI/MiningContextMenu") as GameObject;
-
         m_mineralDamagePrefab = Resources.Load("MineralDamagePopup") as GameObject;
 
-        m_actionContextMenuInstance = GameObject.Instantiate(m_actionContextMenuPrefab);
-        m_actionContextMenu = m_actionContextMenuInstance.GetComponent<MiningContextMenu>();
+        m_actionContextMenu = UIManager.Instance.CreateUIElement<MiningActionMenu>();
 		m_actionContextMenu.FollowGameObject(this.gameObject);
 
         m_currentItems = MaxItems;
@@ -49,7 +44,7 @@ public class MineableObject : SelectableObject
         m_actionContextMenu.OnRetrieveMaxItems = OnRetrieveMaxItems;
         m_actionContextMenu.OnRetrieveCurrentItems = OnRetrieveCurrentItems;
 
-        m_UIController = GameObject.Find("MainUI").GetComponent<UIController>();
+        m_UIController = GameObject.Find("MainUI").GetComponent<UIManager>();
 
         m_onSelectedDelegate = ShowMenu;
         m_onDeselectedDelegate = HideMenu;

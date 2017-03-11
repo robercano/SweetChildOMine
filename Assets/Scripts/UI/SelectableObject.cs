@@ -18,11 +18,9 @@ public class SelectableObject : MonoBehaviour, IPointerEnterHandler, IPointerExi
     public delegate void OnDeselectedDelegate();
     public OnDeselectedDelegate m_onDeselectedDelegate;
 
-    private GameObject m_dialogPanelPrefab;
     private GameObject m_selectorPrefab;
 
-    private GameObject m_dialogInstance;
-    private DialogPanel m_dialogPanel;
+    private NameBalloon m_dialogPanel;
 
     private GameObject m_selectorInstance;
     private UISelector m_selector;
@@ -33,13 +31,11 @@ public class SelectableObject : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     public virtual void Awake()
     {
-        m_dialogPanelPrefab = Resources.Load("UI/DialogPanel") as GameObject;
         m_selectorPrefab = Resources.Load("Selector") as GameObject;
 
         m_spriteRenderer = GetComponent<SpriteRenderer>();
 
-        m_dialogInstance = GameObject.Instantiate(m_dialogPanelPrefab);
-        m_dialogPanel = m_dialogInstance.GetComponent<DialogPanel>();
+        m_dialogPanel = UIManager.Instance.CreateUIElement<NameBalloon>();
         m_dialogPanel.FollowGameObject(this.gameObject);
 
         m_selectorInstance = GameObject.Instantiate(m_selectorPrefab, transform, false);

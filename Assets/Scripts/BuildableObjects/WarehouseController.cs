@@ -80,7 +80,7 @@ public class WarehouseController : SelectableObject, IDropHandler {
         {
             Item item = m_warehouseInventory.GetItemAtSlot(i);
             if (item != null) {
-                m_slots[i].sprite = item.Avatar;
+                m_slots[i].sprite = item.AmountAvatar;
                 m_slots[i].color = Color.white;
             }
             else

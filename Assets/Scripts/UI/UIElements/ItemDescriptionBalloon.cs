@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Assertions;
 
-public class DiggingContextMenu : UIWorldPanel {
+public sealed class ItemDescriptionBalloon : UIElement
+{
 
     public string Title
     {
@@ -17,57 +17,48 @@ public class DiggingContextMenu : UIWorldPanel {
             m_title.text = value;
         }
     }
-    public string ActionName
+    public string Description
     {
         get
         {
-            return m_action.text;
+            return m_description.text;
         }
         set
         {
-            m_action.text = value;
+            m_description.text = value;
         }
     }
-    public delegate void OnActionDelegate();
-    public OnActionDelegate OnAction;
 
     private Text m_title;
-    private Text m_action;
-    private Button m_buttonAction;
+    private Text m_description;
     private WidgetFader m_widgetFader;
-    
+
+    // Use this for initialization
     override protected void Awake()
     {
-		base.Awake ();
+        base.Awake();
 
         m_title = transform.FindDeepChild("Title").GetComponent<Text>();
-        m_action = transform.FindDeepChild("ActionText").GetComponent<Text>();
+        m_description = transform.FindDeepChild("Description").GetComponent<Text>();
 
-        m_buttonAction = transform.FindDeepChild("Action").GetComponent<Button>();
-        m_buttonAction.interactable = false;
+        Title = "";
+        Description = "";
 
         m_widgetFader = GetComponent<WidgetFader>();
         m_widgetFader.DisableImmediate();
     }
 
-    override protected void Update()
-    {
-        m_buttonAction.interactable = (OnAction != null);
-    }
-    
-    /* Public interface */
     public void Enable()
     {
         m_widgetFader.Enable();
     }
+
     public void Disable()
     {
         m_widgetFader.Disable();
     }
-
-    /* Events */
-   public void OnActionClick()
+    public void DisableImmediate()
     {
-        OnAction();
+        m_widgetFader.DisableImmediate();
     }
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
-public class BuildingContextMenu : UIWorldPanel {
+public sealed class BuildingActionMenu : UIElement {
 
     public string Title
     {
@@ -71,7 +71,7 @@ public class BuildingContextMenu : UIWorldPanel {
     {
 		base.Update ();
 
-        Info = "(" + OnRetrieveWorkLeft() + " left)";
+        Info = "(" + OnRetrieveWorkLeft() + "% left)";
 
         m_buttonAction.interactable = (OnAction != null);
     }

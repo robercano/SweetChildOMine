@@ -35,11 +35,9 @@ public class CaveController : MonoBehaviour {
 
     private bool m_textureHasChanged;
 
-    private GameObject m_diggingContextMenuPrefab;
-    private GameObject m_diggingContextMenuInstance;
-    private DiggingContextMenu m_diggingContextMenu;
+    private DiggingActionMenu m_diggingContextMenu;
 
-    private UIController m_UIController;
+    private UIManager m_UIController;
     private Vector2 m_digTarget;
 
     // Use this for initialization
@@ -62,14 +60,12 @@ public class CaveController : MonoBehaviour {
         InitColliderPool();
 	    GenerateCaveColliders ();
 
-        m_diggingContextMenuPrefab = Resources.Load("UI/DiggingContextMenu") as GameObject;
-        m_diggingContextMenuInstance = GameObject.Instantiate(m_diggingContextMenuPrefab);
-        m_diggingContextMenu = m_diggingContextMenuInstance.GetComponent<DiggingContextMenu>();
+        m_diggingContextMenu = UIManager.Instance.CreateUIElement<DiggingActionMenu>();
         m_diggingContextMenu.ActionName = "Dig here";
         m_diggingContextMenu.OnAction = OnDigCave;
         m_diggingContextMenu.Disable();
 
-        m_UIController = GameObject.Find("MainUI").GetComponent<UIController>();
+        m_UIController = GameObject.Find("MainUI").GetComponent<UIManager>();
     }
 
     void Update()
@@ -272,7 +268,7 @@ public class CaveController : MonoBehaviour {
         m_digTarget = Camera.main.ScreenToWorldPoint(mousePosition);
         m_digTarget = new Vector2(Mathf.Round(m_digTarget.x), Mathf.Round(m_digTarget.y));
 
-		m_diggingContextMenu.SetPosition(m_digTarget);
+		m_diggingContextMenu.SetWorldPosition(m_digTarget);
         m_diggingContextMenu.Enable();
         return true;
     }

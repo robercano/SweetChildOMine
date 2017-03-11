@@ -2,12 +2,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Assertions;
 using com.kleberswf.lib.core;
+using System;
+using System.Linq;
 
-public class UIController : Singleton<UIController> {
+public class UIManager : Singleton<UIManager> {
 
     public int ReferenceWidth;
     public int ReferenceHeight;
+
+    private Dictionary<string, GameObject> m_preloadedPrefabs;
 
     private CanvasScaler m_canvasScaler;
 
@@ -29,6 +34,8 @@ public class UIController : Singleton<UIController> {
     {
         base.Awake();
 
+        m_preloadedPrefabs = new Dictionary<string, GameObject>();
+        
         m_canvasScaler = GetComponent<CanvasScaler>();
 
         m_weaponContainer = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
@@ -42,6 +49,34 @@ public class UIController : Singleton<UIController> {
         m_activeMiner = null;
 
         updateUISize();
+        PreloadPrefabs();
+    }
+
+    GameObject PreloadPrefab(string name)
+    {
+        GameObject obj = Resources.Load("UI/" + name) as GameObject;
+        if (obj != null)
+        {
+            m_preloadedPrefabs[name] = obj;
+        }
+        return obj;
+    }
+
+    void PreloadPrefabs()
+    {
+        var type = typeof(UIElement);
+        var types = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(s => s.GetTypes())
+            .Where(p => type.IsAssignableFrom(p) && p.IsSealed );
+
+        foreach (Type t in types)
+        {
+            if (PreloadPrefab(t.Name) == null)
+            {
+                Debug.LogError("ERROR preloading prefab: " + t.Name);
+            }
+        }
+
     }
 
     void Update()
@@ -105,5 +140,34 @@ public class UIController : Singleton<UIController> {
     public Miner GetActiveMiner()
     {
         return m_activeMiner;
+    }
+
+    public T CreateUIElement<T>(Transform parent = null) where T : UIElement
+    {
+        GameObject UIPrefab = null;
+        string nam = typeof(T).Name;
+        if (m_preloadedPrefabs.TryGetValue(typeof(T).Name, out UIPrefab) == false)
+        {
+            /* Try to load it now */
+            Debug.LogWarning("Prefab was not preloaded: " + typeof(T).Name);
+            UIPrefab = PreloadPrefab(typeof(T).Name);
+        }
+        if (UIPrefab == null)
+        {
+            return null;
+        }
+
+        GameObject UIInstance = GameObject.Instantiate(UIPrefab);
+        Assert.IsNotNull(UIInstance);
+
+        T UIComponent = UIInstance.GetComponent<T>();
+
+        UIComponent.SetParent(parent);
+        return UIComponent;
+    }
+
+    public void DestroyItem(Item item)
+    {
+        GameObject.Destroy(item.gameObject);
     }
 }

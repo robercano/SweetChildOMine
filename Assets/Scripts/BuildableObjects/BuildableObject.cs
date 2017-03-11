@@ -20,13 +20,11 @@ public class BuildableObject : SelectableObject
     protected int m_totalWork;
     protected int m_currentWork;
 
-    private GameObject m_buildingContextMenuPrefab;
-    private GameObject m_buildingContextMenuInstance;
-    private BuildingContextMenu m_buildingContextMenu;
+    private BuildingActionMenu m_buildingContextMenu;
 
     AudioClip m_finishedSound;
 
-    protected UIController m_UIController;
+    protected UIManager m_UIController;
 
     private bool m_hasMaterials;
 
@@ -34,10 +32,7 @@ public class BuildableObject : SelectableObject
     {
         base.Awake();
 
-        m_buildingContextMenuPrefab = Resources.Load("UI/BuildingContextMenu") as GameObject;
-
-        m_buildingContextMenuInstance = GameObject.Instantiate(m_buildingContextMenuPrefab);
-        m_buildingContextMenu = m_buildingContextMenuInstance.GetComponent<BuildingContextMenu>();
+        m_buildingContextMenu = UIManager.Instance.CreateUIElement<BuildingActionMenu>();
 		m_buildingContextMenu.FollowGameObject (this.gameObject);
 
         m_totalWork = NumSteps * WorkPerStep;
@@ -50,7 +45,7 @@ public class BuildableObject : SelectableObject
 
         m_finishedSound = Resources.Load("Sounds/FinishedBuilding") as AudioClip;
 
-        m_UIController = GameObject.Find("MainUI").GetComponent<UIController>();
+        m_UIController = GameObject.Find("MainUI").GetComponent<UIManager>();
 
         m_onSelectedDelegate = ShowMenu;
         m_onDeselectedDelegate = HideMenu;

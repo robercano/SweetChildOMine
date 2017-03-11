@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
-public class MiningContextMenu : UIWorldPanel {
+public sealed class MiningActionMenu : UIElement {
 
     public string Title
     {

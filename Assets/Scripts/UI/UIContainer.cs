@@ -6,7 +6,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Assertions;
 
-public class UIContainer : UIWorldPanel, IDropHandler {
+public class UIContainer : UIElement, IDropHandler {
 
 	public string Title;
     public bool EnablePeg;
@@ -150,7 +150,7 @@ public class UIContainer : UIWorldPanel, IDropHandler {
             return false;
         }
 
-        UIController.Instance.Refresh();
+        UIManager.Instance.Refresh();
 
         return true;
 	}
@@ -167,7 +167,7 @@ public class UIContainer : UIWorldPanel, IDropHandler {
             return false;
         }
 
-        UIController.Instance.Refresh();
+        UIManager.Instance.Refresh();
 
         return true;
     }
@@ -210,7 +210,7 @@ public class UIContainer : UIWorldPanel, IDropHandler {
             AudioSource.PlayClipAtPoint(m_containerPop, Camera.main.transform.position);
 		}
 
-        UIController.Instance.Refresh();
+        UIManager.Instance.Refresh();
 	}
 
     #endregion  /* Public interface */

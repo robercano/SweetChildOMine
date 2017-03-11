@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
-public class ActionProgressDialog : UIWorldPanel {
+public sealed class ActionProgressBalloon : UIElement {
 
     public string Title
     {

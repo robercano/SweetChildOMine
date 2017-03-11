@@ -36,7 +36,14 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             }
 
             // Set common fields
-            m_slotImage.sprite = m_slotItem.InventoryAvatar;
+            if (m_slotAmount.enabled)
+            {
+                m_slotImage.sprite = m_slotItem.AmountAvatar;
+            }
+            else
+            {
+                m_slotImage.sprite = m_slotItem.StaticAvatar;
+            }
             if (m_slotAmount != null)
             {
                 m_slotAmount.text = "x" + m_slotItem.Amount.ToString();
@@ -75,7 +82,7 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
             m_buildableDescriptionPanel.Title = m_slotItem.Name;
             m_buildableDescriptionPanel.RequiredAmount = m_buildableObject.Recipe[0].Amount;
-            m_buildableDescriptionPanel.CurrentAmount = m_slotItem.Amount;
+            m_buildableDescriptionPanel.CurrentAmount = miner.MaterialInventory.GetItemAmount(m_buildableObject.Recipe[0].Ingredient);
             m_buildableDescriptionPanel.Material = ItemManager.Instance.CreateItem(m_buildableObject.Recipe[0].Ingredient);
         }
     }
@@ -109,17 +116,12 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     private RectTransform m_rectTransform;
 
-    private GameObject m_descriptionPanelPrefab;
-    private GameObject m_descriptionInstance;
-    private InventoryDescriptionPanel m_descriptionPanel;
-    private RectTransform m_descriptionInstanceRectTransform;
+    private ItemDescriptionBalloon m_descriptionPanel;
 
-    private GameObject m_buildableDescriptionPanelPrefab;
-    private GameObject m_buildableDescriptionInstance;
-    private BuildInventoryDialogPanel m_buildableDescriptionPanel;    
+    private BuildableDescriptionBalloon m_buildableDescriptionPanel;    
     private RectTransform m_buildableDescriptionInstanceRectTransform;
 
-	private UIController m_UIController;
+	private UIManager m_UIController;
     private BuildableObject m_buildableObject;
 
     // Use this for initialization
@@ -128,21 +130,13 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         m_slotImage = GetComponent<Image>();
         m_rectTransform = GetComponent<RectTransform>();
 
-        m_descriptionPanelPrefab = Resources.Load("UI/InventoryDescriptionPanel") as GameObject;
-        m_descriptionInstance = GameObject.Instantiate(m_descriptionPanelPrefab, transform, false);
-        m_descriptionPanel = m_descriptionInstance.GetComponent<InventoryDescriptionPanel>();
-        m_descriptionInstanceRectTransform = m_descriptionInstance.GetComponent<RectTransform>();
-        m_descriptionInstanceRectTransform.anchoredPosition = new Vector2(m_rectTransform.sizeDelta.x / 2.0f, 
-                                                                          m_rectTransform.sizeDelta.y + UIGlobals.PegDistanceToObject);
+        m_descriptionPanel = UIManager.Instance.CreateUIElement<ItemDescriptionBalloon>(transform);
+        m_descriptionPanel.SetPosition(new Vector2(m_rectTransform.sizeDelta.x / 2.0f, m_rectTransform.sizeDelta.y + UIGlobals.PegDistanceToObject));
 
-        m_buildableDescriptionPanelPrefab = Resources.Load("UI/BuildInventoryDialogPanel") as GameObject;
-        m_buildableDescriptionInstance = GameObject.Instantiate(m_buildableDescriptionPanelPrefab, transform, false);
-        m_buildableDescriptionPanel = m_buildableDescriptionInstance.GetComponent<BuildInventoryDialogPanel>();
-        m_buildableDescriptionInstanceRectTransform = m_buildableDescriptionPanel.GetComponent<RectTransform>();
-        m_buildableDescriptionInstanceRectTransform.anchoredPosition = new Vector2(m_rectTransform.sizeDelta.x / 2.0f, 
-                                                                                   m_rectTransform.sizeDelta.y + UIGlobals.PegDistanceToObject);
+        m_buildableDescriptionPanel = UIManager.Instance.CreateUIElement<BuildableDescriptionBalloon>(transform);
+        m_buildableDescriptionPanel.SetPosition(new Vector2(m_rectTransform.sizeDelta.x / 2.0f, m_rectTransform.sizeDelta.y + UIGlobals.PegDistanceToObject));
 
-        m_UIController = GameObject.Find("MainUI").GetComponent<UIController>();
+        m_UIController = GameObject.Find("MainUI").GetComponent<UIManager>();
 
         Transform shortcutGO = transform.FindDeepChild("Shortcut");
         if (shortcutGO != null)
@@ -254,11 +248,19 @@ public class ContainerSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     public void DisableAmount()
     {
         m_slotAmount.enabled = false;
+        if (m_slotItem != null)
+        {
+            m_slotImage.sprite = m_slotItem.StaticAvatar;
+        }
     }
 
     public void EnableAmount()
     {
         m_slotAmount.enabled = true;
+        if (m_slotItem != null)
+        {
+            m_slotImage.sprite = m_slotItem.AmountAvatar;
+        }
     }
 
     public void OnPointerUp(PointerEventData eventData)

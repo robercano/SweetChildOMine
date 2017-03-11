@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class DialogPanel : UIWorldPanel {
+public sealed class NameBalloon : UIElement {
 
     public float Speed = 20.0f;
     public int KeySoundFreq = 3;

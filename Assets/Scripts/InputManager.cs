@@ -10,7 +10,7 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
     private Miner m_miner;
     private CaveController m_caveController;
 
-    private UIController m_UIController;
+    private UIManager m_UIController;
     private UIContainer m_weaponContainer;
     private UIContainer m_buildContainer;
 
@@ -27,7 +27,7 @@ public class InputManager : MonoBehaviour, IPointerClickHandler {
         m_caveController = GameObject.FindObjectOfType<CaveController>();
         m_lastClickTime = Time.time;
 
-        m_UIController = GameObject.Find("MainUI").GetComponent<UIController>();
+        m_UIController = GameObject.Find("MainUI").GetComponent<UIManager>();
 
         m_weaponContainer = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
         m_buildContainer = GameObject.Find("BuildContainer").GetComponent<UIContainer>();
