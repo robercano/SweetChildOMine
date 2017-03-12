@@ -168,7 +168,7 @@ public class UIContainer : UIElement, IDropHandler {
         return true;
     }
 
-    public void SignalError(string itemName)
+    public void SignalError(string itemName = "")
     {
         bool firstTime = true;
 
@@ -200,15 +200,23 @@ public class UIContainer : UIElement, IDropHandler {
         }
 
 		Item item = slot.SlotItem;
+        int currentAmount = item.Amount;
+        int remainingAmount = 0;
 
 		if (slot.ParentContainer.TransferItem (item)) {
 			if (m_inventory.AddItem (item) == false)
             {
+                remainingAmount = item.Amount;
+
                 // Not all the items were added, add the rest back
                 Assert.IsTrue(slot.ParentContainer.AddItem(item));
             }
 			item.Hide ();
-            AudioSource.PlayClipAtPoint(m_containerPop, Camera.main.transform.position);
+
+            if (remainingAmount != currentAmount)
+            {
+                AudioSource.PlayClipAtPoint(m_containerPop, Camera.main.transform.position);
+            }
 		}
 
         UIManager.Instance.Refresh();

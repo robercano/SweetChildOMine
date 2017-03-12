@@ -32,7 +32,7 @@ public class WarehouseController : SelectableObject, IDropHandler {
             this.enabled = false;
         }
 
-		m_warehouseInventory = new Inventory (NumSlots, ItemsPerSlot);
+		m_warehouseInventory = new Inventory (Item.Type.Material, NumSlots, ItemsPerSlot);
 
         m_containerPrefab = Resources.Load("UI/GenericUIContainer6Slots") as GameObject;
         m_containerInstance = GameObject.Instantiate(m_containerPrefab, transform, false);

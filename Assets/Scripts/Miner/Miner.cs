@@ -123,9 +123,9 @@ public class Miner : SelectableObject
 
         m_layerMask = (1 << (LayerMask.NameToLayer("Cave Colliders")));
 
-        MaterialInventory = new Inventory(6, 20);
-        WeaponInventory = new Inventory(3, 1);
-        BuildInventory = new Inventory(3, 1);
+        MaterialInventory = new Inventory(Item.Type.Material, 6, 20);
+        WeaponInventory = new Inventory(Item.Type.Weapon, 3, 1);
+        BuildInventory = new Inventory(Item.Type.Buildable, 3, 1);
 
         m_mineableTarget = null;
         m_mineableTargetAmount = 0;

@@ -75,6 +75,8 @@ public sealed class MiningActionMenu : UIElement {
     private bool m_isFirstClick;
     private float m_previousClickTime;
 
+    UIContainer m_materialInventory;
+
     override protected void Awake()
     {
 		base.Awake ();
@@ -87,6 +89,8 @@ public sealed class MiningActionMenu : UIElement {
         m_buttonLeft = transform.FindDeepChild("ButtonLeft").GetComponent<Button>();
         m_buttonRight = transform.FindDeepChild("ButtonRight").GetComponent<Button>();
         m_buttonAction = transform.FindDeepChild("Action").GetComponent<Button>();
+
+        m_materialInventory = GameObject.Find("InventoryContainer").GetComponent<UIContainer>();
 
         m_buttonLeft.interactable = false;
         m_buttonRight.interactable = false;
@@ -154,8 +158,11 @@ public sealed class MiningActionMenu : UIElement {
                 m_buttonAction.interactable = true;
             }
 
-            if (SelectedNumItems >= OnRetrieveMaxItems())
+            if (SelectedNumItems > OnRetrieveMaxItems())
             {
+                /* Signal the error in the inventory */
+                m_materialInventory.SignalError();
+
                 SelectedNumItems = OnRetrieveMaxItems();
                 m_buttonRight.interactable = false;
             }

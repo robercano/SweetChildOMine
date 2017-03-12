@@ -5,7 +5,13 @@ using UnityEngine.EventSystems;
 
 public class Item : DragDropInterface
 {
+    public enum Type {
+        Material, Weapon, Buildable
+    };
+
     public string Name;
+    public Type ItemType;
+
     public Sprite AmountAvatar
     {
         get

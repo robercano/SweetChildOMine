@@ -21,17 +21,18 @@ public class Inventory {
             return remainingAmount;
         }
     }
-    private List<Item> m_inventorySlots;
-
-    private int m_maxAmountPerSlot;
-
-    public Inventory(int maxSlots, int maxAmountPerSlot)
+    public Inventory(Item.Type itemType, int maxSlots, int maxAmountPerSlot)
     {
+        m_itemType = itemType;
         m_inventorySlots = new List<Item>(maxSlots);
         OnInventoryUpdate = null;
 
         m_maxAmountPerSlot = maxAmountPerSlot;
     }
+
+    private List<Item> m_inventorySlots;
+    private int m_maxAmountPerSlot;
+    private Item.Type m_itemType;
 
     /**
         Adds a new Item to the inventory. If the number of items to add
@@ -48,6 +49,11 @@ public class Inventory {
     */
     public bool AddItem(Item newItem)
     {
+        if (newItem.ItemType != m_itemType)
+        {
+            return false;
+        }
+
         // Add the item amount to existing slots
         foreach (Item item in m_inventorySlots)
         {

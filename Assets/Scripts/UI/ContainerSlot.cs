@@ -108,6 +108,7 @@ public class ContainerSlot : DragDropInterface, IPointerEnterHandler, IPointerEx
         }
     }
     public bool EnableDragDrop;
+    public bool EnableClickToDrag;
 
     private Item m_slotItem;
     private Image m_slotImage;
@@ -264,7 +265,7 @@ public class ContainerSlot : DragDropInterface, IPointerEnterHandler, IPointerEx
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        if (m_slotItem == null || EnableDragDrop == true)
+        if (m_slotItem == null || EnableClickToDrag == false)
             return;
 
         InputManager.Instance.AttachObjectToMouse(m_slotItem);
