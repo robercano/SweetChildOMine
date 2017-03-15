@@ -11,6 +11,7 @@ public class UIManager : Singleton<UIManager> {
 
     public int ReferenceWidth;
     public int ReferenceHeight;
+    public Font[] Fonts;
 
     private Dictionary<string, GameObject> m_preloadedPrefabs;
 
@@ -48,6 +49,10 @@ public class UIManager : Singleton<UIManager> {
         m_characterStatusDict = new Dictionary<Miner, CharacterStatus>(5);
         m_activeMiner = null;
 
+        foreach (Font font in Fonts)
+        {
+            font.material.mainTexture.filterMode = FilterMode.Point;
+        }
         updateUISize();
         PreloadPrefabs();
     }
@@ -109,7 +114,7 @@ public class UIManager : Singleton<UIManager> {
         m_screenWidth = Screen.width;
         m_screenHeight = Screen.height;
 
-        int scale = (int)Mathf.Round(m_screenHeight / ReferenceHeight);
+        int scale = Mathf.CeilToInt(m_screenHeight / (float)ReferenceHeight);
 
         m_canvasScaler.scaleFactor = scale;
     }
