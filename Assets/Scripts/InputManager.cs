@@ -21,6 +21,9 @@ public class InputManager : Singleton<InputManager>, IPointerClickHandler {
     private bool m_attachedObjectFirstTime = true;
     private SpriteRenderer m_attachedObjectSpriteRenderer;
 
+    UIIntroPanel m_introPanel;
+    bool waitForIntro = true;
+
     public enum InputEvent
     {
         LeftClick, DoubleLeftClick, Space
@@ -38,6 +41,9 @@ public class InputManager : Singleton<InputManager>, IPointerClickHandler {
 
         m_weaponContainer = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
         m_buildContainer = GameObject.Find("BuildContainer").GetComponent<UIContainer>();
+
+        m_introPanel = GameObject.FindObjectOfType<UIIntroPanel>();
+        m_introPanel.OnExit += OnIntroPanelExit;
     }
 
     void Start()
@@ -47,8 +53,18 @@ public class InputManager : Singleton<InputManager>, IPointerClickHandler {
         m_weaponContainer.SetSlotShortcut(2, '3');
     }
 
+    public void OnIntroPanelExit()
+    {
+        waitForIntro = false;
+    }
+
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (waitForIntro)
+        {
+            return;
+        }
+
         if (m_miner == null)
             return;
 
@@ -84,6 +100,11 @@ public class InputManager : Singleton<InputManager>, IPointerClickHandler {
 
     void OnGUI()
     {
+        if (waitForIntro)
+        {
+            return;
+        }
+
         if (m_miner != null)
         {
             if (Event.current.type == EventType.KeyDown &&
@@ -126,6 +147,11 @@ public class InputManager : Singleton<InputManager>, IPointerClickHandler {
 
     void Update()
     {
+        if (waitForIntro)
+        {
+            return;
+        }
+
         if (Input.GetKey(KeyCode.Return))
         {
             if (m_miner != null)
