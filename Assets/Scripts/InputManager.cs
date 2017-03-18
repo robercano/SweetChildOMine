@@ -21,8 +21,8 @@ public class InputManager : Singleton<InputManager>, IPointerClickHandler {
     private bool m_attachedObjectFirstTime = true;
     private SpriteRenderer m_attachedObjectSpriteRenderer;
 
-    UIIntroPanel m_introPanel;
-    bool waitForIntro = true;
+    UIModalManager m_modalManager;
+    bool m_inputEnabled = true;
 
     public enum InputEvent
     {
@@ -42,8 +42,9 @@ public class InputManager : Singleton<InputManager>, IPointerClickHandler {
         m_weaponContainer = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
         m_buildContainer = GameObject.Find("BuildContainer").GetComponent<UIContainer>();
 
-        m_introPanel = GameObject.FindObjectOfType<UIIntroPanel>();
-        m_introPanel.OnExit += OnIntroPanelExit;
+        m_modalManager = GameObject.Find("ModalUI").GetComponent<UIModalManager>();
+        m_modalManager.OnModalStarted += DisableInput;
+        m_modalManager.OnModalFinished += EnableInput;
     }
 
     void Start()
@@ -53,14 +54,19 @@ public class InputManager : Singleton<InputManager>, IPointerClickHandler {
         m_weaponContainer.SetSlotShortcut(2, '3');
     }
 
-    public void OnIntroPanelExit()
+    public void DisableInput()
     {
-        waitForIntro = false;
+        m_inputEnabled = false;
+    }
+
+    public void EnableInput()
+    {
+        m_inputEnabled = true;
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (waitForIntro)
+        if (m_inputEnabled == false)
         {
             return;
         }
@@ -100,7 +106,7 @@ public class InputManager : Singleton<InputManager>, IPointerClickHandler {
 
     void OnGUI()
     {
-        if (waitForIntro)
+        if (m_inputEnabled == false)
         {
             return;
         }
@@ -147,7 +153,7 @@ public class InputManager : Singleton<InputManager>, IPointerClickHandler {
 
     void Update()
     {
-        if (waitForIntro)
+        if (m_inputEnabled == false)
         {
             return;
         }

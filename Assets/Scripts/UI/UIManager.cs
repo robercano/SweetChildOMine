@@ -53,7 +53,7 @@ public class UIManager : Singleton<UIManager> {
         {
             font.material.mainTexture.filterMode = FilterMode.Point;
         }
-        updateUISize();
+        UpdateUISize();
         PreloadPrefabs();
     }
 
@@ -88,7 +88,7 @@ public class UIManager : Singleton<UIManager> {
     {
         if (m_screenWidth != Screen.width || m_screenHeight != Screen.height)
         {
-            updateUISize();
+            UpdateUISize();
         }
     }
 
@@ -109,7 +109,7 @@ public class UIManager : Singleton<UIManager> {
         return characterStatus;
     }
 
-    private void updateUISize()
+    private void UpdateUISize()
     {
         m_screenWidth = Screen.width;
         m_screenHeight = Screen.height;

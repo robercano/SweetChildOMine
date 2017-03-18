@@ -9,11 +9,21 @@ public class LevelManager : Singleton<LevelManager> {
 	public GameObject m_winText;
 	public GameObject m_loseText;
 
-	// Use this for initialization
+    private UIModalManager m_modalManager;
+
+
+    override protected void Awake()
+    {
+        m_modalManager = UIModalManager.Instance;
+    }
+
 	void Start () {
 		m_winText.SetActive(false);
 		m_loseText.SetActive(false);
-	}
+
+        // Show the intro panel
+        m_modalManager.EnableIntroPanel();
+    }
 	
 	public void EnemyDestroyed()
 	{
