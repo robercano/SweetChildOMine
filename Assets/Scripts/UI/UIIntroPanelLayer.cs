@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using System;
 
-public class UIIntroPanelLayer : MonoBehaviour {
+public class UIIntroPanelLayer : MonoBehaviour, IPointerClickHandler {
 
     public float Speed = 20.0f;
     public int KeySoundFreq = 3;
@@ -28,6 +30,7 @@ public class UIIntroPanelLayer : MonoBehaviour {
         }
         set
         {
+            StopAllCoroutines();
             m_dialog.text = value;
         }
     }
@@ -36,6 +39,7 @@ public class UIIntroPanelLayer : MonoBehaviour {
     AudioSource m_audioSource;
     float m_letterDelay;
     float m_spaceDelay;
+    string m_textToPlay;
 
     void Awake()
     {
@@ -51,26 +55,32 @@ public class UIIntroPanelLayer : MonoBehaviour {
         m_spaceDelay = 3.0f / Speed;
     }
 
+    public void FinishPlayText()
+    {
+        Text = m_textToPlay;
+    }
+
     public void PlayText(string text)
     {
         StopAllCoroutines();
-        StartCoroutine(CO_PlayText(text));
+        m_textToPlay = text;
+        StartCoroutine(CO_PlayText());
     }
 
-    IEnumerator CO_PlayText(string text)
+    IEnumerator CO_PlayText()
     {
         int count = KeySoundFreq - 1;
 
         m_dialog.text = "";
 
-        foreach (char letter in text)
+        foreach (char letter in m_textToPlay)
         {
             m_dialog.text += letter.ToString();
             count++;
 
             if (count == KeySoundFreq)
             {
-                m_audioSource.PlayOneShot(KeySound[Random.Range(0, KeySound.Length)]);
+                m_audioSource.PlayOneShot(KeySound[UnityEngine.Random.Range(0, KeySound.Length)]);
                 count = 0;
             }
 
@@ -83,5 +93,10 @@ public class UIIntroPanelLayer : MonoBehaviour {
                 yield return new WaitForSeconds(m_letterDelay);
             }
         }
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        FinishPlayText();
     }
 }

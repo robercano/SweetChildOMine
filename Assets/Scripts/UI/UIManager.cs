@@ -17,16 +17,6 @@ public class UIManager : Singleton<UIManager> {
 
     private CanvasScaler m_canvasScaler;
 
-    private UIContainer m_weaponContainer;
-    private UIContainer m_inventoryContainer;
-    private UIContainer m_buildContainer;
-
-    private GameObject m_characterStatusPrefab;
-    private RectTransform m_characterStatusRectTransform;
-    private Dictionary<Miner, CharacterStatus> m_characterStatusDict;
-
-    private Miner m_activeMiner;
-
     private int m_screenWidth;
     private int m_screenHeight;
 
@@ -35,19 +25,8 @@ public class UIManager : Singleton<UIManager> {
     {
         base.Awake();
 
-        m_preloadedPrefabs = new Dictionary<string, GameObject>();
-        
+        m_preloadedPrefabs = new Dictionary<string, GameObject>();        
         m_canvasScaler = GetComponent<CanvasScaler>();
-
-        m_weaponContainer = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
-        m_inventoryContainer = GameObject.Find("InventoryContainer").GetComponent<UIContainer>();
-        m_buildContainer = GameObject.Find("BuildContainer").GetComponent<UIContainer>();
-
-        m_characterStatusPrefab = Resources.Load("UI/CharacterStatus") as GameObject;
-        m_characterStatusRectTransform = m_characterStatusPrefab.GetComponent<RectTransform>();
-
-        m_characterStatusDict = new Dictionary<Miner, CharacterStatus>(5);
-        m_activeMiner = null;
 
         foreach (Font font in Fonts)
         {
@@ -92,23 +71,6 @@ public class UIManager : Singleton<UIManager> {
         }
     }
 
-    private CharacterStatus AddMiner(Miner miner)
-    {
-        GameObject statusInstance = GameObject.Instantiate(m_characterStatusPrefab, transform);
-        statusInstance.GetComponent<RectTransform>().anchoredPosition = new Vector2(18.0f + m_characterStatusDict.Count * (m_characterStatusRectTransform.sizeDelta.x + 10.0f), -60.0f);
-        statusInstance.GetComponent<RectTransform>().localScale = Vector3.one;
-
-        statusInstance.name = "CharacterStatus" + miner.Name.Replace(" " , "");
-
-        CharacterStatus characterStatus = statusInstance.GetComponent<CharacterStatus>();
-
-        characterStatus.SetActiveMiner(miner);
-
-        m_characterStatusDict.Add(miner, characterStatus);
-
-        return characterStatus;
-    }
-
     private void UpdateUISize()
     {
         m_screenWidth = Screen.width;
@@ -117,34 +79,6 @@ public class UIManager : Singleton<UIManager> {
         int scale = Mathf.CeilToInt(m_screenHeight / (float)ReferenceHeight);
 
         m_canvasScaler.scaleFactor = scale;
-    }
-
-    public void Refresh()
-    {
-        m_weaponContainer.InventoryUpdate();
-        m_inventoryContainer.InventoryUpdate();
-        m_buildContainer.InventoryUpdate();
-    }
-    
-    public void SetActiveMiner(Miner miner)
-    {
-        CharacterStatus characterStatus = null;
-
-        if (m_characterStatusDict.TryGetValue(miner, out characterStatus) == false)
-        {
-            characterStatus = AddMiner(miner);
-        }
-
-        m_weaponContainer.SetInventory(miner.WeaponInventory);
-        m_inventoryContainer.SetInventory(miner.MaterialInventory);
-        m_buildContainer.SetInventory(miner.BuildInventory);
-
-        m_activeMiner = miner;
-    }
-
-    public Miner GetActiveMiner()
-    {
-        return m_activeMiner;
     }
 
     public T CreateUIElement<T>(Transform parent = null) where T : UIElement

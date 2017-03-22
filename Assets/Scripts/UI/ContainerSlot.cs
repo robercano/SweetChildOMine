@@ -62,7 +62,7 @@ public class ContainerSlot : DragDropInterface, IPointerEnterHandler, IPointerEx
             m_buildableObject = m_slotItem.BuildablePrefab.GetComponent<BuildableObject>();
             Assert.IsNotNull(m_buildableObject);
 
-            Miner miner = m_UIController.GetActiveMiner();
+            Miner miner = m_UIGameController.GetActiveMiner();
             Assert.IsNotNull(miner);
 
             if (miner.CheckRecipeForBuildableObject(m_buildableObject))
@@ -121,7 +121,7 @@ public class ContainerSlot : DragDropInterface, IPointerEnterHandler, IPointerEx
 
     private BuildableDescriptionBalloon m_buildableDescriptionPanel;    
 
-	private UIManager m_UIController;
+	private UIGameManager m_UIGameController;
     private BuildableObject m_buildableObject;
 
     // Use this for initialization
@@ -136,7 +136,7 @@ public class ContainerSlot : DragDropInterface, IPointerEnterHandler, IPointerEx
         m_buildableDescriptionPanel = UIManager.Instance.CreateUIElement<BuildableDescriptionBalloon>(transform);
         m_buildableDescriptionPanel.SetPosition(new Vector2(m_rectTransform.sizeDelta.x / 2.0f, m_rectTransform.sizeDelta.y + UIGlobals.PegDistanceToObject));
 
-        m_UIController = GameObject.Find("MainUI").GetComponent<UIManager>();
+        m_UIGameController = GameObject.Find("MainUI").GetComponent<UIGameManager>();
 
         Transform shortcutGO = transform.FindDeepChild("Shortcut");
         if (shortcutGO != null)

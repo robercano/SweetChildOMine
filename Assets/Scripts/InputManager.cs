@@ -11,7 +11,7 @@ public class InputManager : Singleton<InputManager>, IPointerClickHandler {
     private Miner m_miner;
     private CaveController m_caveController;
 
-    private UIManager m_UIController;
+    private UIGameManager m_UIGameController;
     private UIContainer m_weaponContainer;
     private UIContainer m_buildContainer;
 
@@ -37,7 +37,7 @@ public class InputManager : Singleton<InputManager>, IPointerClickHandler {
         m_caveController = GameObject.FindObjectOfType<CaveController>();
         m_lastClickTime = Time.time;
 
-        m_UIController = GameObject.Find("MainUI").GetComponent<UIManager>();
+        m_UIGameController = GameObject.Find("MainUI").GetComponent<UIGameManager>();
 
         m_weaponContainer = GameObject.Find("WeaponContainer").GetComponent<UIContainer>();
         m_buildContainer = GameObject.Find("BuildContainer").GetComponent<UIContainer>();
@@ -140,7 +140,7 @@ public class InputManager : Singleton<InputManager>, IPointerClickHandler {
     {
         m_miner = miner;
 
-        m_UIController.SetActiveMiner(miner);
+        m_UIGameController.SetActiveMiner(miner);
     }
 
     public void AttachObjectToMouse(DragDropInterface obj)

@@ -48,7 +48,7 @@ public class Item : DragDropInterface
 	private GameObject m_dragDropObject;
 	private DragDropController m_dragDropObjectController;
 
-	private UIManager m_UIController;
+	private UIGameManager m_UIGameController;
     private int m_amount;
     private AudioClip m_popSound;
 
@@ -58,7 +58,7 @@ public class Item : DragDropInterface
 
 		m_materialInventory = GameObject.Find("InventoryContainer").GetComponent<UIContainer>();
 
-		m_UIController = GameObject.Find("MainUI").GetComponent<UIManager>();
+		m_UIGameController = GameObject.Find("MainUI").GetComponent<UIGameManager>();
 
 		m_dragDropObject = null;
 		m_dragDropObjectController = null;
@@ -83,7 +83,7 @@ public class Item : DragDropInterface
 	{
 		if (BuildablePrefab != null)
 		{
-			Miner miner = m_UIController.GetActiveMiner ();
+			Miner miner = m_UIGameController.GetActiveMiner ();
             if (miner == null)
             {
                 eventData.pointerDrag = null;

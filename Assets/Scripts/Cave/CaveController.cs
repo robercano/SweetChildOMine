@@ -37,7 +37,7 @@ public class CaveController : MonoBehaviour {
 
     private DiggingActionMenu m_diggingContextMenu;
 
-    private UIManager m_UIController;
+    private UIGameManager m_UIGameController;
     private Vector2 m_digTarget;
 
     // Use this for initialization
@@ -65,7 +65,7 @@ public class CaveController : MonoBehaviour {
         m_diggingContextMenu.OnAction = OnDigCave;
         m_diggingContextMenu.Disable();
 
-        m_UIController = GameObject.Find("MainUI").GetComponent<UIManager>();
+        m_UIGameController = GameObject.Find("MainUI").GetComponent<UIGameManager>();
     }
 
     void Update()
@@ -277,7 +277,7 @@ public class CaveController : MonoBehaviour {
     {
         m_diggingContextMenu.Disable();
 
-        Miner miner = m_UIController.GetActiveMiner();
+        Miner miner = m_UIGameController.GetActiveMiner();
         if (miner != null)
             miner.DigCave(m_digTarget);
     }

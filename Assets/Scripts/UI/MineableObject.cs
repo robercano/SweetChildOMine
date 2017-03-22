@@ -20,7 +20,7 @@ public class MineableObject : SelectableObject
 
     private GameObject m_mineralDamagePrefab;
 
-    private UIManager m_UIController;
+    private UIGameManager m_UIGameController;
 
     public override void Awake()
     {
@@ -44,7 +44,7 @@ public class MineableObject : SelectableObject
         m_actionContextMenu.OnRetrieveMaxItems = OnRetrieveMaxItems;
         m_actionContextMenu.OnRetrieveCurrentItems = OnRetrieveCurrentItems;
 
-        m_UIController = GameObject.Find("MainUI").GetComponent<UIManager>();
+        m_UIGameController = GameObject.Find("MainUI").GetComponent<UIGameManager>();
 
         m_onSelectedDelegate = ShowMenu;
         m_onDeselectedDelegate = CheckHideMenu;
@@ -60,7 +60,7 @@ public class MineableObject : SelectableObject
 
     public void ShowMenu()
     {
-        Miner miner = m_UIController.GetActiveMiner();
+        Miner miner = m_UIGameController.GetActiveMiner();
         if (miner != null)
         {
             m_actionContextMenu.OnAction = OnActionMine;
@@ -86,7 +86,7 @@ public class MineableObject : SelectableObject
     {
         int minerMaxItems = 0;
 
-        Miner miner = m_UIController.GetActiveMiner();
+        Miner miner = m_UIGameController.GetActiveMiner();
         if (miner != null)
             minerMaxItems = miner.MaterialInventory.RemainingAmount;
 
@@ -101,7 +101,7 @@ public class MineableObject : SelectableObject
     {
         HideMenu();
 
-        Miner miner = m_UIController.GetActiveMiner();
+        Miner miner = m_UIGameController.GetActiveMiner();
         if (miner != null)
         {
             miner.MineMaterial(this, numItems);

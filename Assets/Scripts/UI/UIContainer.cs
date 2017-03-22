@@ -146,7 +146,7 @@ public class UIContainer : UIElement, IDropHandler {
             return false;
         }
 
-        UIManager.Instance.Refresh();
+        UIGameManager.Instance.Refresh();
 
         return true;
 	}
@@ -163,7 +163,7 @@ public class UIContainer : UIElement, IDropHandler {
             return false;
         }
 
-        UIManager.Instance.Refresh();
+        UIGameManager.Instance.Refresh();
 
         return true;
     }
@@ -219,7 +219,7 @@ public class UIContainer : UIElement, IDropHandler {
             }
 		}
 
-        UIManager.Instance.Refresh();
+        UIGameManager.Instance.Refresh();
 	}
 
     #endregion  /* Public interface */
