@@ -109,4 +109,12 @@ public class UIManager : Singleton<UIManager> {
     {
         GameObject.Destroy(item.gameObject);
     }
+
+    public void DestroyAllChildren()
+    {
+        foreach (Transform child in transform)
+        {
+            GameObject.Destroy(child.gameObject);
+        }
+    }
 }

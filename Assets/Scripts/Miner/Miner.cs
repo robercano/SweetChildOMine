@@ -500,7 +500,7 @@ public class Miner : SelectableObject
 
             if (Life <= 0)
             {
-                LevelManager.Instance.PlayerDestroyed();
+                //LevelManager.Instance.PlayerDestroyed();
                 Destroy(gameObject);
             }
             else

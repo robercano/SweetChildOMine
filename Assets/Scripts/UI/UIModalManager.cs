@@ -69,6 +69,7 @@ public class UIModalManager : Singleton<UIModalManager>
         {
             OnModalStarted();
         }
+        m_modalPanel.SetActive(true);
 
         GameObject UIInstance = GameObject.Instantiate(m_introPanelPrefab, m_modalPanel.transform, false);
         Assert.IsNotNull(UIInstance);

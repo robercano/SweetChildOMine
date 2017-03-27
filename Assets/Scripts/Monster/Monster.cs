@@ -295,7 +295,7 @@ public class Monster : MonoBehaviour {
         if (Life <= 0)
         {
             NumSpawnMonsters--;
-			LevelManager.Instance.EnemyDestroyed();
+			//LevelManager.Instance.EnemyDestroyed();
             DestroyObject(gameObject);
         }
         else
