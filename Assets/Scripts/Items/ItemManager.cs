@@ -5,7 +5,7 @@ using UnityEngine.Assertions;
 using com.kleberswf.lib.core;
 
 public class ItemManager : Singleton<ItemManager> {
-	public string[] PreloadItems = { "Silver", "Gold", "Warehouse", "PickAxe" };
+	public string[] PreloadItems = { "Silver", "Gold", "Warehouse", "PickAxe", "Generator" };
 
 	private Dictionary<string, GameObject> m_preloadedPrefabs;
 

@@ -147,8 +147,14 @@ public class Miner : SelectableObject
         WeaponInventory.AddItem(m_pickAxe);
 
         // Build structures
+		// TODO: we could have a component that adds items to the inventory. This
+		// way each character can have different buildings if needed, and that code goes
+		// out of this component.
 		Item warehouse = ItemManager.Instance.CreateItem ("Warehouse");
 		BuildInventory.AddItem(warehouse);
+
+		Item generator = ItemManager.Instance.CreateItem ("Generator");
+		BuildInventory.AddItem(generator);
 	}
 
 	// Update is called once per frame

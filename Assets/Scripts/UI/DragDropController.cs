@@ -20,6 +20,7 @@ public class DragDropController : MonoBehaviour {
     // Use this for initialization
     void Awake()
     {
+		Debug.Log ("Awake DragDrop " + name);
         m_spriteRenderer = GetComponent<SpriteRenderer>();
         m_boxCollider = GetComponent<BoxCollider2D>();
         m_spriteOutline = GetComponent<SpriteOutline>();
