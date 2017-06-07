@@ -15,6 +15,9 @@ public class WalkingCreature : MonoBehaviour {
 	private float m_faceDirection = 1.0f;
 	public float m_initialDirection = -1.0f;
 	private int m_layerMask;
+	private float DISTANCE_TO_START_FALLING = 2.0f;
+	private bool m_isTouchingGround = false;
+	private bool m_isFalling = false;
 
 	void Start () {
 		InitColliderObjects ();
@@ -23,13 +26,45 @@ public class WalkingCreature : MonoBehaviour {
 		Walk ();
 	}
 
-	void Update () {
-		SettleDown ();
+	void FixedUpdate () {
+		if (!m_isFalling && !m_isTouchingGround) {
+			if (IsGrounded ()) {
+				SettleDown();
+			} else {
+				StartFalling ();
+			}
+		}
+	}
+
+	private void StartFalling() {
+		m_isFalling = true;
+		EndMovement ();
+		m_rigidBody.isKinematic = false;
+		// TODO notify falling
+	}
+
+	private void StopFalling() {
+		if (m_isFalling) {
+			m_isFalling = false;
+			m_rigidBody.isKinematic = true;
+			m_rigidBody.velocity = new Vector2 (m_rigidBody.velocity.x, 0f);
+			Walk ();
+			// TODO notify stop falling
+		}
+	}
+		
+	private bool IsGrounded() {
+		Vector2 leftFeetPosition = new Vector2(m_feetCollider.bounds.min.x, m_feetCollider.bounds.min.y);
+		Vector2 rightFeetPosition = new Vector2(m_feetCollider.bounds.max.x, m_feetCollider.bounds.min.y);
+
+		return (
+			Physics2D.Raycast(leftFeetPosition, Vector2.down, DISTANCE_TO_START_FALLING, m_layerMask)
+			|| Physics2D.Raycast(rightFeetPosition, Vector2.down, DISTANCE_TO_START_FALLING, m_layerMask)
+		);
 	}
 
 	public void Walk() {
 		m_rigidBody.velocity = new Vector2(m_faceDirection * m_walkSpeed, m_rigidBody.velocity.y);
-		SettleDown();
 	}
 
 	public void SettleDown() {
@@ -62,8 +97,6 @@ public class WalkingCreature : MonoBehaviour {
 		/* Round the coordinates so they are perfect pixel aligned */
 		m_rigidBody.position = new Vector2(Mathf.Round(m_rigidBody.position.x), Mathf.Round(m_rigidBody.position.y));
 		m_rigidBody.velocity = Vector2.zero;
-
-		//ResetMovementTarget();
 	}
 
 	private void HandleBodyCollision(Collision2D collision) {
@@ -77,6 +110,7 @@ public class WalkingCreature : MonoBehaviour {
 					m_rigidBody.position.y);
 				Stop ();
 				ChangeDirection ();
+				SettleDown ();
 				Walk ();
 				// TODO: notify bodyCollision in Miner
 //
@@ -101,12 +135,39 @@ public class WalkingCreature : MonoBehaviour {
 	}
 
 	private void HandleFeetCollision(Collision2D collision) {
-		// Only move up if collider is in front of us
-		if (m_faceDirection * (m_rigidBody.position.x - collision.collider.bounds.center.x) <= 0.0f) {
-			MoveStepUp ();
-		} else {
-			SettleDown ();
+		m_isTouchingGround = true;
+		if (m_isFalling) {
+			StopFalling ();
 		}
+		if (CollisionIsHorizontal (collision)) {
+			MoveStepUp ();
+		}
+	}
+
+	private void HandleFeetCollisionStay(Collision2D collision) {
+		if (CollisionIsHorizontal (collision)) {
+			MoveStepUp ();
+		}
+	}
+
+	private bool CollisionIsHorizontal(Collision2D collision) {
+		foreach (ContactPoint2D contact in collision.contacts) {
+			if (contact.normal == Vector2.left) {
+				if(contact.point.x < (m_feetCollider.bounds.max.x - 0.5f)) {
+					return true;
+				}
+			}
+			if (contact.normal == Vector2.right) {
+				if(contact.point.x > (m_feetCollider.bounds.min.x + 0.5f)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private void HandleFeetCollisionExit(Collision2D collision) {
+		m_isTouchingGround = false;
 	}
 
 	private void InitColliderObjects() {
@@ -114,12 +175,15 @@ public class WalkingCreature : MonoBehaviour {
 		GameObject feetCollider = transform.FindChild ("FeetCollider").gameObject;
 		m_feetCollider = feetCollider.GetComponent<BoxCollider2D>();
 		m_feetColliderScript = feetCollider.GetComponent<WalkingCreatureCollider> ();
-		m_feetColliderScript.SetCallback (HandleFeetCollision);
+		m_feetColliderScript.SetEnterCallback (HandleFeetCollision);
+		m_feetColliderScript.SetExitCallback (HandleFeetCollisionExit);
+		m_feetColliderScript.SetStayCallback (HandleFeetCollisionStay);
+
 
 		GameObject bodyCollider = transform.FindChild ("BodyCollider").gameObject;
 		m_bodyCollider = bodyCollider.GetComponent<BoxCollider2D>();
 		m_bodyColliderScript = bodyCollider.GetComponent<WalkingCreatureCollider> ();
-		m_bodyColliderScript.SetCallback (HandleBodyCollision);
+		m_bodyColliderScript.SetEnterCallback (HandleBodyCollision);
 
 		CheckAllComponentsArePresent ();
 	}

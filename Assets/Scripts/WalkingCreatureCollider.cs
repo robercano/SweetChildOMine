@@ -5,15 +5,37 @@ using UnityEngine;
 
 public class WalkingCreatureCollider : MonoBehaviour {
 
-	private Action<Collision2D> m_callback;
+	private Action<Collision2D> m_enterCallback;
+	private Action<Collision2D> m_exitCallback;
+	private Action<Collision2D> m_stayCallback;
 
-	public void SetCallback(Action<Collision2D> callback) {
-		m_callback = callback;
+	public void SetEnterCallback(Action<Collision2D> callback) {
+		m_enterCallback = callback;
+	}
+
+	public void SetExitCallback(Action<Collision2D> callback) {
+		m_exitCallback = callback;
+	}
+
+	public void SetStayCallback(Action<Collision2D> callback) {
+		m_stayCallback = callback;
 	}
 
 	void OnCollisionEnter2D(Collision2D collision) {
-		if (m_callback != null) {
-			m_callback (collision);
+		if (m_enterCallback != null) {
+			m_enterCallback (collision);
+		}
+	}
+
+	void OnCollisionExit2D(Collision2D collision) {
+		if (m_exitCallback != null) {
+			m_exitCallback (collision);
+		}
+	}
+
+	void OnCollisionStay2D(Collision2D collision) {
+		if (m_stayCallback != null) {
+			m_stayCallback (collision);
 		}
 	}
 }
