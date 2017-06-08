@@ -1,10 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class WalkingCreature : MonoBehaviour {
 
 	public float m_walkSpeed = 32.0f;
+	public float m_gravity = 9.8f;
 
 	private Rigidbody2D m_rigidBody;
 	private WalkingCreatureCollider m_feetColliderScript;
@@ -19,6 +21,9 @@ public class WalkingCreature : MonoBehaviour {
 	private bool m_isTouchingGround = false;
 	private bool m_isFalling = false;
 
+	private Action<bool> m_fallingCallback;
+	private Action<Collision2D> m_bodyCollisionCallback;
+
 	void Start ()
 	{
 		InitColliderObjects ();
@@ -29,7 +34,33 @@ public class WalkingCreature : MonoBehaviour {
 
 	void FixedUpdate ()
 	{
-		if (!m_isFalling && !m_isTouchingGround)
+		if (m_isFalling)
+		{
+			UpdateVelocityWithGravity (Time.deltaTime);
+		}
+		else
+		{
+			HandleNotFallingUpdate ();
+		}
+	}
+
+	private void UpdateVelocityWithGravity(float deltaTime)
+	{
+		if (m_isTouchingGround)
+		{
+			m_rigidBody.velocity = new Vector2 (m_rigidBody.velocity.x, 0f);
+		}
+		else
+		{
+			float newYVelocity = m_rigidBody.velocity.y - (m_gravity * deltaTime);
+			m_rigidBody.velocity = new Vector2 (m_rigidBody.velocity.x, newYVelocity);
+		}
+
+	}
+
+	private void HandleNotFallingUpdate()
+	{
+		if (!m_isTouchingGround)
 		{
 			if (IsGrounded ())
 			{
@@ -37,17 +68,29 @@ public class WalkingCreature : MonoBehaviour {
 			}
 			else
 			{
+				EndMovement ();
 				StartFalling ();
 			}
 		}
 	}
 
+	public void SetFallingCallback(Action<bool> callback)
+	{
+		m_fallingCallback = callback;
+	}
+
+	public void SetBodyCollisionCallback(Action<Collision2D> callback)
+	{
+		m_bodyCollisionCallback = callback;
+	}
+
 	private void StartFalling()
 	{
 		m_isFalling = true;
-		EndMovement ();
-		m_rigidBody.isKinematic = false;
-		// TODO notify falling
+		if (m_fallingCallback != null)
+		{
+			m_fallingCallback (true);
+		}
 	}
 
 	private void StopFalling()
@@ -55,10 +98,12 @@ public class WalkingCreature : MonoBehaviour {
 		if (m_isFalling)
 		{
 			m_isFalling = false;
-			m_rigidBody.isKinematic = true;
 			m_rigidBody.velocity = new Vector2 (m_rigidBody.velocity.x, 0f);
 			Walk ();
-			// TODO notify stop falling
+			if (m_fallingCallback != null)
+			{
+				m_fallingCallback (false);
+			}
 		}
 	}
 		
@@ -75,7 +120,7 @@ public class WalkingCreature : MonoBehaviour {
 
 	public void Walk()
 	{
-		m_rigidBody.velocity = new Vector2(m_faceDirection * m_walkSpeed, m_rigidBody.velocity.y);
+		m_rigidBody.velocity = new Vector2(m_faceDirection * m_walkSpeed, 0f);
 	}
 
 	public void SettleDown()
@@ -122,32 +167,39 @@ public class WalkingCreature : MonoBehaviour {
 		// readjust position and end movement
 		for (int i = 0; i < collision.contacts.Length; ++i)
 		{
-			if (m_faceDirection * (m_rigidBody.position.x - collision.contacts [i].point.x) < 0.0f)
+			if (m_faceDirection * (m_rigidBody.position.x - collision.contacts [i].point.x) < float.Epsilon)
 			{
-				m_rigidBody.position = new Vector2 (collision.collider.bounds.center.x -
-					m_faceDirection * (collision.collider.bounds.extents.x + m_bodyCollider.bounds.extents.x),
-					m_rigidBody.position.y);
+				//TODO Is this needed?
+//				m_rigidBody.position = new Vector2 (collision.collider.bounds.center.x -
+//					m_faceDirection * (collision.collider.bounds.extents.x + m_bodyCollider.bounds.extents.x),
+//					m_rigidBody.position.y);
 				Stop ();
-				ChangeDirection ();
-				SettleDown ();
-				Walk ();
-				// TODO: notify bodyCollision in Miner
-//
-//				if (FSM.CurrentState == MinerStateDigWalk.Instance && collision.gameObject.tag == "CaveCollider") {
-//					FSM.ChangeState (MinerStateDig.Instance);
-//				} else {
-//					ResetMovementTarget (); 
-//					FSM.ChangeState (MinerStateIdle.Instance);
-//				}
+				if (m_bodyCollisionCallback != null)
+				{
+					m_bodyCollisionCallback (collision);	
+				}
+
 				break;
 			}
 		}
+	}
+
+	public void TurnBack()
+	{
+		ChangeDirection ();
+		SettleDown ();
+		Walk ();
 	}
 
 	private void ChangeDirection()
 	{
 		m_faceDirection = -1 * m_faceDirection;
 		UpdateLocalTransformDirection ();
+	}
+
+	public bool IsFalling()
+	{
+		return m_isFalling;
 	}
 
 	private void UpdateLocalTransformDirection()
@@ -161,6 +213,7 @@ public class WalkingCreature : MonoBehaviour {
 		if (m_isFalling)
 		{
 			StopFalling ();
+			SettleDown ();
 		}
 		if (CollisionIsHorizontal (collision))
 		{
