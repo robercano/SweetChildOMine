@@ -23,6 +23,7 @@ public class WalkingCreature : MonoBehaviour {
 
 	private Action<bool> m_fallingCallback;
 	private Action<Collision2D> m_bodyCollisionCallback;
+	private Action m_walkCallback;
 
 	void Start ()
 	{
@@ -84,6 +85,11 @@ public class WalkingCreature : MonoBehaviour {
 		m_bodyCollisionCallback = callback;
 	}
 
+	public void SetWalkCallback(Action callback)
+	{
+		m_walkCallback = callback;
+	}
+
 	private void StartFalling()
 	{
 		m_isFalling = true;
@@ -107,7 +113,6 @@ public class WalkingCreature : MonoBehaviour {
 		{
 			m_isFalling = false;
 			m_rigidBody.velocity = new Vector2 (m_rigidBody.velocity.x, 0f);
-			Walk ();
 			if (m_fallingCallback != null)
 			{
 				m_fallingCallback (false);
@@ -129,6 +134,9 @@ public class WalkingCreature : MonoBehaviour {
 	public void Walk()
 	{
 		m_rigidBody.velocity = new Vector2(m_faceDirection * m_walkSpeed, 0f);
+		if (m_walkCallback != null) {
+			m_walkCallback ();
+		}
 	}
 
 	public void SettleDown()
