@@ -9,10 +9,13 @@ public class BigotitosTimer : MonoBehaviour {
     public float BigotitosLickTime;
     public GameObject[] RopeSections;
     public GameObject Bigotitos;
+    public AudioClip CatMeow;
 
     Animator m_crankAnimator;
     float m_lastCrankRotationTime;
     float m_timePerStep;
+
+    AudioSource m_audioSource;
 
     Animator m_bigotitosAnimator;
     float m_lastLickTime;
@@ -24,6 +27,8 @@ public class BigotitosTimer : MonoBehaviour {
     RectTransform m_bigotitosRectTransform;
 
     void Awake () {
+        m_audioSource = GetComponent<AudioSource>();
+
         m_crankAnimator = transform.FindDeepChild("Crank").GetComponent<Animator>();
         m_bigotitosAnimator = transform.FindDeepChild("Bigotitos").GetComponent<Animator>();
 
@@ -67,6 +72,7 @@ public class BigotitosTimer : MonoBehaviour {
 
     public void BigotitosLick()
     {
+        AudioSource.PlayClipAtPoint(CatMeow, Camera.main.transform.position);
         m_bigotitosAnimator.SetTrigger("Lick");
         m_lastLickTime = Time.time;
         m_nextLickTime = UnityEngine.Random.Range(1.0f, BigotitosLickTime);
@@ -79,6 +85,7 @@ public class BigotitosTimer : MonoBehaviour {
             return;
         }
 
+        m_audioSource.Play();
         m_crankAnimator.SetTrigger("Rotate");
         ExecuteAfterSeconds(AddRope, 1.33f);
         m_lastCrankRotationTime = Time.time;
