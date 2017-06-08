@@ -93,6 +93,14 @@ public class WalkingCreature : MonoBehaviour {
 		}
 	}
 
+	public void Jump(Vector2 initialSpeed)
+	{
+		StartFalling ();
+		m_isTouchingGround = false;
+		m_rigidBody.position = new Vector2 (m_rigidBody.position.x, m_rigidBody.position.y + 2f);
+		m_rigidBody.velocity = new Vector2 (initialSpeed.x * m_faceDirection, initialSpeed.y);;
+	}
+
 	private void StopFalling()
 	{
 		if (m_isFalling)
