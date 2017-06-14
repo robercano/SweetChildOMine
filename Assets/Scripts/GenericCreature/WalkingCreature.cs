@@ -185,20 +185,33 @@ public class WalkingCreature : MonoBehaviour {
 		{
 			if (m_faceDirection * (m_rigidBody.position.x - collision.contacts [i].point.x) < float.Epsilon)
 			{
-				//TODO Is this needed?
-//				m_rigidBody.position = new Vector2 (collision.collider.bounds.center.x -
-//					m_faceDirection * (collision.collider.bounds.extents.x + m_bodyCollider.bounds.extents.x),
-//					m_rigidBody.position.y);
-				Stop ();
-				if (m_bodyCollisionCallback != null)
+				if (IsFalling ())
 				{
-					m_bodyCollisionCallback (collision);	
+					HandleInAirCollision (collision);
+				} else
+				{
+					HandleWalkingCollision (collision);
 				}
+
 
 				break;
 			}
 		}
 	}
+
+	private void HandleInAirCollision(Collision2D collision)
+	{
+		m_rigidBody.velocity = new Vector2 (-m_rigidBody.velocity.x, -m_rigidBody.velocity.y);
+	}
+	private void HandleWalkingCollision(Collision2D collision)
+	{
+		Stop ();
+		if (m_bodyCollisionCallback != null)
+		{
+			m_bodyCollisionCallback (collision);	
+		}
+	}
+
 
 	public void TurnBack()
 	{
