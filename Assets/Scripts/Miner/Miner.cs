@@ -308,17 +308,17 @@ public class Miner : SelectableObject
         m_rigidBody.velocity = new Vector2(m_faceDirection * m_walkSpeed, m_rigidBody.velocity.y);
         FallDown();
     }
-//    public void StepForward()
-//    {
-//        if (transform.localScale.x <= 0.0f)
-//        {
-//            m_rigidBody.position = new Vector2(m_rigidBody.position.x - 1.0f, m_rigidBody.position.y);
-//        }
-//        else {
-//            m_rigidBody.position = new Vector2(m_rigidBody.position.x + 1.0f, m_rigidBody.position.y);
-//        }
-//        PlayAudioOneStep();
-//    }
+    public void StepForward()
+    {
+        if (transform.localScale.x <= 0.0f)
+        {
+            m_rigidBody.position = new Vector2(m_rigidBody.position.x - 1.0f, m_rigidBody.position.y);
+        }
+        else {
+            m_rigidBody.position = new Vector2(m_rigidBody.position.x + 1.0f, m_rigidBody.position.y);
+        }
+        PlayAudioOneStep();
+    }
     public void Run()
     {
         m_rigidBody.velocity = new Vector2(m_faceDirection * m_runSpeed, m_rigidBody.velocity.y);
@@ -470,10 +470,10 @@ public class Miner : SelectableObject
         m_nearCaveColliders.Clear();
     }
 
-//    public void OnStepForward()
-//    {
-//        StepForward();
-//    }
+    public void OnStepForward()
+    {
+        StepForward();
+    }
 
     public void OnStep()
     {
