@@ -11,6 +11,7 @@ public class MineableObject : SelectableObject
     public Color DamageColor;
     public string ActionName;
     public string MineableItem;
+	public Sprite m_actionMenuMaterialSprite;
 
     protected int m_currentItems;
 
@@ -38,7 +39,6 @@ public class MineableObject : SelectableObject
         Item mineableItem = ItemManager.Instance.CreateItem(MineableItem);
         ItemManager.Instance.DestroyItem(mineableItem);
 
-        m_actionContextMenu.Title = Name;
         m_actionContextMenu.ActionName = ActionName;
         m_actionContextMenu.OnAction = null;
         m_actionContextMenu.OnRetrieveMaxItems = OnRetrieveMaxItems;

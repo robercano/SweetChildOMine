@@ -6,17 +6,6 @@ using UnityEngine.Assertions;
 
 public sealed class MiningActionMenu : UIElement {
 
-    public string Title
-    {
-        get
-        {
-            return m_title.text;
-        }
-        set
-        {
-            m_title.text = value;
-        }
-    }
     public string ActionName
     {
         get
@@ -60,8 +49,7 @@ public sealed class MiningActionMenu : UIElement {
             m_info.text = value;
         }
     }
-
-    private Text m_title;
+		
     private Text m_numItems;
     private Text m_info;
     private Text m_action;
@@ -81,7 +69,6 @@ public sealed class MiningActionMenu : UIElement {
     {
 		base.Awake ();
 
-        m_title = transform.FindDeepChild("Title").GetComponent<Text>();
         m_numItems = transform.FindDeepChild("NumItems").GetComponent<Text>();
         m_info = transform.FindDeepChild("Info").GetComponent<Text>();
         m_action = transform.FindDeepChild("ActionText").GetComponent<Text>();
