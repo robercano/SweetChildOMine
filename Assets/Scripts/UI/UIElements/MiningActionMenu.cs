@@ -27,35 +27,36 @@ public sealed class MiningActionMenu : UIElement {
     public float OnButtonDownStartRepeatInterval = 1.0f;
     public float OnButtonDownContinueRepeatInterval = 0.2f;
 
-    public int SelectedNumItems
+    private int SelectedNumItems
     {
         get
         {
-            return int.Parse(m_numItems.text);
+            return int.Parse(m_selectedNumItems.text);
         }
         set
         {
-            m_numItems.text = value.ToString();
+            m_selectedNumItems.text = value.ToString();
         }
     }
-    string Info
+    string TotalItems
     {
         get
         {
-            return m_info.text;
+            return m_totalNumItems.text;
         }
         set
         {
-            m_info.text = value;
+            m_totalNumItems.text = value;
         }
     }
 		
-    private Text m_numItems;
-    private Text m_info;
+	private Text m_selectedNumItems;
+    private Text m_totalNumItems;
     private Text m_action;
     private Button m_buttonLeft;
     private Button m_buttonRight;
     private Button m_buttonAction;
+	private Text m_inventoryFull;
     private WidgetFader m_widgetFader;
 
     private bool m_isLeftButtonPressed;
@@ -69,9 +70,10 @@ public sealed class MiningActionMenu : UIElement {
     {
 		base.Awake ();
 
-        m_numItems = transform.FindDeepChild("NumItems").GetComponent<Text>();
-        m_info = transform.FindDeepChild("Info").GetComponent<Text>();
+        m_selectedNumItems = transform.FindDeepChild("NumItemsSelected").GetComponent<Text>();
+		m_totalNumItems = transform.FindDeepChild("NumItemsTotal").GetComponent<Text>();
         m_action = transform.FindDeepChild("ActionText").GetComponent<Text>();
+		m_inventoryFull = transform.FindDeepChild ("InventoryFull").GetComponent<Text>();
 
         m_buttonLeft = transform.FindDeepChild("ButtonLeft").GetComponent<Button>();
         m_buttonRight = transform.FindDeepChild("ButtonRight").GetComponent<Button>();
@@ -92,13 +94,13 @@ public sealed class MiningActionMenu : UIElement {
         m_previousClickTime = 0.0f;
 
         SelectedNumItems = 1;
+
     }
 
     override protected void Update()
     {
 		base.Update ();
-
-        Info = "(" + (OnRetrieveCurrentItems() - SelectedNumItems) + " left)";
+		TotalItems = OnRetrieveCurrentItems ().ToString();
 
         if (m_isLeftButtonPressed || m_isRightButtonPressed)
         {
@@ -107,11 +109,11 @@ public sealed class MiningActionMenu : UIElement {
             {
                 if (m_isLeftButtonPressed)
                 {
-                    SelectedNumItems--;
+					TryToChangeSelectedNumItems(SelectedNumItems - 1);
                 }
                 else if (m_isRightButtonPressed)
                 {
-                    SelectedNumItems++;
+					TryToChangeSelectedNumItems(SelectedNumItems + 1);
                 }
                 m_isFirstClick = false;
                 m_previousClickTime = Time.time;
@@ -135,27 +137,7 @@ public sealed class MiningActionMenu : UIElement {
 
             if (SelectedNumItems <= 0)
             {
-                SelectedNumItems = 0;
-                m_buttonLeft.interactable = false;
                 m_buttonAction.interactable = false;
-            }
-            else
-            {
-                m_buttonLeft.interactable = true;
-                m_buttonAction.interactable = true;
-            }
-
-            if (SelectedNumItems > OnRetrieveMaxItems())
-            {
-                /* Signal the error in the inventory */
-                m_materialInventory.SignalError();
-
-                SelectedNumItems = OnRetrieveMaxItems();
-                m_buttonRight.interactable = false;
-            }
-            else
-            {
-                m_buttonRight.interactable = true;
             }
         }
     }
@@ -173,7 +155,7 @@ public sealed class MiningActionMenu : UIElement {
     /* Events */
     public void OnLeftClickDown()
     {
-        SelectedNumItems--;
+		TryToChangeSelectedNumItems(SelectedNumItems - 1);
         m_isLeftButtonPressed = true;
     }
     public void OnLeftClickUp()
@@ -182,7 +164,7 @@ public sealed class MiningActionMenu : UIElement {
     }
     public void OnRightClickDown()
     {
-        SelectedNumItems++;
+		TryToChangeSelectedNumItems(SelectedNumItems + 1);
         m_isRightButtonPressed = true;
     }
     public void OnRightClickUp()
@@ -193,4 +175,75 @@ public sealed class MiningActionMenu : UIElement {
     {
         OnAction(SelectedNumItems);
     }
+
+	public void TryToChangeSelectedNumItems(int newValue)
+	{
+		int normalisedNewValue = newValue;
+		int maxItems = OnRetrieveMaxItems ();
+
+		if (newValue < 0)
+		{
+			normalisedNewValue = 0;
+		}
+		else if (newValue > maxItems)
+		{
+			normalisedNewValue = maxItems;
+			SetInventoryFullMessageVisible (true);
+			m_materialInventory.SignalError();
+		}
+
+		if (SelectedNumItems != normalisedNewValue)
+		{
+			SelectedNumItems = normalisedNewValue;
+			UpdateUIAfterNumSelectedChanged ();
+		}
+	}
+
+	private void UpdateUIAfterNumSelectedChanged ()
+	{
+		if(SelectedNumItems >= OnRetrieveMaxItems ())
+		{
+			SetInventoryFullMessageVisible (true);
+		}
+		{
+			SetInventoryFullMessageVisible (false);
+		}
+		UpdateMoreAndLessButtons ();
+	}
+
+	private void UpdateMoreAndLessButtons()
+	{
+		if (SelectedNumItems <= 0)
+		{
+			m_buttonLeft.interactable = false;
+		}
+		else
+		{
+			m_buttonLeft.interactable = true;
+		}
+
+		if (SelectedNumItems >= OnRetrieveMaxItems())
+		{
+			m_buttonRight.interactable = false;
+		}
+		else
+		{
+			m_buttonRight.interactable = true;
+		}
+	}
+
+	private void SetInventoryFullMessageVisible(bool visible)
+	{
+		float opacity = 1.0f;
+		if (!visible)
+		{
+			opacity = 0.0f;
+		}
+		m_inventoryFull.color = new Color (
+			m_inventoryFull.color.r,
+			m_inventoryFull.color.g,
+			m_inventoryFull.color.b,
+			opacity);
+	}
+
 }

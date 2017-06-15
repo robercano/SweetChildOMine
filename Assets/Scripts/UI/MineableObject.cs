@@ -66,11 +66,11 @@ public class MineableObject : SelectableObject
             m_actionContextMenu.OnAction = OnActionMine;
 
             int minerMaxItems = miner.MaterialInventory.RemainingAmount;
-            m_actionContextMenu.SelectedNumItems = minerMaxItems;
+			m_actionContextMenu.TryToChangeSelectedNumItems(minerMaxItems);
         }
         else
         {
-            m_actionContextMenu.SelectedNumItems = 0;
+			m_actionContextMenu.TryToChangeSelectedNumItems(0);
         }
 
         DisableDialog();
