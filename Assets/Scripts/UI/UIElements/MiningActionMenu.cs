@@ -58,6 +58,7 @@ public sealed class MiningActionMenu : UIElement {
     private Button m_buttonAction;
 	private Text m_inventoryFull;
     private WidgetFader m_widgetFader;
+	private Image m_sourceImage;
 
     private bool m_isLeftButtonPressed;
     private bool m_isRightButtonPressed;
@@ -74,6 +75,7 @@ public sealed class MiningActionMenu : UIElement {
 		m_totalNumItems = transform.FindDeepChild("NumItemsTotal").GetComponent<Text>();
         m_action = transform.FindDeepChild("ActionText").GetComponent<Text>();
 		m_inventoryFull = transform.FindDeepChild ("InventoryFull").GetComponent<Text>();
+		m_sourceImage = transform.FindDeepChild ("SourceSprite").GetComponent<Image>();
 
         m_buttonLeft = transform.FindDeepChild("ButtonLeft").GetComponent<Button>();
         m_buttonRight = transform.FindDeepChild("ButtonRight").GetComponent<Button>();
@@ -197,6 +199,11 @@ public sealed class MiningActionMenu : UIElement {
 			SelectedNumItems = normalisedNewValue;
 			UpdateUIAfterNumSelectedChanged ();
 		}
+	}
+
+	public void SetSourceImage(Sprite newSprite)
+	{
+		m_sourceImage.sprite = newSprite;
 	}
 
 	private void UpdateUIAfterNumSelectedChanged ()

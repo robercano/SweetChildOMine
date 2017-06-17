@@ -74,6 +74,7 @@ public class MineableObject : SelectableObject
         }
 
         DisableDialog();
+		m_actionContextMenu.SetSourceImage (m_spriteRenderer.sprite);
         m_actionContextMenu.Enable();
     }
     public void HideMenu()
