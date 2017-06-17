@@ -17,6 +17,17 @@ public sealed class MiningActionMenu : UIElement {
             m_action.text = value;
         }
     }
+	public string MaterialName
+	{
+		get
+		{
+			return m_materialActionText.text;
+		}
+		set
+		{
+			m_materialActionText.text = value;
+		}
+	}
     public delegate void OnActionDelegate(int selectedAmount);
     public OnActionDelegate OnAction;
 
@@ -36,6 +47,7 @@ public sealed class MiningActionMenu : UIElement {
         set
         {
             m_selectedNumItems.text = value.ToString();
+			m_amountInAction.text =  value.ToString();
         }
     }
     string TotalItems
@@ -53,6 +65,8 @@ public sealed class MiningActionMenu : UIElement {
 	private Text m_selectedNumItems;
     private Text m_totalNumItems;
     private Text m_action;
+	private Text m_amountInAction;
+	private Text m_materialActionText;
     private Button m_buttonLeft;
     private Button m_buttonRight;
     private Button m_buttonAction;
@@ -74,6 +88,8 @@ public sealed class MiningActionMenu : UIElement {
         m_selectedNumItems = transform.FindDeepChild("NumItemsSelected").GetComponent<Text>();
 		m_totalNumItems = transform.FindDeepChild("NumItemsTotal").GetComponent<Text>();
         m_action = transform.FindDeepChild("ActionText").GetComponent<Text>();
+		m_amountInAction = transform.FindDeepChild("AmountActionText").GetComponent<Text>();
+		m_materialActionText = transform.FindDeepChild("MaterialActionText").GetComponent<Text>();
 		m_inventoryFull = transform.FindDeepChild ("InventoryFull").GetComponent<Text>();
 		m_sourceImage = transform.FindDeepChild ("SourceSprite").GetComponent<Image>();
 

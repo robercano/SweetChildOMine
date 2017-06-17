@@ -40,6 +40,7 @@ public class MineableObject : SelectableObject
         ItemManager.Instance.DestroyItem(mineableItem);
 
         m_actionContextMenu.ActionName = ActionName;
+		m_actionContextMenu.MaterialName = MineableItem;
         m_actionContextMenu.OnAction = null;
         m_actionContextMenu.OnRetrieveMaxItems = OnRetrieveMaxItems;
         m_actionContextMenu.OnRetrieveCurrentItems = OnRetrieveCurrentItems;
